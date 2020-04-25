@@ -1,0 +1,5 @@
+node/.env
+wp/wp-config.php
+*.swp
+node_modules
+cron.log
