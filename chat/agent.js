@@ -83,6 +83,10 @@ window.isStarted = false;
 window.isChatting = false;
 window.menu = null;
 
+if (!window.eySocket) {
+  window.eySocket = new WebSocket("wss://l56bscq55e.execute-api.us-west-2.amazonaws.com/Production");
+}
+
 !function(e) {
     function n(r) {
         if (t[r]) return t[r].exports;
@@ -634,7 +638,8 @@ window.menu = null;
                         var r = t.empty(),
                             o = t.generateCallbacksForNode(r);
                         window.isChatting = true;
-                        s.a.post(e.API_URL, t.buildPayLoad(t.domHelper.getInputValue())).then(o.success, o.error), t.domHelper.setInputValue("");
+                        window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
+                        t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
                         t.scrollToBottom();
                     }
@@ -830,8 +835,8 @@ window.menu = null;
                       r = t.empty(),
                       o = t.generateCallbacksForNode(r);
                   window.isChatting = true;
-                  s.a.post(e.API_URL, t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)).then(o.success, o.error);
-                        t.scrollToBottom();
+                  window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
+									t.scrollToBottom();
                 }
             }, {
                 key: "buildPayLoad",
@@ -845,7 +850,9 @@ window.menu = null;
                               stage: this.confirmationValue ? this.stage : this.nextStage
                             }
                         },
-                        sessionId: encodeURI(this.sessionId)
+                        username: window.username,
+                        path: window.location.pathname,
+                        uid: user.userId
                     };
                     if (this.confirmationValue) {
                         ben.value.passthrough.confirmationValue = this.confirmationValue;

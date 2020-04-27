@@ -25,6 +25,10 @@
 
   var eyelevel = {
     init: function(username) {
+      if (!window.WebSocket) {
+        return;
+      }
+
       var firstScript = document.getElementsByTagName('script')[0];
       var jqs = document.createElement('script');
       jqs.src = 'chat/3rdparty.js';
@@ -88,8 +92,8 @@
     transition: transform 100ms linear, opacity 80ms linear;
   }
   .ey-app-active {
-        opacity: 1;
-        transform: rotate(0deg) scale(1);
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
   }
   .ey-app-active svg {
     width: 28px;
@@ -99,8 +103,8 @@
     fill: rgb(255, 255, 255);
   }
   .ey-app-inactive {
-        opacity: 0;
-        transform: rotate(-30deg) scale(0);
+    opacity: 0;
+    transform: rotate(-30deg) scale(0);
   }
   .ey-app-inactive svg {
     width: 14px;
@@ -114,7 +118,8 @@
       var n=document.createElement("section");
       n.classList.add("ey-section");
       n.classList.add("ey-chat");
-      n.id = "eyChat"
+      n.id = "eyChat";
+      window.username = username;
       n.style.display = "none";
       n.innerHTML= `<div class="ey-chat-nav"><div id="eyChatClose" class="ey-close-btn">&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"><img src="chat/menu.png" alt="Menu"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form></div>`;
       document.body.appendChild(n);
