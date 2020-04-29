@@ -1,10 +1,10 @@
 function randomString(length) {
-	var text = "";
-	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for(var i = 0; i < length; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for(var i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }
 
 if (!window.localStorage) {
@@ -79,13 +79,8 @@ window.getUser = function() {
 }
 
 var user = window.getUser();
-window.isStarted = false;
 window.isChatting = false;
 window.menu = null;
-
-if (!window.eySocket) {
-  window.eySocket = new WebSocket("wss://l56bscq55e.execute-api.us-west-2.amazonaws.com/Production");
-}
 
 !function(e) {
     function n(r) {
@@ -322,10 +317,10 @@ if (!window.eySocket) {
             return a()(e, [{
                 key: "startWelcome",
                 value: function(ben) {
-									setTimeout(function() {
-										ben.handleEvent('welcome');
-										return
-									}, 0);
+                  setTimeout(function() {
+                    ben.handleEvent('welcome');
+                    return
+                  }, 0);
                 }
             }, {
                 key: "getSendInput",
@@ -596,22 +591,49 @@ if (!window.eySocket) {
             function e(n) {
                 var t = this;
                 o()(this, e), this.domHelper = n, this.handleSend = function() {
-                    t.handleInput()
+                    t.checkWS()
                 }, this.handleInputKeyDown = function(n) {
-                    n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.handleInput())
+                    n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.checkWS())
                 }, this.handleInputChange = function(n) {
                     if (n.target.value && n.target.value.length) {
                       t.domHelper.handleStartSend();
-										} else {
+                    } else {
                       t.domHelper.handleStopSend();
-										}
-                }, this.handleSendClick = function(n) {
-                    n.preventDefault(), n.stopPropagation(), t.handleInput()
-                }, this.handleChatWindow = function(n) {
-                    if (!window.isStarted) {
-                      t.domHelper.startWelcome(t);
-	                    window.isStarted = true;
                     }
+                }, this.initializeWS = function(isRestart) {
+//                  window.eySocket = new WebSocket("wss://d-73tb84jg90.execute-api.us-west-2.amazonaws.com");
+                  window.eySocket = new WebSocket("wss://ws.eyelevel.ai");
+                  if (isRestart) {
+                    window.eySocket.isStarted = true;
+                  } else {
+                    window.eySocket.isStarted = false;
+                  }
+                  window.eySocket.onerror = t.handleWSError;
+                  window.eySocket.onopen = t.handleWSOpen;
+                  window.eySocket.onmessage = t.handleWSMessage;
+                }, this.handleWSError = function(n) {
+                  console.error('WS error', window.eySocket);
+                }, this.handleWSOpen = function(n) {
+                  if (!window.eySocket.isStarted) {
+                    t.domHelper.startWelcome(t);
+                    window.eySocket.isStarted = true;
+                  } else {
+                    t.handleInput();
+                  }
+                }, this.handleWSMessage = function(n) {
+console.log('WS response', n);
+                }, this.checkWS = function() {
+                  if (!window.eySocket || window.eySocket.readyState !== 1) {
+                    t.initializeWS(window.eySocket ? true : false);
+                  }
+//t.handleInput();
+                }, this.handleSendClick = function(n) {
+                    n.preventDefault(), n.stopPropagation(), t.checkWS()
+                }, this.handleChatWindow = function(n) {
+                    if (!window.eySocket) {
+                      t.initializeWS();
+                    }
+//t.domHelper.startWelcome(t);
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
@@ -639,6 +661,7 @@ if (!window.eySocket) {
                             o = t.generateCallbacksForNode(r);
                         window.isChatting = true;
                         window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
+//s.a.post(e.API_URL, t.buildPayLoad(t.domHelper.getInputValue())).then(o.success, o.error), t.domHelper.setInputValue("");
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
                         t.scrollToBottom();
@@ -801,7 +824,7 @@ if (!window.eySocket) {
                         e.domHelper.handleStopRecognition(), e.isRecognizing = !1
                     }, n.onresult = function(n) {
                         for (var t = "", r = n.resultIndex; r < n.results.length; ++r) n.results[r].isFinal && (t += n.results[r][0].transcript);
-                        e.domHelper.setInputValue(t), e.handleInput()
+                        e.domHelper.setInputValue(t), e.checkWS()
                     }, n.lang = window.AGENT_LANGUAGE || "en-US", this.recognition = n
                 }
             }, {
@@ -836,7 +859,9 @@ if (!window.eySocket) {
                       o = t.generateCallbacksForNode(r);
                   window.isChatting = true;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
-									t.scrollToBottom();
+//s.a.post(e.API_URL, t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)).then(o.success, o.error);
+                        t.scrollToBottom();
+                  t.scrollToBottom();
                 }
             }, {
                 key: "buildPayLoad",

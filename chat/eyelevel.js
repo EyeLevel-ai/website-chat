@@ -42,7 +42,25 @@
       var eb = document.createElement("div");
       eb.id = "eyBubble";
       eb.classList.add("ey-app");
-      eb.innerHTML = `<div class="ey-app-container"><div class="ey-app-icon ey-app-active"><svg xmlns="http://www.w3.org/2000/svg" focusable="false" viewBox="0 0 28 32"><path d="M28,32 C28,32 23.2863266,30.1450667 19.4727818,28.6592 L3.43749107,28.6592 C1.53921989,28.6592 0,27.0272 0,25.0144 L0,3.6448 C0,1.632 1.53921989,0 3.43749107,0 L24.5615088,0 C26.45978,0 27.9989999,1.632 27.9989999,3.6448 L27.9989999,22.0490667 L28,22.0490667 L28,32 Z M23.8614088,20.0181333 C23.5309223,19.6105242 22.9540812,19.5633836 22.5692242,19.9125333 C22.5392199,19.9392 19.5537934,22.5941333 13.9989999,22.5941333 C8.51321617,22.5941333 5.48178311,19.9584 5.4277754,19.9104 C5.04295119,19.5629428 4.46760991,19.6105095 4.13759108,20.0170667 C3.97913051,20.2124916 3.9004494,20.4673395 3.91904357,20.7249415 C3.93763774,20.9825435 4.05196575,21.2215447 4.23660523,21.3888 C4.37862552,21.5168 7.77411059,24.5386667 13.9989999,24.5386667 C20.2248893,24.5386667 23.6203743,21.5168 23.7623946,21.3888 C23.9467342,21.2215726 24.0608642,20.9827905 24.0794539,20.7254507 C24.0980436,20.4681109 24.0195551,20.2135019 23.8614088,20.0181333 Z"></path></svg></div></div>`;
+      eb.innerHTML = `<div class="ey-app-container"><div class="ey-app-icon ey-app-active"><svg width="70px" height="70px" viewBox="0 0 70 70" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">    <defs>
+        <rect id="path-1" x="0" y="0" width="52" height="52" rx="8"></rect>
+        <filter x="-27.9%" y="-24.0%" width="155.8%" height="155.8%" filterUnits="objectBoundingBox" id="filter-2">
+            <feMorphology radius="1" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="2" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.354102928 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-5" transform="translate(9.000000, 7.000000)">
+            <g id="Rectangle">
+                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+            </g>
+            <path d="M39.0239411,10.4 L12.9760589,10.4 C10.5914328,10.4 8.66666667,12.3002964 8.66666667,14.6546066 L8.66666667,31.6730331 C8.66666667,34.0271542 10.5914328,35.9276397 12.9760589,35.9276397 L14.412523,35.9276397 L14.412523,40.1822464 C14.412523,41.2068502 15.4870939,41.9488536 16.5384899,41.4302643 C16.5672192,41.4019003 16.6247735,41.4019003 16.6535028,41.3734417 C24.5555875,36.1416937 22.7846188,37.3082123 24.5540552,36.1544575 C24.7837937,36.0126373 25.0423573,35.9276397 25.3296501,35.9276397 L39.0239411,35.9276397 C41.4085672,35.9276397 43.3333333,34.0271542 43.3333333,31.6730331 L43.3333333,14.6546066 C43.3333333,12.3002964 41.4085672,10.4 39.0239411,10.4 Z M35.4423573,27.4184265 L23.759116,27.4184265 C21.8655691,27.4184265 21.8578122,24.5820221 23.759116,24.5820221 L35.4423573,24.5820221 C37.3359042,24.5820221 37.3436611,27.4184265 35.4423573,27.4184265 Z M36.1510129,21.7456177 L15.8489871,21.7456177 C13.9554401,21.7456177 13.9476832,18.9092132 15.8489871,18.9092132 L36.1510129,18.9092132 C38.0445599,18.9092132 38.0523168,21.7456177 36.1510129,21.7456177 Z" id="Shape" fill="#6897CD" fill-rule="nonzero" transform="translate(26.000000, 26.000000) scale(-1, 1) translate(-26.000000, -26.000000) "></path>
+        </g>
+    </g>
+</svg></div></div>`;
       eb.addEventListener("click", openChat);
       document.body.appendChild(eb);
       var es = document.createElement("style");
@@ -69,50 +87,26 @@
     z-index: 2147483002;
     bottom: 20px;
     right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #3047EC;
+    width: 70px;
+    height: 70px;
     cursor: pointer;
-    box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.06), 0 2px 32px 0 rgba(0, 0, 0, 0.16);
+
     animation: ey-app-container 250ms ease;
   }
   .ey-app-container:focus {
     outline: none;
   }
-  .ey-app-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 60px;
-    height: 60px;
-    transition: transform 100ms linear, opacity 80ms linear;
-  }
+
   .ey-app-active {
     opacity: 1;
     transform: rotate(0deg) scale(1);
   }
-  .ey-app-active svg {
-    width: 28px;
-    height: 32px;
-  }
-  .ey-app-active svg path {
-    fill: rgb(255, 255, 255);
-  }
+
   .ey-app-inactive {
     opacity: 0;
     transform: rotate(-30deg) scale(0);
   }
-  .ey-app-inactive svg {
-    width: 14px;
-    height: 14px;
-  }
-  .ey-app-inactive svg path {
-    fill: rgb(255, 255, 255);
-  }`;
+`;
       document.body.appendChild(es);
 
       var n=document.createElement("section");
