@@ -318,7 +318,7 @@ window.menu = null;
                 key: "startWelcome",
                 value: function(ben) {
                   setTimeout(function() {
-                    ben.handleEvent('welcome');
+                    ben.handleEvent('welcome', 'welcome');
                     return
                   }, 0);
                 }
@@ -593,6 +593,7 @@ window.menu = null;
                 o()(this, e), this.domHelper = n, this.handleSend = function() {
                     t.checkWS()
                 }, this.handleInputKeyDown = function(n) {
+console.log('enter');
                     n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.checkWS())
                 }, this.handleInputChange = function(n) {
                     if (n.target.value && n.target.value.length) {
@@ -601,7 +602,6 @@ window.menu = null;
                       t.domHelper.handleStopSend();
                     }
                 }, this.initializeWS = function(isRestart) {
-//                  window.eySocket = new WebSocket("wss://d-73tb84jg90.execute-api.us-west-2.amazonaws.com");
                   window.eySocket = new WebSocket("wss://ws.eyelevel.ai");
                   if (isRestart) {
                     window.eySocket.isStarted = true;
@@ -621,12 +621,35 @@ window.menu = null;
                     t.handleInput();
                   }
                 }, this.handleWSMessage = function(n) {
-console.log('WS response', n);
+console.log(n.data);
+                  window.isChatting = false;
+                  if (n && n.data) {
+                    try {
+                      var wsRes = JSON.parse(n.data)
+                      if (wsRes) {
+                        if (window.eySocket.typingElement) {
+											    t.createMessage(wsRes, window.eySocket.typingElement);
+											  } else {
+											    t.createMessage(wsRes);
+											  }
+                      } else {
+//TODO alert
+                      console.error("Invalid WS response payload");
+                      }
+										} catch(err) {
+//TODO alert
+                      console.error(err);
+                    }
+                  } else {
+//TODO alert
+                      console.error("Invalid WS response");
+                  }
                 }, this.checkWS = function() {
                   if (!window.eySocket || window.eySocket.readyState !== 1) {
                     t.initializeWS(window.eySocket ? true : false);
-                  }
-//t.handleInput();
+                  } else {
+                    t.handleInput();
+									}
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleChatWindow = function(n) {
@@ -653,17 +676,16 @@ console.log('WS response', n);
                         nn.appendChild(ee[i]);
                     }
                     return nn, this
-                }, this.handleInput = function() {
+                }, this.handleInput = function(type) {
                     var n = t.domHelper.getInputValue();
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
                         t.domHelper.addUserRequestNode(t.escapeString(n));
-                        var r = t.empty(),
-                            o = t.generateCallbacksForNode(r);
                         window.isChatting = true;
                         window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
 //s.a.post(e.API_URL, t.buildPayLoad(t.domHelper.getInputValue())).then(o.success, o.error), t.domHelper.setInputValue("");
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
+                        window.isChatting = false;
                         t.scrollToBottom();
                     }
                 }, this.sessionId = this.guid(), this.stage = 'welcome', this.nextStage = 'welcome', this.confirmationValue = null, this.menu = null, this.handleMenuButtonClick = function(ben) {
@@ -736,6 +758,21 @@ console.log('WS response', n);
                             }
                         }
                         return html;
+                    }, quick_reply: function(data) {
+											var button = t.domHelper.workplace.createElement('button');
+											button.classList.add('chat-button');
+											button.setAttribute('id', data.payload);
+											button.innerHTML = data.payload;
+											button.onclick = t.sendButton.bind(t);
+											return button;
+                    }, quick_replies: function(data) {
+                        var html = [];
+                        for (var i in data) {
+													if (data[i].content_type && data[i].content_type === 'text') {
+														html.push(t.chat.quick_reply(data[i]));
+													}
+                        }
+                        return html;
                     }
                 }, this.createMessage = function(msg, obj) {
                     return new Promise(function(resolve, reject) {
@@ -745,52 +782,46 @@ console.log('WS response', n);
                         } else {
                             ttt = t.empty();
                         }
+                        var data = JSON.parse(msg.payload);
+console.log(data);
                         var html = '';
-                        if (msg.buttons) {
-                            html = t.chat.buttons(msg.buttons);
-                            ttt.className += ' chat-buttons';
-                        } else {
-                            html = t.chat.text(msg.speech);
+                        var needsReset = false;
+												if (data.text) {
+												  html = t.chat.text(data.text);
+												  t.setText(html, ttt);
+												  needsReset = true;
+												}
+												if (data.attachment && data.attachment.payload && data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
+                          html = t.chat.text(data.attachment.payload.url);
+                          t.setText(html, ttt);
+												  needsReset = true;
+												}
+                        if (data.buttons) {
+                          if (needsReset) {
+                            ttt = t.empty();
+                          }
+                          html = t.chat.buttons(data.buttons);
+													ttt.className += ' chat-buttons';
+													t.setObject(html, ttt);
+                        } else if (data.quick_replies) {
+                          if (needsReset) {
+                            ttt = t.empty();
+                          }
+                          html = t.chat.quick_replies(data.quick_replies);
+													ttt.className += ' chat-buttons';
+													t.setObject(html, ttt);
                         }
-                        if (msg.delay) {
-                            setTimeout(function() {
-                                if (msg.speech) {
-                                    t.setText(html, ttt);
-                                } else {
-                                    t.setObject(html, ttt);
-                                }
-                                t.scrollToBottom();
-                                resolve();
-                            }, msg.delay);
-                        } else {
-                            if (msg.speech) {
-                                t.setText(html, ttt);
-                            } else {
-                                t.setObject(html, ttt);
-                            }
-                            t.scrollToBottom();
+                        t.scrollToBottom();
+                        if (msg.typing) {
+                          setTimeout(function() {
+                            window.eySocket.typingElement = t.empty();
                             resolve();
+                          }, Math.floor(Math.random()*(600-400+1)+400));
+                        } else {
+                          window.eySocket.typingElement = null;
+                          resolve();
                         }
                     });
-                }, this.printMessage = function(msg, obj) {
-                    if (msg.length) {
-                        var m = msg.shift();
-                        if (!obj && m.speech) {
-                            m.delay = Math.floor(Math.random()*(900-600+1)+600);
-                        }
-                        return t.createMessage(m, obj)
-                            .then(function(r) {
-                                if (msg.length) {
-                                    setTimeout(function() {
-                                        t.printMessage(msg);
-                                    }, Math.floor(Math.random()*(600-400+1)+400));
-                                } else {
-                                    t.printMessage(msg);
-                                }
-                            });
-                    } else {
-                        return Promise.resolve();
-                    }
                 }
             }
             return a()(e, [{
@@ -854,13 +885,11 @@ console.log('WS response', n);
             }, {
                 key: "handleEvent",
                 value: function(evt, type, dt) {
-                  var t = this,
-                      r = t.empty(),
-                      o = t.generateCallbacksForNode(r);
+                  var t = this;
                   window.isChatting = true;
+                  window.eySocket.typingElement = t.empty();
                   window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
 //s.a.post(e.API_URL, t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)).then(o.success, o.error);
-                        t.scrollToBottom();
                   t.scrollToBottom();
                 }
             }, {
@@ -868,13 +897,7 @@ console.log('WS response', n);
                 value: function(e, ty, dt) {
                     var ben = {
                         type: ty || 'text',
-                        value: {
-                            value: encodeURI(e),
-                            passthrough: {
-                              dialog: 'signup',
-                              stage: this.confirmationValue ? this.stage : this.nextStage
-                            }
-                        },
+                        data: e,
                         username: window.username,
                         path: window.location.pathname,
                         uid: user.userId
@@ -886,31 +909,6 @@ console.log('WS response', n);
                         ben.value.passthrough.request = dt;
                     }
                     return ben;
-                }
-            }, {
-                key: "handleResponse",
-                value: function(n, t) {
-                    window.isChatting = false;
-                    var r = n.response ? n.response : n.responseText,
-                        o = null;
-                    try {
-                        o = JSON.parse(r)
-                    } catch (e) {
-                        return this.handleError(o, t)
-                    }
-                    if (!(o.status && o.status.code && o.status.code === e.HTTP_STATUS.OK && o.status.nextStage && o.result && o.result)) return this.handleError(o, t);
-                    var i = this.getSpeech(o.result);
-                    this.stage = o.status.thisStage;
-                    this.nextStage = o.status.nextStage;
-                    if (o.menu) {
-                        this.loadMenu(o.menu);
-                    }
-                    if (o.confirmationValue) {
-                        this.confirmationValue = o.confirmationValue;
-                    } else {
-                        this.confirmationValue = null;
-                    }
-                    this.printMessage(i, t);
                 }
             }, {
                 key: "generateCallbacksForNode",
