@@ -78,6 +78,21 @@ window.getUser = function() {
   return { userId: userId, newUser: newUser };
 }
 
+saveInteraction = function(interaction) {
+  var h = window.localStorage.getItem('eyelevel.conversation.history');
+	var history = JSON.parse(h);
+  if (history) {
+    history.push(interaction)
+  } else {
+    history = [interaction];
+  }
+  window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
+}
+
+retrieveInteractions = function() {
+  return JSON.parse(window.localStorage.getItem('eyelevel.conversation.history'));
+}
+
 var user = window.getUser();
 window.isChatting = false;
 window.menu = null;
@@ -318,7 +333,7 @@ window.menu = null;
                 key: "startWelcome",
                 value: function(ben) {
                   setTimeout(function() {
-                    ben.handleEvent('welcome', 'welcome');
+                    ben.handleEvent('startWelcome', 'startWelcome');
                     return
                   }, 0);
                 }
@@ -593,7 +608,6 @@ window.menu = null;
                 o()(this, e), this.domHelper = n, this.handleSend = function() {
                     t.checkWS()
                 }, this.handleInputKeyDown = function(n) {
-console.log('enter');
                     n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.checkWS())
                 }, this.handleInputChange = function(n) {
                     if (n.target.value && n.target.value.length) {
@@ -602,20 +616,38 @@ console.log('enter');
                       t.domHelper.handleStopSend();
                     }
                 }, this.initializeWS = function(isRestart) {
-                  window.eySocket = new WebSocket("wss://ws.eyelevel.ai");
+                  window.eySocket = new WebSocket(`wss://ws.eyelevel.ai?uid=${user.userId}&username=${window.username}`);
+                  window.eySocket.connectTime = Date.now();
                   if (isRestart) {
                     window.eySocket.isStarted = true;
                   } else {
                     window.eySocket.isStarted = false;
                   }
+                  if (window.eySocket.connectAttempts) {
+                    window.eySocket.connectAttempts += 1;
+                  } else {
+                    window.eySocket.connectAttempts += 1;
+                  }
                   window.eySocket.onerror = t.handleWSError;
                   window.eySocket.onopen = t.handleWSOpen;
                   window.eySocket.onmessage = t.handleWSMessage;
+                  window.eySocket.onclose = t.handleWSClose;
+                }, this.handleWSClose = function(n) {
+                  var now = Date.now();
+                  console.log('ws closed');
+                  if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 5000 > now || window.eySocket.connectAttempts < 4)) {
+                    console.log('reconnecting');
+                    setTimeout(function() {
+                      t.initializeWS(true);
+                    }, 1000);
+									}
                 }, this.handleWSError = function(n) {
                   console.error('WS error', window.eySocket);
                 }, this.handleWSOpen = function(n) {
+                  window.eySocket.connectAttempts = 0;
                   if (!window.eySocket.isStarted) {
-                    t.domHelper.startWelcome(t);
+console.log(retrieveInteractions());
+//                    t.domHelper.startWelcome(t);
                     window.eySocket.isStarted = true;
                   } else {
                     t.handleInput();
@@ -632,6 +664,8 @@ console.log(n.data);
 											  } else {
 											    t.createMessage(wsRes);
 											  }
+											  wsRes.sender = "server";
+											  saveInteraction(wsRes);
                       } else {
 //TODO alert
                       console.error("Invalid WS response payload");
@@ -656,7 +690,6 @@ console.log(n.data);
                     if (!window.eySocket) {
                       t.initializeWS();
                     }
-//t.domHelper.startWelcome(t);
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
@@ -681,6 +714,7 @@ console.log(n.data);
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
                         t.domHelper.addUserRequestNode(t.escapeString(n));
                         window.isChatting = true;
+                        saveInteraction({ action: "message", payload: JSON.stringify({ text: t.domHelper.getInputValue() }), typing: false, sender: "user" });
                         window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
 //s.a.post(e.API_URL, t.buildPayLoad(t.domHelper.getInputValue())).then(o.success, o.error), t.domHelper.setInputValue("");
                         t.domHelper.setInputValue("");
@@ -783,7 +817,7 @@ console.log(n.data);
                             ttt = t.empty();
                         }
                         var data = JSON.parse(msg.payload);
-console.log(data);
+console.log(msg);
                         var html = '';
                         var needsReset = false;
 												if (data.text) {
@@ -888,7 +922,9 @@ console.log(data);
                   var t = this;
                   window.isChatting = true;
                   window.eySocket.typingElement = t.empty();
+                  saveInteraction({ action: "message", payload: JSON.stringify({ text: evt || t.domHelper.getInputValue() }), typing: false, sender: "user" });
                   window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
+									window.isChatting = false;
 //s.a.post(e.API_URL, t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)).then(o.success, o.error);
                   t.scrollToBottom();
                 }
