@@ -29,10 +29,6 @@
         return;
       }
 
-      var firstScript = document.getElementsByTagName('script')[0];
-      var jqs = document.createElement('script');
-      jqs.src = 'chat/3rdparty.js';
-      firstScript.parentNode.insertBefore(jqs, firstScript);
 /*
       var e = document.querySelector('meta[name="referrer"]'),
       t = e ? '<meta name="referrer" content="' + e.content + '">' : "",
@@ -106,27 +102,31 @@
     opacity: 0;
     transform: rotate(-30deg) scale(0);
   }
+  .ey-section {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200000000;
+  }
+  .ey-chat {
+    width: 100%;
+    height: 100%;
+  }
 `;
       document.body.appendChild(es);
 
       var n=document.createElement("section");
       n.classList.add("ey-section");
-      n.classList.add("ey-chat");
       n.id = "eyChat";
-      window.username = username;
       n.style.display = "none";
-      n.innerHTML= `<div class="ey-chat-nav"><div id="eyChatClose" class="ey-close-btn">&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"><img src="chat/menu.png" alt="Menu"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form></div>`;
+      n.innerHTML= `<iframe class="ey-chat"><html><head><script src="chat/3rdparty.js"></script><script src="chat/agent.js"></script><script>window.username = username;</script><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="chat/chat.css" rel="stylesheet" type="text/css"></head><body><div class="ey-container"><div class="ey-chat-nav"><div id="eyChatClose" class="ey-close-btn">&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"><img src="chat/menu.png" alt="Menu"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form></div></div></body></html><iframe>`;
       document.body.appendChild(n);
       var close = document.getElementById("eyChatClose");
       close.addEventListener("click", closeChat);
-      var as = document.createElement('script');
-      as.src = 'chat/agent.js';
-      firstScript.parentNode.insertBefore(as, firstScript);
-      var raf=window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-      raf ? raf(function() {
-        window.setTimeout(loadDeferredStyles,0)
-      }) : window.addEventListener("load", loadDeferredStyles);
-
     },
   };
   var execute = function() {

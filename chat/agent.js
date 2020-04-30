@@ -67,6 +67,7 @@ if (!window.localStorage) {
     this.enumerable = true;
   })());
 }
+//window.localStorage.removeItem('eyelevel.conversation.history');
 window.getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var newUser = false;
@@ -79,6 +80,7 @@ window.getUser = function() {
 }
 
 saveInteraction = function(interaction) {
+return;
   var h = window.localStorage.getItem('eyelevel.conversation.history');
 	var history = JSON.parse(h);
   if (history) {
@@ -646,14 +648,25 @@ window.menu = null;
                 }, this.handleWSOpen = function(n) {
                   window.eySocket.connectAttempts = 0;
                   if (!window.eySocket.isStarted) {
-console.log(retrieveInteractions());
-//                    t.domHelper.startWelcome(t);
+                    var inter = retrieveInteractions();
+                    if (inter && inter.length) {
+                      for (var ji = 0; ji < inter.length; ji++) {
+											  var int1 = inter[ji];
+											  var pay = JSON.parse(int1.payload);
+											  if (int1.sender === 'user') {
+                          t.domHelper.addUserRequestNode(pay.text);
+											  } else {
+                          t.createMessage(int1);
+											  }
+                      }
+										} else {
+                      t.domHelper.startWelcome(t);
+                    }
                     window.eySocket.isStarted = true;
                   } else {
                     t.handleInput();
                   }
                 }, this.handleWSMessage = function(n) {
-console.log(n.data);
                   window.isChatting = false;
                   if (n && n.data) {
                     try {
@@ -690,6 +703,7 @@ console.log(n.data);
                     if (!window.eySocket) {
                       t.initializeWS();
                     }
+                    t.scrollToBottom();
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
@@ -714,7 +728,10 @@ console.log(n.data);
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
                         t.domHelper.addUserRequestNode(t.escapeString(n));
                         window.isChatting = true;
-                        saveInteraction({ action: "message", payload: JSON.stringify({ text: t.domHelper.getInputValue() }), typing: false, sender: "user" });
+                        var txt = t.domHelper.getInputValue();
+                        if (txt !== 'startWelcome') {
+                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                        }
                         window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
 //s.a.post(e.API_URL, t.buildPayLoad(t.domHelper.getInputValue())).then(o.success, o.error), t.domHelper.setInputValue("");
                         t.domHelper.setInputValue("");
@@ -922,7 +939,10 @@ console.log(msg);
                   var t = this;
                   window.isChatting = true;
                   window.eySocket.typingElement = t.empty();
-                  saveInteraction({ action: "message", payload: JSON.stringify({ text: evt || t.domHelper.getInputValue() }), typing: false, sender: "user" });
+                  var txt = evt || t.domHelper.getInputValue();
+                  if (txt !== 'startWelcome') {
+                    saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                  }
                   window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
 									window.isChatting = false;
 //s.a.post(e.API_URL, t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)).then(o.success, o.error);
@@ -1667,7 +1687,7 @@ console.log(msg);
         f && !f[a] && o(f, a, c), i[c] = i.Array
     }
 }, function(e, n, t) {
-    n = e.exports = t(77)(), n.push([e.i, 'body {\n  margin: 0;\n  background: white;\n}\nform {\n  margin: 0;\n}\n.ey-chat {\n  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;\n  font-weight: 300;\n  width: 100%;\n  height: auto;\n  color: #2b313f;\n font-size: 1.25em; overflow: hidden;\n  position: absolute;\n  top: 0;\n  bottom: 0;\n  left: 0;\n  right: 0;\n z-index: 2000000000;\n}.ey-chat .user-request,\n.ey-chat .server-response {\n  display: inline-block;\n  padding: 15px 25px;\n  border-radius: 3px;\n  margin-bottom: 5px;\n clear: both;\n}\n.ey-chat .user-request.server-response-error,\n.ey-chat .server-response.server-response-error {\n  background-color: #F76949;\n}\n.ey-chat .user-request {\n  float: left;\n  margin-right: 15px;\n  margin-top: 15px;\n  margin-left: 15px;\n}.ey-chat .server-response {\n  float: right;\n  margin-top: 15px;\n  margin-right: 15px;\n  margin-left: 15px;\n}\n.ey-chat .ey_result {\n  overflow-y: auto;\n  background: white;\n  position: fixed;\n  top: 80px;\n  bottom: 55px;\n  width: 100%;\n}\n.ey-chat .ey_result-table {\n  height: 100%;\n  min-height: 100%;\n  width: 100%;\n}\n.ey-chat .ey_result-table td {\n  vertical-align: bottom; padding-bottom: 15px;\n}\n.ey-chat .ey_input {\n  position: fixed;\n  bottom: 0;\n  height: 55px;\n  border-top: 1px solid lightgray;\n  background-color: white;\n  width: 100%;\n}\n.ey-chat #agentDemoForm {\n  display: block;\n  margin-left: 24px;\n  margin-right: 55px;\n}\n.ey-chat #query {\n  width: 100%;\n  border: 0;\n font-weight: 300;\n  margin: 0;\n  height: 55px;\n}\n.ey-chat #query:focus {\n  outline: none;\n  outline-offset: 0;\n}\n.ey-chat .ey_input-send {\n  display: none;\n  position: absolute;\n  font-size: 1.75em;\n  width: 54px;\n  height: 54px;\n  right: 0;\n  bottom: 0;\n  cursor: pointer;\n  text-align: center;\n  /* line-height: 30px; */\n  line-height: 54px;\n  background: white;\n  color: white;\n}\n.ey-chat .ey_input-send.active {\n  color: #4970f7;\n}\n.ey-chat .b-agent-demo_powered_by {\n  position: fixed;\n  left: 0;\n  right: 0;\n  top: 80px;\n  height: 30px;\n  background-color: #F8F8F8;\n  vertical-align: middle;\n}\n.ey-chat .b-agent-demo_powered_by span {\n  color: #B7BBC4;\n  text-transform: uppercase;\n  float: right;\n  vertical-align: middle;\n  line-height: 20px;\n  margin-top: 5px;\n  margin-right: 10px;\n  font-size: 0.75em;\n  margin-left: -10px;\n}\n.ey-chat .b-agent-demo_powered_by img {\n  margin-top: 7px;\n  height: 16px;\n  margin-right: 20px;\n  float: right;\n  vertical-align: middle;\n  border: 0;\n}\n.clearfix {\n  clear: both;\n}\n', ""])
+    n = e.exports = t(77)()
 }, function(e, n) {
     e.exports = function() {
         var e = [];
