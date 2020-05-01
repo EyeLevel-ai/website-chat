@@ -798,6 +798,9 @@ window.menu = null;
                         button.classList.add('chat-button');
                         if (data.type === 'phone_number') {
                           button.classList.add('click-to-call');
+                        } else if (data.type === 'web_url') {
+                          button.classList.add('web-url');
+                          button.value = data.url;
                         }
                         button.setAttribute('id', data.payload);
                         button.innerHTML = data.title;
@@ -841,6 +844,7 @@ window.menu = null;
                             ttt = t.empty();
                         }
                         var data = JSON.parse(msg.payload);
+console.log(data);
                         var html = '';
                         var needsReset = false;
 												if (data.text) {
@@ -937,12 +941,19 @@ window.menu = null;
             }, {
                 key: "sendButton",
                 value: function(ee) {
-                  ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
+//                  ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
 									if (ee.target.classList.contains('click-to-call')) {
                     var aa = document.createElement('a');
                     aa.href = `tel:${ee.target.id}`;
                     aa.click();
                     this.handleEvent(`tel:${ee.target.id}`);
+									  t.scrollToBottom();
+                  } else if (ee.target.classList.contains('web-url')) {
+                    var aa = document.createElement('a');
+                    aa.href = ee.target.value;
+                    aa.target = '_blank';
+                    aa.click();
+                    this.handleEvent(`web}${ee.target.value}`);
 									  t.scrollToBottom();
 									} else {
                     this.handleEvent(ee.target.id);
@@ -972,15 +983,24 @@ window.menu = null;
                   var t = this;
                   window.isChatting = true;
                   var txt = evt || t.domHelper.getInputValue();
+                  var shouldSend = true;
                   if (txt !== 'startWelcome') {
-                    if (evt.indexOf('tel:') < 0) {
-                      t.domHelper.addUserRequestNode(evt);
+                    if (txt.indexOf('tel:') < 0) {
+                      if (txt.indexOf('web}') < 0) {
+                        t.domHelper.addUserRequestNode(txt);
+                      } else {
+                        shouldSend = false;
+												txt = txt.replace('web}', '');
+                        t.domHelper.addUserRequestNode(txt);
+                      }
                     } else {
-                      t.domHelper.addUserRequestNode(evt.replace('tel:', 'Our number is ') + '.');
+                      shouldSend = false;
+                      txt = txt.replace('tel:', 'Our number is ') + '.';
+                      t.domHelper.addUserRequestNode(txt);
                     }
                     saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                   }
-                  if (evt.indexOf('tel:') < 0) {
+                  if (shouldSend) {
                     window.eySocket.typingElement = t.empty();
                     window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
                   }
