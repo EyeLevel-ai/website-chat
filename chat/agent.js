@@ -329,7 +329,7 @@ window.menu = null;
         a = t.n(i),
         u = function() {
             function e() {
-                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
+                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID), this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
             }
             return a()(e, [{
                 key: "startWelcome",
@@ -397,6 +397,11 @@ window.menu = null;
                     return this.workplace
                 }
             }, {
+                key: "getCloseWindow",
+                value: function() {
+                    return this.closeWindow
+                }
+            }, {
                 key: "getChatWindow",
                 value: function() {
                     return this.chatWindow
@@ -445,7 +450,7 @@ window.menu = null;
                 }
             }]), e
         }();
-    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
+    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
 }, function(e, n, t) {
     var r = t(8),
         o = t(0)("toStringTag"),
@@ -646,6 +651,7 @@ window.menu = null;
                 }, this.handleWSError = function(n) {
                   console.error('WS error', window.eySocket);
                 }, this.handleWSOpen = function(n) {
+console.log('open');
                   window.eySocket.connectAttempts = 0;
                   if (!window.eySocket.isStarted) {
                     var inter = retrieveInteractions();
@@ -699,6 +705,9 @@ window.menu = null;
 									}
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
+                }, this.handleCloseWindow = function(n) {
+console.log('close');
+                  window.parent.postMessage("toggle", "*");
                 }, this.handleChatWindow = function(n) {
                     if (!window.eySocket) {
                       t.initializeWS();
@@ -788,8 +797,11 @@ window.menu = null;
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
                         button.classList.add('chat-button');
-                        button.setAttribute('id', data.intent);
-                        button.innerHTML = data.label;
+                        if (data.type === 'phone_number') {
+                          button.classList.add('click-to-call');
+                        }
+                        button.setAttribute('id', data.payload);
+                        button.innerHTML = data.title;
                         button.onclick = t.sendButton.bind(t);
                         return button;
                     }, button_facebook: function(data) {
@@ -802,11 +814,7 @@ window.menu = null;
                     }, buttons: function(data) {
                         var html = [];
                         for (var i in data) {
-                            if (data[i].type && t.chat['button_' + data[i].type]) {
-                                html.push(t.chat['button_' + data[i].type](data[i]));
-                            } else {
-                                html.push(t.chat.button(data[i]));
-                            }
+                          html.push(t.chat.button(data[i]));
                         }
                         return html;
                     }, quick_reply: function(data) {
@@ -835,6 +843,7 @@ window.menu = null;
                         }
                         var data = JSON.parse(msg.payload);
 console.log(msg);
+console.log(data);
                         var html = '';
                         var needsReset = false;
 												if (data.text) {
@@ -842,19 +851,32 @@ console.log(msg);
 												  t.setText(html, ttt);
 												  needsReset = true;
 												}
-												if (data.attachment && data.attachment.payload && data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
-                          html = t.chat.text(data.attachment.payload.url);
-                          t.setText(html, ttt);
-												  needsReset = true;
-												}
-                        if (data.buttons) {
-                          if (needsReset) {
-                            ttt = t.empty();
+												if (data.attachment && data.attachment.payload) {
+                          if (data.attachment.payload.text) {
+                            if (needsReset) {
+                              ttt = t.empty();
+                            }
+                            t.setText(t.chat.text(data.attachment.payload.text), ttt);
+												    needsReset = true;
+												  }
+												  if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
+                            if (needsReset) {
+                              ttt = t.empty();
+                            }
+                            html = t.chat.text(data.attachment.payload.url);
+                            t.setText(html, ttt);
+												    needsReset = true;
+												  }
+                          if (data.attachment.payload.buttons) {
+                            if (needsReset) {
+                              ttt = t.empty();
+                            }
+                            html = t.chat.buttons(data.attachment.payload.buttons);
+													  ttt.className += ' chat-buttons';
+													  t.setObject(html, ttt);
                           }
-                          html = t.chat.buttons(data.buttons);
-													ttt.className += ' chat-buttons';
-													t.setObject(html, ttt);
-                        } else if (data.quick_replies) {
+                        }
+                        if (data.quick_replies) {
                           if (needsReset) {
                             ttt = t.empty();
                           }
@@ -878,7 +900,14 @@ console.log(msg);
             return a()(e, [{
                 key: "bindEventHandlers",
                 value: function() {
-                    this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1), this.domHelper.getChatWindow().addEventListener("toggle", this.handleChatWindow, !1), this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1), this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1), "webkitSpeechRecognition" in window && (this.initRecognition(), u.a.showNode(this.domHelper.getSendInput()), this.domHelper.getSendInput().addEventListener("click", this.handleSend, !1)), this.domHelper.getMenuButton().addEventListener("click", this.handleMenuButtonClick, !1), this.domHelper.getBody().addEventListener("click", this.handleBodyClick, !1)
+                    this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
+                    window.addEventListener("message", this.handleChatWindow),
+                    this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, !1),
+                    this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
+                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1), "webkitSpeechRecognition" in window && (this.initRecognition(), u.a.showNode(this.domHelper.getSendInput()),
+                    this.domHelper.getSendInput().addEventListener("click", this.handleSend, !1)),
+                    this.domHelper.getMenuButton().addEventListener("click", this.handleMenuButtonClick, !1),
+                    this.domHelper.getBody().addEventListener("click", this.handleBodyClick, !1)
                 }
             }, {
                 key: "handleMenuItemClick",
@@ -912,8 +941,16 @@ console.log(msg);
             }, {
                 key: "sendButton",
                 value: function(ee) {
-                    ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
+                  ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
+									if (ee.target.classList.contains('click-to-call')) {
+                    var aa = document.createElement('a');
+                    aa.href = `tel:${ee.target.id}`;
+                    aa.click();
+                    this.handleEvent(`tel:${ee.target.id}`);
+									  t.scrollToBottom();
+									} else {
                     this.handleEvent(ee.target.id);
+                  }
                 }
             }, {
                 key: "facebookButton",
@@ -938,14 +975,20 @@ console.log(msg);
                 value: function(evt, type, dt) {
                   var t = this;
                   window.isChatting = true;
-                  window.eySocket.typingElement = t.empty();
                   var txt = evt || t.domHelper.getInputValue();
                   if (txt !== 'startWelcome') {
+                    if (evt.indexOf('tel:') < 0) {
+                      t.domHelper.addUserRequestNode(evt);
+                    } else {
+                      t.domHelper.addUserRequestNode(evt.replace('tel:', 'Our number is ') + '.');
+                    }
                     saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                   }
-                  window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
+                  if (evt.indexOf('tel:') < 0) {
+                    window.eySocket.typingElement = t.empty();
+                    window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
+                  }
 									window.isChatting = false;
-//s.a.post(e.API_URL, t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)).then(o.success, o.error);
                   t.scrollToBottom();
                 }
             }, {
