@@ -115,7 +115,8 @@ noscript h1 {
   padding: 16px 28px 0 0;
   font-size: 30px;
   text-align: right;
-  color: #d8d8d8;
+  color: transparent;
+  text-shadow: 0 0 0 #d8d8d8;
 }
 .ey-chat .chat-buttons {
   margin-top: 0;
@@ -250,6 +251,7 @@ noscript h1 {
 }
 .ey-chat .ey_input-send.active {
   color: #4970f7;
+  display: block;
 }
 .ey-chat .b-agent-demo_powered_by {
   position: fixed;
@@ -361,4 +363,4 @@ noscript h1 {
   font-style: italic;
   color: #393939;
 }
-@font-face{font-family:icomoon;src:url(icomoon.eot?o8kcso);src:url(icomoon.eot?o8kcso#iefix) format('embedded-opentype'),url(icomoon.ttf?o8kcso) format('truetype'),url(icomoon.woff?o8kcso) format('woff'),url(icomoon.svg?o8kcso#icomoon) format('svg');font-weight:400;font-style:normal}[class*=" icon-"],[class^=icon-]{font-family:icomoon!important;speak:none;font-style:normal;font-weight:400;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-send:before{content:"\ea42"}
+@font-face{font-family:icomoon;src:url('://cdn.eyelevel.ai/chat/icomoon.eot?o8kcso');src:url('://cdn.eyelevel.ai/chat/icomoon.eot?o8kcso#iefix') format('embedded-opentype'),url('://cdn.eyelevel.ai/chat/icomoon.ttf?o8kcso') format('truetype'),url(icomoon.woff?o8kcso) format('woff'),url('://cdn.eyelevel.ai/chat/icomoon.svg?o8kcso#icomoon') format('svg');font-weight:400;font-style:normal}[class*=" icon-"],[class^=icon-]{font-family:icomoon!important;speak:none;font-style:normal;font-weight:400;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-send:before{content:"\ea42"}

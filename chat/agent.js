@@ -612,8 +612,8 @@ window.menu = null;
         c = function() {
             function e(n) {
                 var t = this;
-                o()(this, e), this.domHelper = n, this.handleSend = function() {
-                    t.checkWS()
+                o()(this, e), this.domHelper = n, this.handleSend = function(n) {
+                    n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleInputKeyDown = function(n) {
                     n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.checkWS())
                 }, this.handleInputChange = function(n) {
@@ -651,7 +651,6 @@ window.menu = null;
                 }, this.handleWSError = function(n) {
                   console.error('WS error', window.eySocket);
                 }, this.handleWSOpen = function(n) {
-console.log('open');
                   window.eySocket.connectAttempts = 0;
                   if (!window.eySocket.isStarted) {
                     var inter = retrieveInteractions();
@@ -706,7 +705,8 @@ console.log('open');
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleCloseWindow = function(n) {
-console.log('close');
+                  n.preventDefault();
+                  n.stopPropagation();
                   window.parent.postMessage("toggle", "*");
                 }, this.handleChatWindow = function(n) {
                     if (!window.eySocket) {
@@ -742,7 +742,6 @@ console.log('close');
                           saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                         }
                         window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
-//s.a.post(e.API_URL, t.buildPayLoad(t.domHelper.getInputValue())).then(o.success, o.error), t.domHelper.setInputValue("");
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
                         window.isChatting = false;
@@ -842,8 +841,6 @@ console.log('close');
                             ttt = t.empty();
                         }
                         var data = JSON.parse(msg.payload);
-console.log(msg);
-console.log(data);
                         var html = '';
                         var needsReset = false;
 												if (data.text) {
@@ -903,11 +900,10 @@ console.log(data);
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
                     window.addEventListener("message", this.handleChatWindow),
                     this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, !1),
+                    this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, !1),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
-                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1), "webkitSpeechRecognition" in window && (this.initRecognition(), u.a.showNode(this.domHelper.getSendInput()),
-                    this.domHelper.getSendInput().addEventListener("click", this.handleSend, !1)),
-                    this.domHelper.getMenuButton().addEventListener("click", this.handleMenuButtonClick, !1),
-                    this.domHelper.getBody().addEventListener("click", this.handleBodyClick, !1)
+                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1),
+                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1)
                 }
             }, {
                 key: "handleMenuItemClick",
@@ -1038,7 +1034,7 @@ console.log(data);
                 }
             }]), e
         }();
-    n.a = c, c.API_URL = "https://api.eyelevel.ai/chat/" + user.userId, c.DEFAULT_ERROR = "Sorry, it seems like there was an error during the request.", c.DEFAULT_NO_ANSWER = "[empty response]", c.HTTP_STATUS = {
+    n.a = c, c.DEFAULT_ERROR = "Sorry, it seems like there was an error during the request.", c.DEFAULT_NO_ANSWER = "[empty response]", c.HTTP_STATUS = {
         OK: 200
     }, c.KEY_CODES = {
         ENTER: 13

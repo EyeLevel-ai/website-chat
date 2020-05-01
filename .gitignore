@@ -3,4 +3,4 @@ wp/wp-config.php
 *.swp
 node_modules
 cron.log
-*.DS_Store
+.DS_Store
