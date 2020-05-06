@@ -82,15 +82,14 @@ window.getUser = function() {
 }
 
 saveInteraction = function(interaction) {
-if (typeof mixpanel !== "undefined") {
   if (interaction && interaction.sender && interaction.sender === 'user') {
     interaction.host = window.location.host;
     interaction.pathname = window.location.pathname;
     interaction.uid = window.getUser().userId;
     interaction.username = window.eyusername;
-    mixpanel.track("Chat Interaction", interaction);
+    window.parent.postMessage(`track:${JSON.stringify(interaction)}`, "*");
   }
-}
+
 return;
   var h = window.localStorage.getItem('eyelevel.conversation.history');
 	var history = JSON.parse(h);
@@ -848,7 +847,6 @@ window.menu = null;
                             ttt = t.empty();
                         }
                         var data = JSON.parse(msg.payload);
-console.log(data);
                         var html = '';
                         var needsReset = false;
 												if (data.text) {
@@ -908,8 +906,8 @@ console.log(data);
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
                     window.addEventListener("message", this.handleChatWindow),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
-                    this.domHelper.getSendInput().addEventListener("mousemove", this.handleSendClick, !1),
-                    this.domHelper.getSendInput().addEventListener("touchmove", this.handleSendClick, !1)
+                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1),
+                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1)
                 }
             }, {
                 key: "handleMenuItemClick",
@@ -935,14 +933,14 @@ console.log(data);
                     aa.href = `tel:${ee.target.id}`;
                     aa.click();
                     this.handleEvent(`tel:${ee.target.id}`);
-									  t.scrollToBottom();
+									  this.scrollToBottom();
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
                     aa.target = '_blank';
                     aa.click();
                     this.handleEvent(`web}${ee.target.value}`);
-									  t.scrollToBottom();
+									  this.scrollToBottom();
 									} else {
                     this.handleEvent(ee.target.id);
                   }
@@ -983,7 +981,7 @@ console.log(data);
                       }
                     } else {
                       shouldSend = false;
-                      txt = txt.replace('tel:', 'Our number is ') + '.';
+                      txt = txt.replace('tel:', 'Call ') + '.';
                       t.domHelper.addUserRequestNode(txt);
                     }
                     saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
@@ -993,7 +991,7 @@ console.log(data);
                     window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
                   }
 									window.isChatting = false;
-                  t.scrollToBottom();
+                  this.scrollToBottom();
                 }
             }, {
                 key: "buildPayLoad",
@@ -1935,15 +1933,11 @@ console.log(data);
   if (window.localStorage) {
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
-  if (typeof mixpanel !== 'undefined') {
-    mixpanel.track("CATCH CHAT ERROR", { error: e.message, stack: e.stack, uid: userId, username: window.eyusername });
-  } else {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
-    xhr.setRequestHeader('Content-type', 'application/json');
-    xhr.onload = function () {
-      console.log(this.responseText);
-    };
-    xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
-  }
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
+	xhr.setRequestHeader('Content-type', 'application/json');
+	xhr.onload = function () {
+		console.log(this.responseText);
+	};
+	xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
 }

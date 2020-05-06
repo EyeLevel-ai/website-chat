@@ -157,11 +157,11 @@ if (!window.localStorage) {
       isn.document.open();
       isn.document.write(`<html><head><base target="_parent"></base><style>body{overflow:hidden;}@keyframes growIcon{from{transform: scale(0);-webkit-transform:scale(0);-moz-transform:scale(0);-ms-transform:scale(0);-o-transform:scale(0);}to{transform:scale(1);-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);}}.ey-app-icon-container{position:relative;}.ey-app-icon-active{height:90px;width:90px;animation:growIcon 0.25s;}.ey-app-icon-inactive{width:0;height:0;animation:growIcon 0.25s;}.ey-close-btn {position: absolute;top:0;left:0;font-size:60px;color:transparent;text-shadow: 0 0 0 #7197c9;display:flex;justify-content:center;align-items:center;}.ey-icon-btn{position:absolute;top:0;left:0;display:flex;justify-content:center;align-items:center;}</style><script>window.addEventListener("message", function(e){if(e && e.data === "open"){var ci = document.getElementById("eyChatOpen");ci.classList.remove("ey-app-icon-active");void ci.offsetWidth;ci.classList.add("ey-app-icon-inactive");var cbi = document.getElementById("eyChatClose");cbi.classList.remove("ey-app-icon-inactive");void cbi.offsetWidth;cbi.classList.add("ey-app-icon-active");}else{var ci = document.getElementById("eyChatOpen");ci.classList.remove("ey-app-icon-inactive");void ci.offsetWidth;ci.classList.add("ey-app-icon-active");var cbi = document.getElementById("eyChatClose");cbi.classList.remove("ey-app-icon-active");void cbi.offsetWidth;cbi.classList.add("ey-app-icon-inactive");}})</script></head><body><div class="ey-app-icon-container"><svg width="90px" height="90px" viewBox="0 0 70 70" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><rect id="path-1" x="0" y="0" width="52" height="52" rx="8"></rect><filter x="-27.9%" y="-24.0%" width="155.8%" height="155.8%" filterUnits="objectBoundingBox" id="filter-2"><feMorphology radius="1" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology><feOffset dx="0" dy="2" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset><feGaussianBlur stdDeviation="3.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur><feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.354102928 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix></filter></defs><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-5-Copy" transform="translate(9.000000, 7.000000)"><g id="Rectangle"><use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use><use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use></g></g></g></svg><div id="eyChatOpen" class="ey-icon-btn ey-app-icon-active"><svg class="ey-o-icon" width="45px" height="41px" viewBox="0 0 35 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path d="M30.3572744,0 L4.30939227,0 C1.92476611,0 0,1.90029641 0,4.25460662 L0,21.2730331 C0,23.6271542 1.92476611,25.5276397 4.30939227,25.5276397 L5.74585635,25.5276397 L5.74585635,29.7822464 C5.74585635,30.8068502 6.82042726,31.5488536 7.8718232,31.0302643 C7.90055249,31.0019003 7.95810681,31.0019003 7.9868361,30.9734417 C15.8889208,25.7416937 14.1179521,26.9082123 15.8873886,25.7544575 C16.1171271,25.6126373 16.3756906,25.5276397 16.6629834,25.5276397 L30.3572744,25.5276397 C32.7419006,25.5276397 34.6666667,23.6271542 34.6666667,21.2730331 L34.6666667,4.25460662 C34.6666667,1.90029641 32.7419006,0 30.3572744,0 Z M26.7756906,17.0184265 L15.0924494,17.0184265 C13.1989024,17.0184265 13.1911455,14.1820221 15.0924494,14.1820221 L26.7756906,14.1820221 C28.6692376,14.1820221 28.6769945,17.0184265 26.7756906,17.0184265 Z M27.4843462,11.3456177 L7.18232044,11.3456177 C5.28877348,11.3456177 5.28101657,8.50921325 7.18232044,8.50921325 L27.4843462,8.50921325 C29.3778932,8.50921325 29.3856501,11.3456177 27.4843462,11.3456177 Z" id="Shape-Copy-5" fill="#6897CD" fill-rule="nonzero" transform="translate(17.333333, 15.600000) scale(-1, 1) translate(-17.333333, -15.600000) "></path></g></svg></div><div id="eyChatClose" class="ey-close-btn ey-app-icon-inactive"><svg class="ey-x-icon" width="36px" height="36px" viewBox="0 0 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-11" fill="#6897CD" fill-rule="nonzero"><path d="M19.7250963,10.8364044 L-0.576929453,10.8364044 C-2.47047641,10.8364044 -2.47823332,8 -0.576929453,8 L19.7250963,8 C21.6186433,8 21.6264002,10.8364044 19.7250963,10.8364044 Z" id="Path-Copy-2" transform="translate(9.574083, 9.418202) scale(-1, 1) rotate(45.000000) translate(-9.574083, -9.418202) "></path><path d="M19.7250963,10.8364044 L-0.576929453,10.8364044 C-2.47047641,10.8364044 -2.47823332,8 -0.576929453,8 L19.7250963,8 C21.6186433,8 21.6264002,10.8364044 19.7250963,10.8364044 Z" id="Path-Copy-3" transform="translate(9.574083, 9.418202) scale(-1, -1) rotate(45.000000) translate(-9.574083, -9.418202) "></path></g></g></svg></div></div></body></html>`);
       isn.document.close();
-      isn.addEventListener("mousemove", toggleChat);
-      isn.addEventListener("touchmove", toggleChat);
+      isn.addEventListener("click", toggleChat);
+      isn.addEventListener("touchstart", toggleChat);
       var ebn = document.getElementById("eyBubble");
-      ebn.addEventListener("mousemove", toggleChat);
-      ebn.addEventListener("touchmove", toggleChat);
+      ebn.addEventListener("click", toggleChat);
+      ebn.addEventListener("touchstart", toggleChat);
 
 			var es = document.createElement("style");
       es.innerHTML = `
@@ -191,6 +191,15 @@ if (!window.localStorage) {
       is.document.open();
       is.document.write(`<html><head><base target="_parent"></base><script>window.username = "${username}";</script><script src="https://cdn.eyelevel.ai/chat/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="https://cdn.eyelevel.ai/chat/chat.css" rel="stylesheet" type="text/css"></head><body><div class="ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><img class="ey-chat-logo" src="https://cdn.eyelevel.ai/chat/logos/${username}.png"></img></div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "https://cdn.eyelevel.ai/chat/agent.js"; document.body.appendChild(as); }</script></body></html>`);
       is.document.close();
+      window.addEventListener("message", function(e) {
+        if (e.data && e.data && e.data.indexOf("track:") === 0) {
+          var jsonStr = e.data.replace("track:", "");
+          var jsonObj = JSON.parse(jsonStr);
+          if (typeof mixpanel !== 'undefined') {
+            mixpanel.track("CHAT INTERACTION", jsonObj);
+          }
+        }
+      }, true);
     },
   };
   var execute = function() {
@@ -211,15 +220,11 @@ console.error(e);
   if (window.localStorage) {
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
-  if (typeof mixpanel !== 'undefined') {
-    mixpanel.track("CATCH CHAT ERROR", { error: e.message, stack: e.stack, uid: userId, username: window.eyusername });
-  } else {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
-    xhr.setRequestHeader('Content-type', 'application/json');
-    xhr.onload = function () {
-      console.log(this.responseText);
-    };
-    xhr.send(JSON.stringify({ event: "CATCH EYELEVEL.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
-  }
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
+	xhr.setRequestHeader('Content-type', 'application/json');
+	xhr.onload = function () {
+		console.log(this.responseText);
+	};
+	xhr.send(JSON.stringify({ event: "CATCH EYELEVEL.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
 }
