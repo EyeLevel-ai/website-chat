@@ -99,24 +99,23 @@ noscript h1 {
   100% { transform: translateX(0px); }
 }
 .ey-chat-nav {
-  height: 80px;
+  height: 60px;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   background: #374050;
 }
-.ey-close-btn {
-  height: 60px;
-  width: 60px;
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 16px 28px 0 0;
-  font-size: 30px;
-  text-align: right;
-  color: transparent;
-  text-shadow: 0 0 0 #d8d8d8;
+.ey-chat-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+.ey-chat-logo {
+  height: 40px;
+  width: auto;
 }
 .ey-chat .chat-buttons {
   margin-top: 0;
@@ -194,7 +193,7 @@ noscript h1 {
   overflow-y: auto;
   background: #d8d8d8;
   position: absolute;
-  top: 80px;
+  top: 60px;
   bottom: 55px;
   width: 100%;
 }
@@ -250,14 +249,14 @@ noscript h1 {
 	color: white;
 }
 .ey-chat .ey_input-send.active {
-  color: #4970f7;
+  color: #7197c9;
   display: block;
 }
 .ey-chat .b-agent-demo_powered_by {
   position: fixed;
   left: 0;
   right: 0;
-  top: 80px;
+  top: 60px;
   height: 30px;
   background-color: #F8F8F8;
   vertical-align: middle;

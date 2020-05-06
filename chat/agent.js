@@ -1,3 +1,5 @@
+try {
+
 function randomString(length) {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -80,6 +82,15 @@ window.getUser = function() {
 }
 
 saveInteraction = function(interaction) {
+if (typeof mixpanel !== "undefined") {
+  if (interaction && interaction.sender && interaction.sender === 'user') {
+    interaction.host = window.location.host;
+    interaction.pathname = window.location.pathname;
+    interaction.uid = window.getUser().userId;
+    interaction.username = window.eyusername;
+    mixpanel.track("Chat Interaction", interaction);
+  }
+}
 return;
   var h = window.localStorage.getItem('eyelevel.conversation.history');
 	var history = JSON.parse(h);
@@ -329,7 +340,7 @@ window.menu = null;
         a = t.n(i),
         u = function() {
             function e() {
-                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID), this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
+                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
             }
             return a()(e, [{
                 key: "startWelcome",
@@ -397,11 +408,6 @@ window.menu = null;
                     return this.workplace
                 }
             }, {
-                key: "getCloseWindow",
-                value: function() {
-                    return this.closeWindow
-                }
-            }, {
                 key: "getChatWindow",
                 value: function() {
                     return this.chatWindow
@@ -450,7 +456,7 @@ window.menu = null;
                 }
             }]), e
         }();
-    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
+    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
 }, function(e, n, t) {
     var r = t(8),
         o = t(0)("toStringTag"),
@@ -704,15 +710,13 @@ window.menu = null;
 									}
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
-                }, this.handleCloseWindow = function(n) {
-                  n.preventDefault();
-                  n.stopPropagation();
-                  window.parent.postMessage("toggle", "*");
                 }, this.handleChatWindow = function(n) {
-                    if (!window.eySocket) {
-                      t.initializeWS();
+                  if (n && n.type === "message" && n.data === "open") {
+                      if (!window.eySocket) {
+                        t.initializeWS();
+                      }
+                      t.scrollToBottom();
                     }
-                    t.scrollToBottom();
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
@@ -903,11 +907,9 @@ console.log(data);
                 value: function() {
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
                     window.addEventListener("message", this.handleChatWindow),
-                    this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, !1),
-                    this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, !1),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
-                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1),
-                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1)
+                    this.domHelper.getSendInput().addEventListener("mousemove", this.handleSendClick, !1),
+                    this.domHelper.getSendInput().addEventListener("touchmove", this.handleSendClick, !1)
                 }
             }, {
                 key: "handleMenuItemClick",
@@ -923,20 +925,6 @@ console.log(data);
                         }
                         this.printMessage(i);
                     }
-                }
-            }, {
-                key: "initRecognition",
-                value: function() {
-                    var e = this,
-                        n = new webkitSpeechRecognition;
-                    n.onstart = function() {
-                        e.isRecognizing = !0, e.domHelper.handleStartRecognition()
-                    }, n.onerror = function() {}, n.onend = function() {
-                        e.domHelper.handleStopRecognition(), e.isRecognizing = !1
-                    }, n.onresult = function(n) {
-                        for (var t = "", r = n.resultIndex; r < n.results.length; ++r) n.results[r].isFinal && (t += n.results[r][0].transcript);
-                        e.domHelper.setInputValue(t), e.checkWS()
-                    }, n.lang = window.AGENT_LANGUAGE || "en-US", this.recognition = n
                 }
             }, {
                 key: "sendButton",
@@ -1941,3 +1929,21 @@ console.log(data);
     var i = new o.a;
     new r.a(i).bindEventHandlers()
 }]);
+
+} catch(e) {
+  var userId;
+  if (window.localStorage) {
+    userId = window.localStorage.getItem('eyelevel.user.userId');
+  }
+  if (typeof mixpanel !== 'undefined') {
+    mixpanel.track("CATCH CHAT ERROR", { error: e.message, stack: e.stack, uid: userId, username: window.eyusername });
+  } else {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
+    xhr.setRequestHeader('Content-type', 'application/json');
+    xhr.onload = function () {
+      console.log(this.responseText);
+    };
+    xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
+  }
+}
