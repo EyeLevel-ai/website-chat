@@ -339,7 +339,7 @@ window.menu = null;
         a = t.n(i),
         u = function() {
             function e() {
-                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
+                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
             }
             return a()(e, [{
                 key: "startWelcome",
@@ -407,6 +407,11 @@ window.menu = null;
                     return this.workplace
                 }
             }, {
+                key: "getCloseWindow",
+                value: function() {
+                    return this.closeWindow
+                }
+            }, {
                 key: "getChatWindow",
                 value: function() {
                     return this.chatWindow
@@ -455,7 +460,7 @@ window.menu = null;
                 }
             }]), e
         }();
-    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
+    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
 }, function(e, n, t) {
     var r = t(8),
         o = t(0)("toStringTag"),
@@ -709,8 +714,17 @@ window.menu = null;
 									}
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
+                }, this.handleCloseWindow = function(n) {
+                  n.preventDefault();
+                  n.stopPropagation();
+                  window.parent.postMessage("close", "*");
                 }, this.handleChatWindow = function(n) {
-                  if (n && n.type === "message" && n.data === "open") {
+                  var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+                  if (width > 450) {
+                    var cw = t.domHelper.getCloseWindow();
+                    cw.style.display = "none";
+                  }
+                  if ((n && n.type === "message" && n.data === "open") || window.shouldOpen) {
                       if (!window.eySocket) {
                         t.initializeWS();
                       }
@@ -905,9 +919,11 @@ window.menu = null;
                 value: function() {
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
                     window.addEventListener("message", this.handleChatWindow),
+                    this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, !1),
+                    this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, !1),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1),
-                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1)
+                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1), window.shouldOpen && this.handleChatWindow()
                 }
             }, {
                 key: "handleMenuItemClick",
@@ -1929,6 +1945,7 @@ window.menu = null;
 }]);
 
 } catch(e) {
+console.error(e);
   var userId;
   if (window.localStorage) {
     userId = window.localStorage.getItem('eyelevel.user.userId');

@@ -104,7 +104,19 @@ noscript h1 {
   top: 0;
   left: 0;
   width: 100%;
-  background: #374050;
+  background: linear-gradient(0deg, hsl(219, 20%, 34%), hsl(219, 21%, 33%));
+}
+.ey-close-btn {
+  height: 60px;
+  width: 60px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 10px 28px 0 0;
+  font-size: 30px;
+  text-align: right;
+  color: transparent;
+  text-shadow: 0 0 0 #fff;
 }
 .ey-chat-logo-container {
   display: flex;
