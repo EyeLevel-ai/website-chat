@@ -87,7 +87,7 @@ saveInteraction = function(interaction) {
     interaction.pathname = window.location.pathname;
     interaction.uid = window.getUser().userId;
     interaction.username = window.eyusername;
-    window.parent.postMessage(`track:${JSON.stringify(interaction)}`, "*");
+    window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   }
 
 return;
@@ -633,7 +633,7 @@ window.menu = null;
                       t.domHelper.handleStopSend();
                     }
                 }, this.initializeWS = function(isRestart) {
-                  window.eySocket = new WebSocket(`wss://ws.eyelevel.ai?uid=${user.userId}&username=${window.username}`);
+                  window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username);
                   window.eySocket.connectTime = Date.now();
                   if (isRestart) {
                     window.eySocket.isStarted = true;
@@ -719,11 +719,6 @@ window.menu = null;
                   n.stopPropagation();
                   window.parent.postMessage("close", "*");
                 }, this.handleChatWindow = function(n) {
-                  var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-                  if (width > 450) {
-                    var cw = t.domHelper.getCloseWindow();
-                    cw.style.display = "none";
-                  }
                   if ((n && n.type === "message" && n.data === "open") || window.shouldOpen) {
                       if (!window.eySocket) {
                         t.initializeWS();
@@ -918,7 +913,7 @@ window.menu = null;
                 key: "bindEventHandlers",
                 value: function() {
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
-                    window.addEventListener("message", this.handleChatWindow),
+                    window.addEventListener("message", this.handleChatWindow, !1),
                     this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, !1),
                     this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, !1),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
@@ -946,16 +941,16 @@ window.menu = null;
 //                  ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
 									if (ee.target.classList.contains('click-to-call')) {
                     var aa = document.createElement('a');
-                    aa.href = `tel:${ee.target.id}`;
+                    aa.href = 'tel:'+ee.target.id;
                     aa.click();
-                    this.handleEvent(`tel:${ee.target.id}`);
+                    this.handleEvent('tel:'+ee.target.id);
 									  this.scrollToBottom();
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
                     aa.target = '_blank';
                     aa.click();
-                    this.handleEvent(`web}${ee.target.value}`);
+                    this.handleEvent('web}'+ee.target.value);
 									  this.scrollToBottom();
 									} else {
                     this.handleEvent(ee.target.id);
