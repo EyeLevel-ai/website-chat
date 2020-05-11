@@ -33,7 +33,6 @@
 <body>
 
 <script>
-// TODO: support flowname as an input
 // Desktop styling
 // WTF is going on with mobile?
 function getQueryVariable(variable) {
@@ -53,10 +52,13 @@ if(window.eyelevel)return;
 
 window.eyelevel = [];
 
-var name = getQueryVariable("username");
-console.log(name);
+var username = getQueryVariable("username");
+var flowname = getQueryVariable("flowname");
 
-window.eyelevel.push(["init",{ username: name, state: "open" }]);
+window.eyusername = username;
+window.eyflowname = flowname;
+
+window.eyelevel.push(["init",{ username: username, flowname: flowname, state: "open" }]);
 
 var t=document.createElement("script");
 

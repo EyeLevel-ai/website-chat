@@ -124,7 +124,7 @@ if (!window.localStorage) {
       cw.classList.remove("ey-section-visible");
       cw.classList.add("ey-section-invisible");
       if (typeof mixpanel !== 'undefined') {
-        mixpanel.track("Close Chat", { host: window.location.host, pathname: window.location.pathname, uid: window.getUser().userId, username: window.eyusername });
+        mixpanel.track("Close Chat", { host: window.location.host, pathname: window.location.pathname, uid: window.getUser().userId, username: window.eyusername, flowname: window.eyflowname });
       }
       setTimeout(function() {
         var eis = document.getElementById("eyAppFrame");
@@ -137,7 +137,7 @@ if (!window.localStorage) {
       cw.classList.remove("ey-section-invisible");
       cw.classList.add("ey-section-visible");
       if (typeof mixpanel !== "undefined") {
-        mixpanel.track("Open Chat", { host: window.location.host, pathname: window.location.pathname, uid: window.getUser().userId, username: window.eyusername });
+        mixpanel.track("Open Chat", { host: window.location.host, pathname: window.location.pathname, uid: window.getUser().userId, username: window.eyusername, flowname: window.eyflowname });
       }
       setTimeout(function() {
         var is = document.getElementById("eyFrame");
@@ -153,16 +153,17 @@ if (!window.localStorage) {
   var eyelevel = {
     init: function(params) {
       var username = params.username;
+      var flowname = params.flowname;
       var shouldOpen = params.state && params.state === "open";
       var userId = window.getUser().userId;
 			if (window.location.host.indexOf('eyelevel.ai') < 0 && typeof mixpanel !== 'undefined') {
         mixpanel.identify(userId);
-        mixpanel.track("Page Loaded", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername });
+        mixpanel.track("Page Loaded", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername, flowname: window.eyflowname });
       }
 
       if (!window.WebSocket || !window.addEventListener) {
         if (typeof mixpanel !== 'undefined') {
-				  mixpanel.track("Chat Not Shown", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername });
+				  mixpanel.track("Chat Not Shown", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername, flowname: window.eyflowname });
 				}
         return;
       }
@@ -199,7 +200,7 @@ if (!window.localStorage) {
       var is = document.getElementById("eyFrame");
       is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
       is.document.open();
-      is.document.write('<html><head><base target="_parent"></base><script>window.username = "'+username+'";window.shouldOpen = '+(shouldOpen || false)+';if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="https://cdn.eyelevel.ai/chat/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="https://cdn.eyelevel.ai/chat/chat.css" rel="stylesheet" type="text/css"></head><body><div class="ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><img class="ey-chat-logo" src="https://cdn.eyelevel.ai/chat/logos/'+username+'.png"></img></div><div id="eyMobileChatClose" class="ey-close-btn" '+((shouldOpen || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "https://cdn.eyelevel.ai/chat/agent.js"; document.body.appendChild(as); }</script></body></html>');
+      is.document.write('<html><head><base target="_parent"></base><script>window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="https://cdn.eyelevel.ai/chat/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="https://cdn.eyelevel.ai/chat/chat.css" rel="stylesheet" type="text/css"></head><body><div class="ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><img class="ey-chat-logo" src="https://cdn.eyelevel.ai/chat/logos/'+username+'.png"></img></div><div id="eyMobileChatClose" class="ey-close-btn" '+((shouldOpen || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "chat/agent.js"; document.body.appendChild(as); }</script></body></html>');
       is.document.close();
       window.addEventListener("message", function(e) {
         if (e.data && e.data && e.data.indexOf("track:") === 0) {
@@ -238,5 +239,5 @@ console.error(e);
 	xhr.onload = function () {
 		console.log(this.responseText);
 	};
-	xhr.send(JSON.stringify({ event: "CATCH EYELEVEL.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
+	xhr.send(JSON.stringify({ event: "CATCH EYELEVEL.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername, flowname: window.eyflowname }));
 }

@@ -86,7 +86,10 @@ saveInteraction = function(interaction) {
     interaction.host = window.location.host;
     interaction.pathname = window.location.pathname;
     interaction.uid = window.getUser().userId;
-    interaction.username = window.eyusername;
+    interaction.username = window.username;
+    if (typeof window.flowname !== 'undefined') {
+      interaction.flowname = window.flowname;
+    }
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   }
 
@@ -1014,6 +1017,9 @@ window.menu = null;
                         path: window.location.pathname,
                         uid: user.userId
                     };
+                    if (typeof window.flowname !== 'undefined') {
+                      ben.flowname = window.flowname;
+                    }
                     if (this.confirmationValue) {
                         ben.value.passthrough.confirmationValue = this.confirmationValue;
                     }
@@ -1951,5 +1957,5 @@ console.error(e);
 	xhr.onload = function () {
 		console.log(this.responseText);
 	};
-	xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername }));
+	xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '' }));
 }
