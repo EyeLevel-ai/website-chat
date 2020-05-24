@@ -95,7 +95,7 @@ saveInteraction = function(interaction) {
 
 return;
   var h = window.localStorage.getItem('eyelevel.conversation.history');
-	var history = JSON.parse(h);
+  var history = JSON.parse(h);
   if (history) {
     history.push(interaction)
   } else {
@@ -433,7 +433,7 @@ window.menu = null;
                 key: "addUserRequestNode",
                 value: function(n) {
                     var t = this.workplace.createElement("div");
-                    return t.className = e.CLASS_USER_REQUEST, t.innerHTML = n, this.queryResult.appendChild(t), this
+                    return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n + '</div>', this.queryResult.appendChild(t), this
                 }
             }, {
                 key: "setErrorOnNode",
@@ -660,7 +660,7 @@ window.menu = null;
                     setTimeout(function() {
                       t.initializeWS(true);
                     }, 1000);
-									}
+                  }
                 }, this.handleWSError = function(n) {
                   console.error('WS error', window.eySocket);
                 }, this.handleWSOpen = function(n) {
@@ -669,15 +669,15 @@ window.menu = null;
                     var inter = retrieveInteractions();
                     if (inter && inter.length) {
                       for (var ji = 0; ji < inter.length; ji++) {
-											  var int1 = inter[ji];
-											  var pay = JSON.parse(int1.payload);
-											  if (int1.sender === 'user') {
+                        var int1 = inter[ji];
+                        var pay = JSON.parse(int1.payload);
+                        if (int1.sender === 'user') {
                           t.domHelper.addUserRequestNode(pay.text);
-											  } else {
+                        } else {
                           t.createMessage(int1);
-											  }
+                        }
                       }
-										} else {
+                    } else {
                       t.domHelper.startWelcome(t);
                     }
                     window.eySocket.isStarted = true;
@@ -691,17 +691,17 @@ window.menu = null;
                       var wsRes = JSON.parse(n.data)
                       if (wsRes) {
                         if (window.eySocket.typingElement) {
-											    t.createMessage(wsRes, window.eySocket.typingElement);
-											  } else {
-											    t.createMessage(wsRes);
-											  }
-											  wsRes.sender = "server";
-											  saveInteraction(wsRes);
+                          t.createMessage(wsRes, window.eySocket.typingElement);
+                        } else {
+                          t.createMessage(wsRes);
+                        }
+                        wsRes.sender = "server";
+                        saveInteraction(wsRes);
                       } else {
 //TODO alert
                       console.error("Invalid WS response payload");
                       }
-										} catch(err) {
+                    } catch(err) {
 //TODO alert
                       console.error(err);
                     }
@@ -714,7 +714,7 @@ window.menu = null;
                     t.initializeWS(window.eySocket ? true : false);
                   } else {
                     t.handleInput();
-									}
+                  }
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleCloseWindow = function(n) {
@@ -722,12 +722,50 @@ window.menu = null;
                   n.stopPropagation();
                   window.parent.postMessage("close", "*");
                 }, this.handleChatWindow = function(n) {
-                  if ((n && n.type === "message" && n.data === "open") || window.shouldOpen) {
+                  if (n && n.type === "message") {
+                    if (n.data === "open") {
                       if (!window.eySocket) {
                         t.initializeWS();
                       }
                       t.scrollToBottom();
                     }
+                  } else if (window.shouldOpen) {
+                    if (!window.eySocket) {
+                      t.initializeWS();
+                    }
+                    t.scrollToBottom();
+                  }
+                }, this.updateResponses = function() {
+                    var tc = [];
+                    var aa = t.domHelper.workplace.getElementById('result');
+                    for (var j = aa.childNodes.length - 1; j >= 0; j--) {
+                      if (aa.childNodes[j].classList.contains('user-request-container')) {
+                        break;
+                      } else {
+                        var cn = aa.childNodes[j].getElementsByClassName('server-response');
+                        if (!cn || !cn.length || cn.length !== 1) {
+                          console.warn('unexpected element', cn);
+                          break;
+                        } else if (!cn[0].classList.contains('chat-buttons')) {
+                          tc.push(j);
+                        } else {
+                        }
+                      }
+                    }
+                    for (var k = 0; k < tc.length; k++) {
+                      var idx = tc[k];
+                      var icon = aa.childNodes[idx].getElementsByClassName('server-icon');
+                      if (!icon || !icon.length || icon.length !== 1) {
+                        console.warn('unexpected element', icon);
+                        break;
+                      }
+                      if (k > 0) {
+                        icon[0].innerHTML = '';
+                      } else {
+                        icon[0].innerHTML = '<img class="server-icon-img" />';
+                      }
+                    }
+                    t.scrollToBottom();
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
@@ -735,18 +773,34 @@ window.menu = null;
                     return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt
                 }, this.empty = function() {
                     var na = t.domHelper.workplace.createElement('div');
+                    na.className = 'server-response-container';
+                    na.innerHTML = '<div class="server-icon"></div><div class="server-response">...</div>';
                     var aa = t.domHelper.workplace.getElementById('result');
-                    return na.className = 'server-response', na.innerHTML = '...', aa.appendChild(na), na;
+                    aa.appendChild(na);
+                    t.scrollToBottom();
+                    return na;
                 }, this.setText = function(ee, nn) {
-                    return nn.innerHTML = ee, this
-                }, this.setObject = function(ee, nn) {
-                    while (nn.firstChild) {
-                        nn.removeChild(nn.firstChild);
+                    var sc = nn.getElementsByClassName('server-response');
+                    if (sc && sc.length && sc.length === 1) {
+                      sc[0].innerHTML = ee
+                      return nn, this
+                    } else {
+                      console.warn('unexpected response', nn);
                     }
-                    for (var i in ee) {
-                        nn.appendChild(ee[i]);
+                }, this.setButtons = function(ee, nn) {
+                    var sc = nn.getElementsByClassName('server-response');
+                    if (sc && sc.length && sc.length === 1) {
+                      while (sc[0].firstChild) {
+                        sc[0].removeChild(sc[0].firstChild);
+                      }
+                      sc[0].classList.add('chat-buttons');
+                      for (var i in ee) {
+                        sc[0].appendChild(ee[i]);
+                      }
+                      return nn, this
+                    } else {
+                      console.warn('unexpected response', nn);
                     }
-                    return nn, this
                 }, this.handleInput = function(type) {
                     var n = t.domHelper.getInputValue();
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
@@ -835,18 +889,18 @@ window.menu = null;
                         }
                         return html;
                     }, quick_reply: function(data) {
-											var button = t.domHelper.workplace.createElement('button');
-											button.classList.add('chat-button');
-											button.setAttribute('id', data.payload);
-											button.innerHTML = data.payload;
-											button.onclick = t.sendButton.bind(t);
-											return button;
+                      var button = t.domHelper.workplace.createElement('button');
+                      button.classList.add('chat-button');
+                      button.setAttribute('id', data.payload);
+                      button.innerHTML = data.payload;
+                      button.onclick = t.sendButton.bind(t);
+                      return button;
                     }, quick_replies: function(data) {
                         var html = [];
                         for (var i in data) {
-													if (data[i].content_type && data[i].content_type === 'text') {
-														html.push(t.chat.quick_reply(data[i]));
-													}
+                          if (data[i].content_type && data[i].content_type === 'text') {
+                            html.push(t.chat.quick_reply(data[i]));
+                          }
                         }
                         return html;
                     }
@@ -861,34 +915,33 @@ window.menu = null;
                         var data = JSON.parse(msg.payload);
                         var html = '';
                         var needsReset = false;
-												if (data.text) {
-												  html = t.chat.text(data.text);
-												  t.setText(html, ttt);
-												  needsReset = true;
-												}
-												if (data.attachment && data.attachment.payload) {
+                        if (data.text) {
+                          html = t.chat.text(data.text);
+                          t.setText(html, ttt);
+                          needsReset = true;
+                        }
+                        if (data.attachment && data.attachment.payload) {
                           if (data.attachment.payload.text) {
                             if (needsReset) {
                               ttt = t.empty();
                             }
                             t.setText(t.chat.text(data.attachment.payload.text), ttt);
-												    needsReset = true;
-												  }
-												  if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
+                            needsReset = true;
+                          }
+                          if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
                             if (needsReset) {
                               ttt = t.empty();
                             }
                             html = t.chat.text(data.attachment.payload.url);
                             t.setText(html, ttt);
-												    needsReset = true;
-												  }
+                            needsReset = true;
+                          }
                           if (data.attachment.payload.buttons) {
                             if (needsReset) {
                               ttt = t.empty();
                             }
                             html = t.chat.buttons(data.attachment.payload.buttons);
-													  ttt.className += ' chat-buttons';
-													  t.setObject(html, ttt);
+                            t.setButtons(html, ttt);
                           }
                         }
                         if (data.quick_replies) {
@@ -896,10 +949,9 @@ window.menu = null;
                             ttt = t.empty();
                           }
                           html = t.chat.quick_replies(data.quick_replies);
-													ttt.className += ' chat-buttons';
-													t.setObject(html, ttt);
+                          t.setButtons(html, ttt);
                         }
-                        t.scrollToBottom();
+                        t.updateResponses();
                         if (msg.typing) {
                           setTimeout(function() {
                             window.eySocket.typingElement = t.empty();
@@ -942,20 +994,20 @@ window.menu = null;
                 key: "sendButton",
                 value: function(ee) {
 //                  ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
-									if (ee.target.classList.contains('click-to-call')) {
+                  if (ee.target.classList.contains('click-to-call')) {
                     var aa = document.createElement('a');
                     aa.href = 'tel:'+ee.target.id;
                     aa.click();
                     this.handleEvent('tel:'+ee.target.id);
-									  this.scrollToBottom();
+                    this.scrollToBottom();
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
                     aa.target = '_blank';
                     aa.click();
                     this.handleEvent('web}'+ee.target.value);
-									  this.scrollToBottom();
-									} else {
+                    this.scrollToBottom();
+                  } else {
                     this.handleEvent(ee.target.id);
                   }
                 }
@@ -990,7 +1042,7 @@ window.menu = null;
                         t.domHelper.addUserRequestNode(txt);
                       } else {
                         shouldSend = false;
-												txt = txt.replace('web}', '');
+                        txt = txt.replace('web}', '');
                         t.domHelper.addUserRequestNode(txt);
                       }
                     } else {
@@ -1004,7 +1056,7 @@ window.menu = null;
                     window.eySocket.typingElement = t.empty();
                     window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
                   }
-									window.isChatting = false;
+                  window.isChatting = false;
                   this.scrollToBottom();
                 }
             }, {
@@ -1951,11 +2003,11 @@ console.error(e);
   if (window.localStorage) {
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
-	xhr.setRequestHeader('Content-type', 'application/json');
-	xhr.onload = function () {
-		console.log(this.responseText);
-	};
-	xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '' }));
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
+  xhr.setRequestHeader('Content-type', 'application/json');
+  xhr.onload = function () {
+    console.log(this.responseText);
+  };
+  xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '' }));
 }
