@@ -1,13 +1,13 @@
 /* Navbar icon */
 .ey-chat-logo {
-  background: #fff;
-  content: url(https://css.eyelevel.ai/default.png);
+  background-color: #fff;
+  background-image: url(https://css.eyelevel.ai/default.png);
 }
 
 /* In chat icon */
 .ey-chat .server-icon-img {
-  background: #fff;
-  content: url(https://css.eyelevel.ai/default.png);
+  background-color: #fff;
+  background-image: url(https://css.eyelevel.ai/default.icon.png);
 }
 
 /* Navbar title */

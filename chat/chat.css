@@ -131,9 +131,12 @@ noscript h1 {
   width: 38px;
   padding: 3px;
   border-radius: 50%;
-  background: #fff;
+  background-color: #fff;
   margin: 0 10px 0 20px;
-  content: url(https://css.eyelevel.ai/default.icon.png);
+  background-image: url(https://css.eyelevel.ai/default.icon.png);
+  background-repeat: no-repeat;
+  background-size: 38px 38px;
+  background-position: center;
 }
 .ey-chat-name::before {
   font-size: 1.125rem;
@@ -215,11 +218,14 @@ noscript h1 {
 }
 .ey-chat .server-icon-img {
   border-radius: 50%;
-  background: #fff;
+  background-color: #fff;
   height: 28px;
   width: 28px;
   padding: 2px;
-  content: url(https://css.eyelevel.ai/default.icon.png);
+  background-image: url(https://css.eyelevel.ai/default.icon.png);
+  background-repeat: no-repeat;
+  background-size: 28px 28px;
+  background-position: center;
 }
 .ey-chat .server-response {
   color: #4a4a4a;
@@ -245,6 +251,7 @@ noscript h1 {
   width: 100%;
 }
 .ey-chat .ey_result-table {
+  table-layout: fixed;
   height: 100%;
   min-height: 100%;
   width: 100%;
