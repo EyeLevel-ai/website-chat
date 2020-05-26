@@ -762,7 +762,7 @@ window.menu = null;
                       if (k > 0) {
                         icon[0].innerHTML = '';
                       } else {
-                        icon[0].innerHTML = '<img class="server-icon-img" />';
+                        icon[0].innerHTML = '<div class="server-icon-img"></div>';
                       }
                     }
                     t.scrollToBottom();
