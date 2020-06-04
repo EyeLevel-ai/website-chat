@@ -635,6 +635,11 @@ window.menu = null;
                     } else {
                       t.domHelper.handleStopSend();
                     }
+                }, this.heartbeat = function() {
+                  if (!window.eySocket) return;
+                  if (window.eySocket.readyState !== 1) return;
+                  window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
+                  setTimeout(t.heartbeat, 300000);
                 }, this.initializeWS = function(isRestart) {
                   window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username);
                   window.eySocket.connectTime = Date.now();
@@ -681,6 +686,7 @@ window.menu = null;
                       t.domHelper.startWelcome(t);
                     }
                     window.eySocket.isStarted = true;
+                    t.heartbeat();
                   } else {
                     t.handleInput();
                   }
@@ -688,15 +694,17 @@ window.menu = null;
                   window.isChatting = false;
                   if (n && n.data) {
                     try {
-                      var wsRes = JSON.parse(n.data)
+                      var wsRes = JSON.parse(n.data);
                       if (wsRes) {
-                        if (window.eySocket.typingElement) {
-                          t.createMessage(wsRes, window.eySocket.typingElement);
-                        } else {
-                          t.createMessage(wsRes);
+                        if (wsRes.action && wsRes.action !== 'heartbeat') {
+                          if (window.eySocket.typingElement) {
+                            t.createMessage(wsRes, window.eySocket.typingElement);
+                          } else {
+                            t.createMessage(wsRes);
+                          }
+                          wsRes.sender = "server";
+                          saveInteraction(wsRes);
                         }
-                        wsRes.sender = "server";
-                        saveInteraction(wsRes);
                       } else {
 //TODO alert
                       console.error("Invalid WS response payload");
@@ -1003,7 +1011,9 @@ window.menu = null;
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
-                    aa.target = '_blank';
+                    if (!window.shouldOpen) {
+                      aa.target = '_blank';
+                    }
                     aa.click();
                     this.handleEvent('web}'+ee.target.value);
                     this.scrollToBottom();
