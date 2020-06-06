@@ -815,10 +815,14 @@ window.menu = null;
                         t.domHelper.addUserRequestNode(t.escapeString(n));
                         window.isChatting = true;
                         var txt = t.domHelper.getInputValue();
-                        if (txt !== 'startWelcome') {
-                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                        if (txt === 'clear all') {
+console.log('clear all');
+                        } else {
+                          if (txt !== 'startWelcome') {
+                            saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                          }
+                          window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
                         }
-                        window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
                         window.isChatting = false;
