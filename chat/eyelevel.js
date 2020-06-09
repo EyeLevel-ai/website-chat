@@ -29,6 +29,7 @@ try {
     } catch (e) {}
     return cold;
   }
+  window.supportsPassive = supportsPassive;
 
   function randomString(length) {
     var text = "";
@@ -164,6 +165,7 @@ if (!window.localStorage) {
       }, 200);
     }
   }
+  window.toggleChat = toggleChat;
 
   var eyelevel = {
     init: function(params) {
@@ -201,6 +203,9 @@ if (!window.localStorage) {
         var eb = document.createElement("section");
         eb.id = "eyBubble";
         eb.classList.add("ey-app");
+        if (shouldOpen) {
+          eb.classList.add("ey-app-open");
+        }
         eb.innerHTML = '<iframe id="eyAppFrame" class="ey-app-container ey-iframe"></iframe>';
         document.body.appendChild(eb);
         var isn = document.getElementById("eyAppFrame");
