@@ -69,7 +69,7 @@ if (!window.localStorage) {
     this.enumerable = true;
   })());
 }
-//window.localStorage.removeItem('eyelevel.conversation.history');
+
 window.getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var newUser = false;
@@ -87,12 +87,13 @@ saveInteraction = function(interaction) {
     interaction.pathname = window.location.pathname;
     interaction.uid = window.getUser().userId;
     interaction.username = window.username;
+    interaction.origin = window.origin;
     if (typeof window.flowname !== 'undefined') {
       interaction.flowname = window.flowname;
     }
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   }
-
+//console.log(interaction);
 return;
   var h = window.localStorage.getItem('eyelevel.conversation.history');
   var history = JSON.parse(h);
@@ -641,7 +642,7 @@ window.menu = null;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
                   setTimeout(t.heartbeat, 300000);
                 }, this.initializeWS = function(isRestart) {
-                  window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username);
+                  window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username+'&origin='+window.origin);
                   window.eySocket.connectTime = Date.now();
                   if (isRestart) {
                     window.eySocket.isStarted = true;
@@ -676,8 +677,10 @@ window.menu = null;
                       for (var ji = 0; ji < inter.length; ji++) {
                         var int1 = inter[ji];
                         var pay = JSON.parse(int1.payload);
+                        int1.typing = false;
                         if (int1.sender === 'user') {
                           t.domHelper.addUserRequestNode(pay.text);
+                          t.scrollToBottom();
                         } else {
                           t.createMessage(int1);
                         }
@@ -816,7 +819,9 @@ window.menu = null;
                         window.isChatting = true;
                         var txt = t.domHelper.getInputValue();
                         if (txt === 'clear all') {
-console.log('clear all');
+                          window.localStorage.removeItem('eyelevel.conversation.history');
+                          t.domHelper.addUserRequestNode('cleared');
+                          t.scrollToBottom();
                         } else {
                           if (txt !== 'startWelcome') {
                             saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
@@ -1015,7 +1020,7 @@ console.log('clear all');
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
-                    if (!window.shouldOpen) {
+                    if (window.origin !== 'linkedin') {
                       aa.target = '_blank';
                     }
                     aa.click();
@@ -1056,13 +1061,9 @@ console.log('clear all');
                         t.domHelper.addUserRequestNode(txt);
                       } else {
                         shouldSend = false;
-                        txt = txt.replace('web}', '');
-                        t.domHelper.addUserRequestNode(txt);
                       }
                     } else {
                       shouldSend = false;
-                      txt = txt.replace('tel:', 'Call ') + '.';
-                      t.domHelper.addUserRequestNode(txt);
                     }
                     saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                   }
@@ -1081,7 +1082,8 @@ console.log('clear all');
                         data: e,
                         username: window.username,
                         path: window.location.pathname,
-                        uid: user.userId
+                        uid: user.userId,
+                        origin: window.origin
                     };
                     if (typeof window.flowname !== 'undefined') {
                       ben.flowname = window.flowname;
@@ -2023,5 +2025,5 @@ console.error(e);
   xhr.onload = function () {
     console.log(this.responseText);
   };
-  xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '' }));
+  xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '', origin: window.origin }));
 }
