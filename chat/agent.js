@@ -87,14 +87,12 @@ saveInteraction = function(interaction) {
     interaction.pathname = window.location.pathname;
     interaction.uid = window.getUser().userId;
     interaction.username = window.username;
-    interaction.origin = window.origin;
+    interaction.origin = window.origin || 'web';
     if (typeof window.flowname !== 'undefined') {
       interaction.flowname = window.flowname;
     }
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   }
-//console.log(interaction);
-return;
   var h = window.localStorage.getItem('eyelevel.conversation.history');
   var history = JSON.parse(h);
   if (history) {
@@ -350,6 +348,14 @@ window.menu = null;
                 value: function(ben) {
                   setTimeout(function() {
                     ben.handleEvent('startWelcome', 'startWelcome');
+                    return
+                  }, 0);
+                }
+            }, {
+                key: "reconnect",
+                value: function(ben) {
+                  setTimeout(function() {
+                    ben.handleEvent('reconnect', 'reconnect');
                     return
                   }, 0);
                 }
@@ -642,7 +648,7 @@ window.menu = null;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
                   setTimeout(t.heartbeat, 300000);
                 }, this.initializeWS = function(isRestart) {
-                  window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username+'&origin='+window.origin);
+                  window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username+'&origin='+(window.origin || web));
                   window.eySocket.connectTime = Date.now();
                   if (isRestart) {
                     window.eySocket.isStarted = true;
@@ -652,7 +658,7 @@ window.menu = null;
                   if (window.eySocket.connectAttempts) {
                     window.eySocket.connectAttempts += 1;
                   } else {
-                    window.eySocket.connectAttempts += 1;
+                    window.eySocket.connectAttempts = 1;
                   }
                   window.eySocket.onerror = t.handleWSError;
                   window.eySocket.onopen = t.handleWSOpen;
@@ -670,7 +676,6 @@ window.menu = null;
                 }, this.handleWSError = function(n) {
                   console.error('WS error', window.eySocket);
                 }, this.handleWSOpen = function(n) {
-                  window.eySocket.connectAttempts = 0;
                   if (!window.eySocket.isStarted) {
                     var inter = retrieveInteractions();
                     if (inter && inter.length) {
@@ -685,6 +690,7 @@ window.menu = null;
                           t.createMessage(int1);
                         }
                       }
+                      t.domHelper.reconnect(t);
                     } else {
                       t.domHelper.startWelcome(t);
                     }
@@ -699,7 +705,7 @@ window.menu = null;
                     try {
                       var wsRes = JSON.parse(n.data);
                       if (wsRes) {
-                        if (wsRes.action && wsRes.action !== 'heartbeat') {
+                        if (wsRes.action && wsRes.action !== 'heartbeat' && wsRes.action !== 'reconnect') {
                           if (window.eySocket.typingElement) {
                             t.createMessage(wsRes, window.eySocket.typingElement);
                           } else {
@@ -707,10 +713,17 @@ window.menu = null;
                           }
                           wsRes.sender = "server";
                           saveInteraction(wsRes);
+                        } else if (wsRes.action && wsRes.action === 'reconnect') {
+                          if (window.eySocket.typingElement) {
+                            t.createMessage(wsRes, window.eySocket.typingElement);
+                          } else {
+                            t.createMessage(wsRes);
+                          }
+                          wsRes.sender = "server";
                         }
                       } else {
 //TODO alert
-                      console.error("Invalid WS response payload");
+                        console.error("Invalid WS response payload");
                       }
                     } catch(err) {
 //TODO alert
@@ -823,7 +836,7 @@ window.menu = null;
                           t.domHelper.addUserRequestNode('cleared');
                           t.scrollToBottom();
                         } else {
-                          if (txt !== 'startWelcome') {
+                          if (txt !== 'startWelcome' && txt !== 'reconnect') {
                             saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                           }
                           window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
@@ -1020,7 +1033,7 @@ window.menu = null;
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
-                    if (window.origin !== 'linkedin') {
+                    if (window.origin === 'web') {
                       aa.target = '_blank';
                     }
                     aa.click();
@@ -1055,7 +1068,7 @@ window.menu = null;
                   window.isChatting = true;
                   var txt = evt || t.domHelper.getInputValue();
                   var shouldSend = true;
-                  if (txt !== 'startWelcome') {
+                  if (txt !== 'startWelcome' && txt !== 'reconnect') {
                     if (txt.indexOf('tel:') < 0) {
                       if (txt.indexOf('web}') < 0) {
                         t.domHelper.addUserRequestNode(txt);
@@ -1083,7 +1096,7 @@ window.menu = null;
                         username: window.username,
                         path: window.location.pathname,
                         uid: user.userId,
-                        origin: window.origin
+                        origin: window.origin || 'web'
                     };
                     if (typeof window.flowname !== 'undefined') {
                       ben.flowname = window.flowname;
@@ -2025,5 +2038,5 @@ console.error(e);
   xhr.onload = function () {
     console.log(this.responseText);
   };
-  xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '', origin: window.origin }));
+  xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '', origin: window.origin || 'web' }));
 }
