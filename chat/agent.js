@@ -705,7 +705,7 @@ window.menu = null;
                     try {
                       var wsRes = JSON.parse(n.data);
                       if (wsRes) {
-                        if (wsRes.action && wsRes.action !== 'heartbeat' && wsRes.action !== 'reconnect') {
+                        if (wsRes.action && wsRes.action !== 'heartbeat' && wsRes.action !== 'reconnect' && wsRes.action !== 'reconnect-empty') {
                           if (window.eySocket.typingElement) {
                             t.createMessage(wsRes, window.eySocket.typingElement);
                           } else {
@@ -720,6 +720,11 @@ window.menu = null;
                             t.createMessage(wsRes);
                           }
                           wsRes.sender = "server";
+                        } else if (wsRes.action && wsRes.action === 'reconnect-empty') {
+                          if (window.eySocket.typingElement) {
+                            t.removeEmpty(window.eySocket.typingElement)
+                            delete window.eySocket.typingElement;
+                          }
                         }
                       } else {
 //TODO alert
@@ -803,6 +808,13 @@ window.menu = null;
                     aa.appendChild(na);
                     t.scrollToBottom();
                     return na;
+                }, this.removeEmpty = function(nn) {
+                    var sc = nn.getElementsByClassName('server-response');
+                    if (sc && sc.length && sc.length === 1) {
+                      sc[0].remove();
+                    } else {
+                      console.warn('unexpected response', nn);
+                    }
                 }, this.setText = function(ee, nn) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (sc && sc.length && sc.length === 1) {
