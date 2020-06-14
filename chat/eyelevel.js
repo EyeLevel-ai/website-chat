@@ -1,7 +1,10 @@
 try {
-  const remoteURL = 'https://cdn.eyelevel.ai/chat';
-  const chatURL = 'https://cdn.eyelevel.ai/chat';
-  const cssURL = 'https://css.eyelevel.ai';
+  var remoteURL = 'https://cdn.eyelevel.ai/chat';
+  var chatURL = '/chat';
+  var cssURL = 'https://css.eyelevel.ai';
+  window.remoteURL = remoteURL;
+  window.chatURL = chatURL;
+  window.cssURL = cssURL;
 
   function getQueryVar(vn) {
     var qq = window.location.search.substring(1);
@@ -50,66 +53,105 @@ try {
     );
   }
 
-if (!window.localStorage) {
-  Object.defineProperty(window, "localStorage", new (function () {
-    var aKeys = [], oStorage = {};
-    Object.defineProperty(oStorage, "getItem", {
-      value: function (sKey) { return sKey ? this[sKey] : null; },
-      writable: false,
-      configurable: false,
-      enumerable: false
-    });
-    Object.defineProperty(oStorage, "key", {
-      value: function (nKeyId) { return aKeys[nKeyId]; },
-      writable: false,
-      configurable: false,
-      enumerable: false
-    });
-    Object.defineProperty(oStorage, "setItem", {
-      value: function (sKey, sValue) {
-        if(!sKey) { return; }
-        document.cookie = escape(sKey) + "=" + escape(sValue) + "; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/";
-      },
-      writable: false,
-      configurable: false,
-      enumerable: false
-    });
-    Object.defineProperty(oStorage, "length", {
-      get: function () { return aKeys.length; },
-      configurable: false,
-      enumerable: false
-    });
-    Object.defineProperty(oStorage, "removeItem", {
-      value: function (sKey) {
-        if(!sKey) { return; }
-        document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      },
-      writable: false,
-      configurable: false,
-      enumerable: false
-    });
-    this.get = function () {
-      var iThisIndx;
-      for (var sKey in oStorage) {
-        iThisIndx = aKeys.indexOf(sKey);
-        if (iThisIndx === -1) { oStorage.setItem(sKey, oStorage[sKey]); }
-        else { aKeys.splice(iThisIndx, 1); }
-        delete oStorage[sKey];
-      }
-      for (aKeys; aKeys.length > 0; aKeys.splice(0, 1)) { oStorage.removeItem(aKeys[0]); }
-      for (var aCouple, iKey, nIdx = 0, aCouples = document.cookie.split(/\s*;\s*/); nIdx < aCouples.length; nIdx++) {
-        aCouple = aCouples[nIdx].split(/\s*=\s*/);
-        if (aCouple.length > 1) {
-          oStorage[iKey = unescape(aCouple[0])] = unescape(aCouple[1]);
-          aKeys.push(iKey);
+  window.initBadgeFrame = function(n) {
+    var af = document.createElement("section");
+    af.classList.add("ey-badge-cnt");
+    af.id = "eyBadgeCnt";
+    af.innerHTML = '<iframe id="eyBadge" class="ey-badge-frame ey-iframe"></iframe>';
+    document.body.appendChild(af);
+    var ei = document.getElementById("eyBadge");
+    ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
+    ei.document.open();
+    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.1" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body class="badge-body"><div class="badge-cnt"><div class="badge">' + n + '</div></div></body></html>');
+    ei.document.close();
+  }
+
+  window.initAlertFrame = function(txt) {
+    var af = document.createElement("section");
+    af.classList.add("ey-alert-cnt");
+    af.id = "eyAlertCnt";
+    af.innerHTML = '<iframe id="eyAlert" class="ey-alert-frame ey-iframe"></iframe>';
+    document.body.appendChild(af);
+    var ei = document.getElementById("eyAlert");
+    ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
+    ei.document.open();
+    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.1" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body"><div class="ey-chat"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
+    ei.document.close();
+    iFrameResize({ checkOrigin: false }, '#eyAlert');
+  }
+
+  if (!window.localStorage) {
+    Object.defineProperty(window, "localStorage", new (function () {
+      var aKeys = [], oStorage = {};
+      Object.defineProperty(oStorage, "getItem", {
+        value: function (sKey) { return sKey ? this[sKey] : null; },
+        writable: false,
+        configurable: false,
+        enumerable: false
+      });
+      Object.defineProperty(oStorage, "key", {
+        value: function (nKeyId) { return aKeys[nKeyId]; },
+        writable: false,
+        configurable: false,
+        enumerable: false
+      });
+      Object.defineProperty(oStorage, "setItem", {
+        value: function (sKey, sValue) {
+          if(!sKey) { return; }
+          document.cookie = escape(sKey) + "=" + escape(sValue) + "; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/";
+        },
+        writable: false,
+        configurable: false,
+        enumerable: false
+      });
+      Object.defineProperty(oStorage, "length", {
+        get: function () { return aKeys.length; },
+        configurable: false,
+        enumerable: false
+      });
+      Object.defineProperty(oStorage, "removeItem", {
+        value: function (sKey) {
+          if(!sKey) { return; }
+          document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        },
+        writable: false,
+        configurable: false,
+        enumerable: false
+      });
+      this.get = function () {
+        var iThisIndx;
+        for (var sKey in oStorage) {
+          iThisIndx = aKeys.indexOf(sKey);
+          if (iThisIndx === -1) { oStorage.setItem(sKey, oStorage[sKey]); }
+          else { aKeys.splice(iThisIndx, 1); }
+          delete oStorage[sKey];
         }
+        for (aKeys; aKeys.length > 0; aKeys.splice(0, 1)) { oStorage.removeItem(aKeys[0]); }
+        for (var aCouple, iKey, nIdx = 0, aCouples = document.cookie.split(/\s*;\s*/); nIdx < aCouples.length; nIdx++) {
+          aCouple = aCouples[nIdx].split(/\s*=\s*/);
+          if (aCouple.length > 1) {
+            oStorage[iKey = unescape(aCouple[0])] = unescape(aCouple[1]);
+            aKeys.push(iKey);
+          }
+        }
+        return oStorage;
+      };
+      this.configurable = false;
+      this.enumerable = true;
+    })());
+  }
+
+  function loadHistory() {
+    var h = window.localStorage.getItem('eyelevel.conversation.history');
+    var history = JSON.parse(h);
+    window.isReturn = false;
+    for (var i in history) {
+      if (history[i].sender && history[i].sender !== 'server') {
+        window.isReturn = true;
+        break;
       }
-      return oStorage;
-    };
-    this.configurable = false;
-    this.enumerable = true;
-  })());
-}
+    }
+  }
 
 (function() {
   var cooldown = false;
@@ -123,6 +165,20 @@ if (!window.localStorage) {
       window.localStorage.setItem('eyelevel.user.userId', userId);
     }
     return { userId: userId, newUser: newUser };
+  }
+
+  function clearBadge() {
+    var cad = document.getElementById('eyBadgeCnt');
+    if (cad) {
+      cad.style.display = "none";
+    }
+  }
+
+  function closeAlert() {
+    var cad = document.getElementById('eyAlertCnt');
+    if (cad) {
+      cad.style.display = "none";
+    }
   }
 
   function toggleChat(e) {
@@ -147,6 +203,11 @@ if (!window.localStorage) {
         eis.postMessage("close", "*");
       }, 200);
     } else {
+      setTimeout(function() {
+        closeAlert();
+        clearBadge();
+      }, 250);
+      window.isOpen = true;
       cb.classList.add("ey-app-open");
       var cw = document.getElementById("eySection");
       cw.classList.remove("ey-section-invisible");
@@ -188,6 +249,7 @@ if (!window.localStorage) {
       var origin = params.origin ? params.origin.toLowerCase() : 'web';
       window.eyorigin = origin;
       var userId = window.getUser().userId;
+      loadHistory();
       if (window.location.host.indexOf('eyelevel.ai') < 0 && typeof mixpanel !== 'undefined') {
         mixpanel.identify(userId);
         mixpanel.track("Page Loaded", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin });
@@ -205,6 +267,7 @@ if (!window.localStorage) {
         eb.classList.add("ey-app");
         if (shouldOpen) {
           eb.classList.add("ey-app-open");
+          window.isOpen = true;
         }
         eb.innerHTML = '<iframe id="eyAppFrame" class="ey-app-container ey-iframe"></iframe>';
         document.body.appendChild(eb);
@@ -220,7 +283,7 @@ if (!window.localStorage) {
         ebn.addEventListener("touchstart", toggleChat, supportsPassive() ? {passive : false} : false);
       }
       var es = document.createElement("style");
-      es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483002;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:100%;width:100%;}.ey-section{display:block;width:100%;height:100%;position:' + (origin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2000000000;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-section{width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;overflow: hidden;height:calc(100% - 120px);}.ey-section-visible{max-height:704px;}.ey-section-open{max-height:704px;top:123px;bottom:auto}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
+      es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:100%;width:100%;}.ey-section{display:block;width:100%;height:100%;position:' + (origin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-section{width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;overflow: hidden;height:calc(100% - 120px);}.ey-section-visible{max-height:704px;}.ey-section-open{max-height:704px;top:123px;bottom:auto}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
       document.body.appendChild(es);
 
       var width = getWidth();
@@ -244,7 +307,7 @@ if (!window.localStorage) {
       var is = document.getElementById("eyFrame");
       is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
       is.document.open();
-      is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.0" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.2"; document.body.appendChild(as); }</script></body></html>');
+      is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.1" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.3"; document.body.appendChild(as); }</script></body></html>');
       is.document.close();
       window.addEventListener("message", function(e) {
         if (e.data && e.data && e.data.indexOf && e.data.indexOf("track:") === 0) {
@@ -255,8 +318,18 @@ if (!window.localStorage) {
           }
         } else if (e.data && e.data === "close") {
           toggleChat();
+        } else if (e.data && e.data === "close-alert") {
+          closeAlert();
+        } else if (e.data && e.data === "open-alert") {
+          toggleChat();
         }
       }, true);
+      var es1 = document.createElement("script");
+      es1.src = remoteURL + '/iframeResizer.min.js';
+      document.body.appendChild(es1);
+      var es2 = document.createElement("script");
+      es2.src = cssURL + '/' + username + '/behavior.js';
+      document.body.appendChild(es2);
     },
   };
   var execute = function() {

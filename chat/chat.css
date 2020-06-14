@@ -149,21 +149,54 @@ noscript h1 {
   padding: 0;
   border: 0;
   background-image: none;
-  -webkit-animation-duration: 0.8s, 0.5s;
-  -moz-animation-duration: 0.8s, 0.5s;
-  -ms-animation-duration: 0.8s, 0.5s;
-  -o-animation-duration: 0.8s, 0.5s;
-  animation-duration: 0.8s, 0.5s;
-  -webkit-animation-delay: 0s, 0s;
-  -moz-animation-delay: 0s, 0s;
-  -ms-animation-delay: 0s, 0s;
-  -o-animation-delay: 0s, 0s;
-  animation-delay: 0s, 0s;
-  -webkit-animation-name: fadein, grow;
-  -moz-animation-name: fadein, grow;
-  -ms-animation-name: fadein, grow;
-  -o-animation-name: fadein, grow;
-  animation-name: fadein, grow;
+}
+.badge-body {
+  background: transparent;
+  height: 26px;
+  width: 24px;
+}
+.badge-cnt {
+  width: 100%;
+  height:100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: red;
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 500;
+}
+.badge {
+}
+.alert-body {
+  background: transparent;
+  padding: 14px;
+}
+.alert-nav {
+  height: 30px;
+  width: 100%;
+  position: relative;
+}
+.alert-close {
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  left: auto;
+  text-shadow: rgba(0,0,0,0.35) 2px 2px 10px;
+}
+.alert-item {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+}
+.alert-text {
+  margin: 0 0 0 15px !important;
+  display: block;
+  clear: none;
+  box-shadow: rgba(0,0,0,0.35) 2px 2px 10px;
 }
 .ey-chat {
   padding: 0;
@@ -173,12 +206,27 @@ noscript h1 {
   height: auto;
   color: #2b313f;
   font-size: 1.25em;
+}
+.ey-chat-only {
   overflow: hidden;
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
+}
+.ey-chat .remove-item {
+  opacity: 0;
+  -moz-transform: scaleY(0);
+  -webkit-transform: scaleY(0);
+  -o-transform: scaleY(0);
+  -ms-transform: scaleY(0);
+  transform: scaleY(0);
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
 }
 .ey-chat .user-request,
 .ey-chat .server-response {
@@ -204,11 +252,21 @@ noscript h1 {
 .ey-chat .server-response-container {
   display: flex;
   align-items: flex-end;
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
 }
 .ey-chat .user-request-container {
   display: flex;
   flex-direction: row-reverse;
   align-items: flex-start;
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
 }
 .ey-chat .server-icon {
   height: 28px;
@@ -226,6 +284,9 @@ noscript h1 {
   background-repeat: no-repeat;
   background-size: 24px 24px;
   background-position: center;
+}
+.ey-alert .server-icon-img {
+  box-shadow: rgba(0,0,0,0.35) 2px 2px 10px;
 }
 .ey-chat .server-response {
   color: #4a4a4a;

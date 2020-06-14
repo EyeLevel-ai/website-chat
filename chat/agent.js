@@ -803,18 +803,16 @@ window.menu = null;
                 }, this.empty = function() {
                     var na = t.domHelper.workplace.createElement('div');
                     na.className = 'server-response-container';
-                    na.innerHTML = '<div class="server-icon"></div><div class="server-response">...</div>';
+                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response">...</div>';
                     var aa = t.domHelper.workplace.getElementById('result');
                     aa.appendChild(na);
                     t.scrollToBottom();
                     return na;
                 }, this.removeEmpty = function(nn) {
-                    var sc = nn.getElementsByClassName('server-response');
-                    if (sc && sc.length && sc.length === 1) {
-                      sc[0].remove();
-                    } else {
-                      console.warn('unexpected response', nn);
-                    }
+                    nn.classList.add('remove-item');
+                    setTimeout(function() {
+                      nn.remove();
+                    }, 200);
                 }, this.setText = function(ee, nn) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (sc && sc.length && sc.length === 1) {
