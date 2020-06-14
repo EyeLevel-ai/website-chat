@@ -1,6 +1,6 @@
 try {
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
-  var chatURL = '/chat';
+  var chatURL = 'https://cdn.eyelevel.ai/chat';
   var cssURL = 'https://css.eyelevel.ai';
   window.remoteURL = remoteURL;
   window.chatURL = chatURL;
