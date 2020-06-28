@@ -691,19 +691,7 @@ window.menu = null;
                   if (!window.eySocket.isStarted) {
                     var inter = retrieveInteractions();
                     if (inter && inter.length) {
-                      for (var ji = 0; ji < inter.length; ji++) {
-                        var int1 = inter[ji];
-                        window.eySocket.lastInteraction = int1;
-                        var pay = JSON.parse(int1.payload);
-                        int1.typing = false;
-                        if (int1.sender === 'user') {
-                          t.domHelper.addUserRequestNode(pay, t);
-                          t.scrollToBottom();
-                        } else {
-                          t.createMessage(int1);
-                        }
-                      }
-                      t.domHelper.reconnect(t);
+                      t.loadInteractions(0, inter);
                     } else {
                       t.domHelper.startWelcome(t);
                     }
@@ -815,6 +803,24 @@ window.menu = null;
                       }
                     }
                     t.scrollToBottom();
+                }, this.loadInteractions = function(idx, inter) {
+                  if (idx === inter.length) {
+                    return t.domHelper.reconnect(t);
+                  }
+                  var int1 = inter[idx];
+                  window.eySocket.lastInteraction = int1;
+                  var pay = JSON.parse(int1.payload);
+                  int1.typing = false;
+                  if (int1.sender === 'user') {
+                   t.domHelper.addUserRequestNode(pay, t);
+                   t.scrollToBottom();
+                   t.loadInteractions(idx + 1, inter);
+                  } else {
+                   t.createMessage(int1)
+                     .then(function(ra0) {
+                       return t.loadInteractions(idx + 1, inter);
+                     });
+                  }
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
@@ -870,7 +876,10 @@ window.menu = null;
                         if (n === 'clear all') {
                           window.localStorage.removeItem('eyelevel.conversation.history');
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
+                          window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
                           t.domHelper.setInputValue("");
+                          t.domHelper.handleStopSend();
+                          window.parent.postMessage('clear all', "*");
                         } else if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
                           var inBtn = document.getElementById(window.eySocket.turnID);
                           var input = document.getElementById(window.eySocket.turnID + '-input');
@@ -965,7 +974,22 @@ window.menu = null;
                           html.push(t.chat.button(data[i]));
                         }
                         return html;
-                    }, user_input: function(msg, data) {
+                    }, user_input: function(msg) {
+                      var payload = JSON.parse(msg.payload);
+                      var data;
+                      for (var i in payload.quick_replies) {
+                        if (payload.quick_replies[i].content_type && (payload.quick_replies[i].content_type === 'user_email' || payload.quick_replies[i].content_type === 'user_phone_number')) {
+                          data = payload.quick_replies[i];
+                          break;
+                        }
+                      }
+                      if (!data) {
+                        if (payload.text === 'Name') {
+                          data = { content_type: 'user_name' };
+                        } else {
+                          return;
+                        }
+                      }
                       var idPrefix;
                       if (msg.id) {
                         idPrefix = msg.id;
@@ -991,6 +1015,9 @@ window.menu = null;
                       inBtn.classList.add('icon-send');
                       inBtn.id = idPrefix;
                       inBtn.onclick = t.inputButton.bind(t);
+                      var label = t.domHelper.workplace.createElement('label');
+                      label.classList.add('user-input-label');
+                      label.innerHTML = payload.text;
                       switch (data.content_type) {
                         case 'user_email':
                           window.eySocket.turnID = idPrefix;
@@ -999,9 +1026,6 @@ window.menu = null;
                           input.type = 'email';
                           input.autocomplete = 'email';
                           input.name = data.content_type;
-                          var label = t.domHelper.workplace.createElement('label');
-                          label.classList.add('user-input-label');
-                          label.innerHTML = 'Email';
                           holder.appendChild(inBtn);
                           cnt.appendChild(label);
                           cnt.appendChild(holder);
@@ -1013,16 +1037,23 @@ window.menu = null;
                           input.type = 'tel';
                           input.autocomplete = 'tel';
                           input.name = data.content_type;
-                          var label = t.domHelper.workplace.createElement('label');
-                          label.classList.add('user-input-label');
-                          label.innerHTML = 'Phone Number';
+                          holder.appendChild(inBtn);
+                          cnt.appendChild(label);
+                          cnt.appendChild(holder);
+                          break;
+                        case 'user_name':
+                          window.eySocket.turnID = idPrefix;
+                          window.eySocket.turnType = 'name';
+                          inBtn.type = 'name';
+                          input.type = 'text';
+                          input.autocomplete = 'name';
+                          input.name = data.content_type;
                           holder.appendChild(inBtn);
                           cnt.appendChild(label);
                           cnt.appendChild(holder);
                           break;
                         default:
-                          holder.appendChild(inBtn);
-                          cnt.appendChild(holder);
+                          return;
                       }
                       cnt.appendChild(status);
                       return cnt;
@@ -1042,6 +1073,9 @@ window.menu = null;
                           }
                         }
                       }
+                      if (data.text === 'Name') {
+                        return true;
+                      }
                       return false;
                     }, quick_replies: function(msg, data) {
                         var html = [];
@@ -1049,10 +1083,6 @@ window.menu = null;
                           if (data[i].content_type) {
                             if (data[i].content_type === 'text') {
                               html.push(t.chat.quick_reply(data[i]));
-                            } else if (data[i].content_type === 'user_email') {
-                              html.push(t.chat.user_input(msg, data[i]));
-                            } else if (data[i].content_type === 'user_phone_number') {
-                              html.push(t.chat.user_input(msg, data[i]));
                             }
                           }
                         }
@@ -1069,48 +1099,57 @@ window.menu = null;
                         var data = JSON.parse(msg.payload);
                         var html = '';
                         var needsReset = false;
-                        if (data.text) {
-                          html = t.chat.text(data.text);
-                          t.setText(html, ttt);
-                          needsReset = true;
-                        }
-                        if (data.attachment && data.attachment.payload) {
-                          if (data.attachment.payload.text) {
-                            if (needsReset) {
-                              ttt = t.empty();
-                            }
-                            t.setText(t.chat.text(data.attachment.payload.text), ttt);
-                            needsReset = true;
+                        if (t.chat.is_input(msg)) {
+                          html = t.chat.user_input(msg);
+                          if (html) {
+                            t.setButtons([html], ttt);
+                          } else {
+                            t.setText("Unsupported user input type", ttt);
                           }
-                          if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
-                            if (needsReset) {
-                              ttt = t.empty();
-                            }
-                            html = t.chat.text(data.attachment.payload.url);
+                        } else {
+                          if (data.text) {
+                            html = t.chat.text(data.text);
                             t.setText(html, ttt);
                             needsReset = true;
                           }
-                          if (data.attachment.payload.buttons) {
+                          if (data.attachment && data.attachment.payload) {
+                            if (data.attachment.payload.text) {
+                              if (needsReset) {
+                                ttt = t.empty();
+                              }
+                              t.setText(t.chat.text(data.attachment.payload.text), ttt);
+                              needsReset = true;
+                            }
+                            if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
+                              if (needsReset) {
+                                ttt = t.empty();
+                              }
+                              html = t.chat.text(data.attachment.payload.url);
+                              t.setText(html, ttt);
+                              needsReset = true;
+                            }
+                            if (data.attachment.payload.buttons) {
+                              if (needsReset) {
+                                ttt = t.empty();
+                              }
+                              html = t.chat.buttons(data.attachment.payload.buttons);
+                              if (html && html.length) {
+                                t.setButtons(html, ttt);
+                              } else {
+                                t.removeEmpty(ttt);
+                              }
+                            }
+                          }
+                          if (data.quick_replies) {
                             if (needsReset) {
                               ttt = t.empty();
                             }
-                            html = t.chat.buttons(data.attachment.payload.buttons);
+                            html = t.chat.quick_replies(msg, data.quick_replies);
                             if (html && html.length) {
                               t.setButtons(html, ttt);
                             } else {
                               t.removeEmpty(ttt);
                             }
-                          }
-                        }
-                        if (data.quick_replies) {
-                          if (needsReset) {
-                            ttt = t.empty();
-                          }
-                          html = t.chat.quick_replies(msg, data.quick_replies);
-                          if (html && html.length) {
-                            t.setButtons(html, ttt);
-                          } else {
-                            t.removeEmpty(ttt);
                           }
                         }
                         t.updateResponses();
@@ -1183,6 +1222,18 @@ window.menu = null;
                           }, 250);
                         } else {
                           status.innerHTML = 'Invalid Phone Number';
+                        }
+                        break;
+                      case 'name':
+                        if (/^[a-zA-Z ]+$/.test(input.value) && input.value.length > 2) {
+                          ee.target.classList.remove('icon-send');
+                          ee.target.classList.add('icon-success');
+                          var ae = this;
+                          setTimeout(function() {
+                            ae.handleEvent(input.value, 'user_input', ee.target.id);
+                          }, 250);
+                        } else {
+                          status.innerHTML = 'Invalid Name';
                         }
                         break;
                       default:

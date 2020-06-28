@@ -328,6 +328,8 @@ try {
           closeAlert();
         } else if (e.data && e.data === "open-alert") {
           toggleChat();
+        } else if (e.data && e.data === "clear all") {
+          window.location.href = window.location.pathname + window.location.search + window.location.hash;
         }
       }, true);
       var es1 = document.createElement("script");
