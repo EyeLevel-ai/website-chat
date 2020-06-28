@@ -870,6 +870,7 @@ window.menu = null;
                         if (n === 'clear all') {
                           window.localStorage.removeItem('eyelevel.conversation.history');
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
+                          t.domHelper.setInputValue("");
                         } else if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
                           var inBtn = document.getElementById(window.eySocket.turnID);
                           var input = document.getElementById(window.eySocket.turnID + '-input');
@@ -880,8 +881,8 @@ window.menu = null;
                           t.domHelper.addUserRequestNode({text: t.escapeString(n)}, t);
                           window.isChatting = true;
                           if (n !== 'startWelcome' && n !== 'reconnect') {
-                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: n }), typing: false, sender: "user" };
-                            saveInteraction({ action: "message", payload: JSON.stringify({ text: n }), typing: false, sender: "user" });
+                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
+                            saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" });
                           }
                           delete window.eySocket.turnType;
                           delete window.eySocket.turnID;
@@ -1248,14 +1249,14 @@ window.menu = null;
                       if (txt.indexOf('tel:') < 0) {
                         if (txt.indexOf('web}') < 0) {
                           t.domHelper.addUserRequestNode({text: txt}, t);
+                          window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
+                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                         } else {
                           shouldSend = false;
                         }
                       } else {
                         shouldSend = false;
                       }
-                      window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
-                      saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                     }
                   } else if (type === 'user_input') {
                     saveInteraction({ action: "input_value", payload: JSON.stringify({ input_value: txt, id: dt }), typing: false, sender: "user" });

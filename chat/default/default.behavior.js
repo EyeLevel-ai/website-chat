@@ -8,8 +8,10 @@
     if (!window.isOpen) {
       if (window.isReturn) {
         setTimeout(function() {
-          window.initAlertFrame(eyReturnText);
-          window.initBadgeFrame(1);
+          if (!window.isOpen) {
+            window.initAlertFrame(eyReturnText);
+            window.initBadgeFrame(1);
+          }
         }, eyReturnTime);
       } else {
         setTimeout(function() {
