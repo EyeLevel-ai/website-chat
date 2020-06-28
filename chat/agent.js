@@ -438,9 +438,17 @@ window.menu = null;
                 }
             }, {
                 key: "addUserRequestNode",
-                value: function(n) {
+                value: function(n, ben) {
                     var t = this.workplace.createElement("div");
-                    return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n + '</div>', this.queryResult.appendChild(t), this
+                    if (n.text) {
+                      return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n.text + '</div>', this.queryResult.appendChild(t), this
+                    } else if (n.input_value && n.id) {
+                      var input = ben.domHelper.workplace.getElementById(n.id + '-input');
+                      var cnt = ben.domHelper.workplace.getElementById(n.id);
+                      input.value = n.input_value;
+                      cnt.classList.remove('icon-send');
+                      cnt.classList.add('icon-success');
+                    }
                 }
             }, {
                 key: "setErrorOnNode",
@@ -681,10 +689,11 @@ window.menu = null;
                     if (inter && inter.length) {
                       for (var ji = 0; ji < inter.length; ji++) {
                         var int1 = inter[ji];
+                        window.eySocket.lastInteraction = int1;
                         var pay = JSON.parse(int1.payload);
                         int1.typing = false;
                         if (int1.sender === 'user') {
-                          t.domHelper.addUserRequestNode(pay.text);
+                          t.domHelper.addUserRequestNode(pay, t);
                           t.scrollToBottom();
                         } else {
                           t.createMessage(int1);
@@ -712,6 +721,7 @@ window.menu = null;
                             t.createMessage(wsRes);
                           }
                           wsRes.sender = "server";
+                          window.eySocket.lastInteraction = wsRes;
                           saveInteraction(wsRes);
                         } else if (wsRes.action && wsRes.action === 'reconnect') {
                           if (window.eySocket.typingElement) {
@@ -722,7 +732,7 @@ window.menu = null;
                           wsRes.sender = "server";
                         } else if (wsRes.action && wsRes.action === 'reconnect-empty') {
                           if (window.eySocket.typingElement) {
-                            t.removeEmpty(window.eySocket.typingElement)
+                            t.removeEmpty(window.eySocket.typingElement);
                             delete window.eySocket.typingElement;
                           }
                         }
@@ -768,16 +778,22 @@ window.menu = null;
                     var tc = [];
                     var aa = t.domHelper.workplace.getElementById('result');
                     for (var j = aa.childNodes.length - 1; j >= 0; j--) {
-                      if (aa.childNodes[j].classList.contains('user-request-container')) {
+                      if (aa.childNodes[j].classList.contains('user-request-container') || aa.childNodes[j].classList.contains('remove-item')) {
                         break;
                       } else {
                         var cn = aa.childNodes[j].getElementsByClassName('server-response');
                         if (!cn || !cn.length || cn.length !== 1) {
                           console.warn('unexpected element', cn);
                           break;
-                        } else if (!cn[0].classList.contains('chat-buttons')) {
+                        } else if (!cn[0].classList.contains('chat-buttons') && !cn[0].classList.contains('user-input-wrapper')) {
                           tc.push(j);
                         } else {
+                          var icon = aa.childNodes[j].getElementsByClassName('server-icon');
+                          if (!icon || !icon.length || icon.length !== 1) {
+                            console.warn('unexpected element', icon);
+                            break;
+                          }
+                          icon[0].innerHTML = '';
                         }
                       }
                     }
@@ -827,9 +843,18 @@ window.menu = null;
                       while (sc[0].firstChild) {
                         sc[0].removeChild(sc[0].firstChild);
                       }
-                      sc[0].classList.add('chat-buttons');
+
+                      var isInput = false;
                       for (var i in ee) {
+                        if (i == 0 && ee.length === 1 && ee[i].classList.contains('user-input-container')) {
+                          isInput = true;
+                        }
                         sc[0].appendChild(ee[i]);
+                      }
+                      if (isInput) {
+                        sc[0].classList.add('user-input-wrapper');
+                      } else {
+                        sc[0].classList.add('chat-buttons');
                       }
                       return nn, this
                     } else {
@@ -838,21 +863,28 @@ window.menu = null;
                 }, this.handleInput = function(type) {
                     var n = t.domHelper.getInputValue();
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
-                        t.domHelper.addUserRequestNode(t.escapeString(n));
-                        window.isChatting = true;
-                        var txt = t.domHelper.getInputValue();
-                        if (txt === 'clear all') {
+                        if (n === 'clear all') {
                           window.localStorage.removeItem('eyelevel.conversation.history');
-                          t.domHelper.addUserRequestNode('cleared');
-                          t.scrollToBottom();
+                          t.domHelper.addUserRequestNode({text: 'cleared'}, t);
+                        } else if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
+                          var inBtn = document.getElementById(window.eySocket.turnID);
+                          var input = document.getElementById(window.eySocket.turnID + '-input');
+                          input.value = n;
+                          inBtn.click();
+                          t.domHelper.setInputValue("");
                         } else {
-                          if (txt !== 'startWelcome' && txt !== 'reconnect') {
-                            saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                          t.domHelper.addUserRequestNode({text: t.escapeString(n)}, t);
+                          window.isChatting = true;
+                          if (n !== 'startWelcome' && n !== 'reconnect') {
+                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: n }), typing: false, sender: "user" };
+                            saveInteraction({ action: "message", payload: JSON.stringify({ text: n }), typing: false, sender: "user" });
                           }
+                          delete window.eySocket.turnType;
+                          delete window.eySocket.turnID;
                           window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
+                          t.domHelper.setInputValue("");
+                          t.domHelper.handleStopSend();
                         }
-                        t.domHelper.setInputValue("");
-                        t.domHelper.handleStopSend();
                         window.isChatting = false;
                         t.scrollToBottom();
                     }
@@ -928,6 +960,67 @@ window.menu = null;
                           html.push(t.chat.button(data[i]));
                         }
                         return html;
+                    }, user_input: function(msg, data) {
+                      var idPrefix;
+                      if (msg.id) {
+                        idPrefix = msg.id;
+                      } else {
+                        idPrefix = 'in-' + Date.now();
+                        msg.id = idPrefix;
+                      }
+                      var cnt = t.domHelper.workplace.createElement('div');
+                      cnt.classList.add('user-input-container');
+                      var holder = t.domHelper.workplace.createElement('div');
+                      holder.classList.add('user-input-holder');
+                      var input = t.domHelper.workplace.createElement('input');
+                      input.classList.add('user-input');
+                      input.id = idPrefix + '-input';
+                      input.required = true;
+                      holder.appendChild(input);
+                      var status = t.domHelper.workplace.createElement('div');
+                      status.classList.add('user-input-status');
+                      status.id = idPrefix + '-status';
+                      status.innerHTML = '&nbsp;';
+                      var inBtn = t.domHelper.workplace.createElement('div');
+                      inBtn.classList.add('user-input-button');
+                      inBtn.classList.add('icon-send');
+                      inBtn.id = idPrefix;
+                      inBtn.onclick = t.inputButton.bind(t);
+                      switch (data.content_type) {
+                        case 'user_email':
+                          window.eySocket.turnID = idPrefix;
+                          window.eySocket.turnType = 'email';
+                          inBtn.type = 'email';
+                          input.type = 'email';
+                          input.autocomplete = 'email';
+                          input.name = data.content_type;
+                          var label = t.domHelper.workplace.createElement('label');
+                          label.classList.add('user-input-label');
+                          label.innerHTML = 'Email';
+                          holder.appendChild(inBtn);
+                          cnt.appendChild(label);
+                          cnt.appendChild(holder);
+                          break;
+                        case 'user_phone_number':
+                          window.eySocket.turnID = idPrefix;
+                          window.eySocket.turnType = 'tel';
+                          inBtn.type = 'tel';
+                          input.type = 'tel';
+                          input.autocomplete = 'tel';
+                          input.name = data.content_type;
+                          var label = t.domHelper.workplace.createElement('label');
+                          label.classList.add('user-input-label');
+                          label.innerHTML = 'Phone Number';
+                          holder.appendChild(inBtn);
+                          cnt.appendChild(label);
+                          cnt.appendChild(holder);
+                          break;
+                        default:
+                          holder.appendChild(inBtn);
+                          cnt.appendChild(holder);
+                      }
+                      cnt.appendChild(status);
+                      return cnt;
                     }, quick_reply: function(data) {
                       var button = t.domHelper.workplace.createElement('button');
                       button.classList.add('chat-button');
@@ -935,11 +1028,27 @@ window.menu = null;
                       button.innerHTML = data.payload;
                       button.onclick = t.sendButton.bind(t);
                       return button;
-                    }, quick_replies: function(data) {
+                    }, is_input: function(msg) {
+                      var data = JSON.parse(msg.payload);
+                      if (data.quick_replies) {
+                        for (var i in data.quick_replies) {
+                          if (data.quick_replies[i].content_type && (data.quick_replies[i].content_type === 'user_email' || data.quick_replies[i].content_type === 'user_phone_number')) {
+                            return true;
+                          }
+                        }
+                      }
+                      return false;
+                    }, quick_replies: function(msg, data) {
                         var html = [];
                         for (var i in data) {
-                          if (data[i].content_type && data[i].content_type === 'text') {
-                            html.push(t.chat.quick_reply(data[i]));
+                          if (data[i].content_type) {
+                            if (data[i].content_type === 'text') {
+                              html.push(t.chat.quick_reply(data[i]));
+                            } else if (data[i].content_type === 'user_email') {
+                              html.push(t.chat.user_input(msg, data[i]));
+                            } else if (data[i].content_type === 'user_phone_number') {
+                              html.push(t.chat.user_input(msg, data[i]));
+                            }
                           }
                         }
                         return html;
@@ -981,15 +1090,23 @@ window.menu = null;
                               ttt = t.empty();
                             }
                             html = t.chat.buttons(data.attachment.payload.buttons);
-                            t.setButtons(html, ttt);
+                            if (html && html.length) {
+                              t.setButtons(html, ttt);
+                            } else {
+                              t.removeEmpty(ttt);
+                            }
                           }
                         }
                         if (data.quick_replies) {
                           if (needsReset) {
                             ttt = t.empty();
                           }
-                          html = t.chat.quick_replies(data.quick_replies);
-                          t.setButtons(html, ttt);
+                          html = t.chat.quick_replies(msg, data.quick_replies);
+                          if (html && html.length) {
+                            t.setButtons(html, ttt);
+                          } else {
+                            t.removeEmpty(ttt);
+                          }
                         }
                         t.updateResponses();
                         if (msg.typing) {
@@ -1029,6 +1146,44 @@ window.menu = null;
                         }
                         this.printMessage(i);
                     }
+                }
+            }, {
+                key: "inputButton",
+                value: function(ee) {
+                  if (!ee.target.classList.contains('icon-success')) {
+                    var input = document.getElementById(ee.target.id + '-input');
+                    var status = document.getElementById(ee.target.id + '-status');
+                    status.innerHTML = '&nbsp;';
+                    switch (ee.target.type) {
+                      case 'email':
+                        if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(input.value)) {
+                          ee.target.classList.remove('icon-send');
+                          ee.target.classList.add('icon-success');
+                          var ae = this;
+                          setTimeout(function() {
+                            ae.handleEvent(input.value, 'user_input', ee.target.id);
+                          }, 250);
+                        } else {
+                          status.innerHTML = 'Invalid Email';
+                        }
+                        break;
+                      case 'tel':
+                        var testNum = input.value.replace(/\D+/gm, '');
+                        if (testNum && testNum.length > 6) {
+                          ee.target.classList.remove('icon-send');
+                          ee.target.classList.add('icon-success');
+                          var ae = this;
+                          setTimeout(function() {
+                            ae.handleEvent(input.value, 'user_input', ee.target.id);
+                          }, 250);
+                        } else {
+                          status.innerHTML = 'Invalid Phone Number';
+                        }
+                        break;
+                      default:
+                        break;
+                    }
+                  }
                 }
             }, {
                 key: "sendButton",
@@ -1078,20 +1233,37 @@ window.menu = null;
                   window.isChatting = true;
                   var txt = evt || t.domHelper.getInputValue();
                   var shouldSend = true;
-                  if (txt !== 'startWelcome' && txt !== 'reconnect') {
-                    if (txt.indexOf('tel:') < 0) {
-                      if (txt.indexOf('web}') < 0) {
-                        t.domHelper.addUserRequestNode(txt);
+                  if (txt !== 'startWelcome' && txt !== 'reconnect' && type !== 'user_input') {
+                    if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
+                    shouldSend = false;
+                    var inBtn = document.getElementById(window.eySocket.turnId);
+                    var input = document.getElementById(window.eySocket.turnId + '-input');
+                    input.value = n;
+                    inBtn.click();
+                    } else {
+                      if (txt.indexOf('tel:') < 0) {
+                        if (txt.indexOf('web}') < 0) {
+                          t.domHelper.addUserRequestNode({text: txt}, t);
+                        } else {
+                          shouldSend = false;
+                        }
                       } else {
                         shouldSend = false;
                       }
-                    } else {
-                      shouldSend = false;
+                      window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
+                      saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
                     }
-                    saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                  } else if (type === 'user_input') {
+                    saveInteraction({ action: "input_value", payload: JSON.stringify({ input_value: txt, id: dt }), typing: false, sender: "user" });
+                    dt = null;
                   }
                   if (shouldSend) {
                     window.eySocket.typingElement = t.empty();
+                    if (txt === 'reconnect' && window.eySocket.lastInteraction && t.chat.is_input(window.eySocket.lastInteraction)) {
+                    } else {
+                      delete window.eySocket.turnType;
+                      delete window.eySocket.turnID;
+                    }
                     window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
                   }
                   window.isChatting = false;
