@@ -445,9 +445,13 @@ window.menu = null;
                     } else if (n.input_value && n.id) {
                       var input = ben.domHelper.workplace.getElementById(n.id + '-input');
                       var cnt = ben.domHelper.workplace.getElementById(n.id);
-                      input.value = n.input_value;
-                      cnt.classList.remove('icon-send');
-                      cnt.classList.add('icon-success');
+                      if (input) {
+                        input.value = n.input_value;
+                      }
+                      if (cnt) {
+                        cnt.classList.remove('icon-send');
+                        cnt.classList.add('icon-success');
+                      }
                     }
                 }
             }, {
