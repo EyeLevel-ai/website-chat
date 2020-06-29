@@ -847,6 +847,18 @@ window.menu = null;
                     } else {
                       console.warn('unexpected response', nn);
                     }
+                }, this.setMultimedia = function(ee, nn) {
+                    var sc = nn.getElementsByClassName('server-response');
+                    if (sc && sc.length && sc.length === 1) {
+                      while (sc[0].firstChild) {
+                        sc[0].removeChild(sc[0].firstChild);
+                      }
+                      sc[0].classList.add('chat-multimedia');
+                      sc[0].appendChild(ee);
+                      return nn, this
+                    } else {
+                      console.warn('unexpected response', nn);
+                    }
                 }, this.setButtons = function(ee, nn) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (sc && sc.length && sc.length === 1) {
@@ -948,6 +960,11 @@ window.menu = null;
                 }, this.chat = {
                     text: function(data) {
                         return t.escapeString(data);
+                    }, image: function(data) {
+                        var img = t.domHelper.workplace.createElement('img');
+                        img.src = data;
+                        img.classList.add('chat-image');
+                        return img;
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
                         button.classList.add('chat-button');
@@ -1126,6 +1143,14 @@ window.menu = null;
                               }
                               html = t.chat.text(data.attachment.payload.url);
                               t.setText(html, ttt);
+                              needsReset = true;
+                            }
+                            if (data.attachment.type && data.attachment.type === 'image' && data.attachment.payload.url) {
+                              if (needsReset) {
+                                ttt = t.empty();
+                              }
+                              html = t.chat.image(data.attachment.payload.url);
+                              t.setMultimedia(html, ttt);
                               needsReset = true;
                             }
                             if (data.attachment.payload.buttons) {

@@ -272,6 +272,12 @@ noscript h1 {
   -ms-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
 }
+.ey-chat .chat-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .ey-chat .user-input-wrapper {
   border-radius: 8px !important;
   padding: 10px 25px;
@@ -366,6 +372,10 @@ noscript h1 {
   margin-left: 15px;
   border-radius: 16px 16px 16px 0;
   background: #ffffff;
+}
+.ey-chat .chat-multimedia {
+  padding: 0;
+  overflow: hidden;
 }
 .ey-chat .server-response.chat-buttons {
   background: transparent;
