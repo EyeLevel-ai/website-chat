@@ -1359,7 +1359,8 @@ window.menu = null;
                         username: window.username,
                         path: window.location.pathname,
                         uid: user.userId,
-                        origin: window.origin || 'web'
+                        origin: window.origin || 'web',
+                        ref: window.location.href
                     };
                     if (typeof window.flowname !== 'undefined') {
                       ben.flowname = window.flowname;

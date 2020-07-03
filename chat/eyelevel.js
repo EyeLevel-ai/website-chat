@@ -297,6 +297,7 @@ try {
       sn.classList.add("ey-section");
       if (origin === 'linkedin') {
         sn.classList.add("ey-section-open");
+        window.isOpen = true;
       } else if (shouldOpen) {
         sn.classList.add("ey-section-visible");
       } else {
