@@ -979,6 +979,34 @@ window.menu = null;
                           t.scrollToBottom();
                         });
                         return img;
+                    }, card: function(t, ttt, data) {
+                      var html = [];
+                      if (data.length && data.length === 1) {
+                        var cd = data[0];
+                        var needsReset = false;
+                        if (cd.title) {
+                          var pt = cd.title;
+                          if (cd.subtitle) {
+                            pt += cd.subtitle;
+                          }
+                          var txt = t.chat.text(pt);
+                          t.setText(txt, ttt);
+                          needsReset = true;
+                        }
+                        if (cd.buttons && cd.buttons.length) {
+                          if (needsReset) {
+                            ttt = t.empty();
+                          }
+                          var bt = t.chat.buttons(cd.buttons);
+                          if (bt && bt.length) {
+                            t.setButtons(bt, ttt);
+                          } else {
+                            t.removeEmpty(ttt);
+                          }
+                        }
+                      } else {
+                        t.removeEmpty(ttt);
+                      }
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
                         button.classList.add('chat-button');
@@ -1177,6 +1205,9 @@ window.menu = null;
                               } else {
                                 t.removeEmpty(ttt);
                               }
+                            }
+                            if (data.attachment.payload.template_type === 'generic') {
+                              html = t.chat.card(t, ttt, data.attachment.payload.elements);
                             }
                           }
                           if (data.quick_replies) {
