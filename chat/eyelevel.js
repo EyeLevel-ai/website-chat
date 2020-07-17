@@ -57,7 +57,7 @@ try {
     var af = document.createElement("section");
     af.classList.add("ey-badge-cnt");
     af.id = "eyBadgeCnt";
-    af.innerHTML = '<iframe id="eyBadge" class="ey-badge-frame ey-iframe"></iframe>';
+    af.innerHTML = '<iframe id="eyBadge" class="ey-badge-frame ey-iframe" data-hj-allow-iframe=""></iframe>';
     document.body.appendChild(af);
     var ei = document.getElementById("eyBadge");
     ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
@@ -70,7 +70,7 @@ try {
     var af = document.createElement("section");
     af.classList.add("ey-alert-cnt");
     af.id = "eyAlertCnt";
-    af.innerHTML = '<iframe id="eyAlert" class="ey-alert-frame ey-iframe"></iframe>';
+    af.innerHTML = '<iframe id="eyAlert" class="ey-alert-frame ey-iframe" data-hj-allow-iframe=""></iframe>';
     document.body.appendChild(af);
     var ei = document.getElementById("eyAlert");
     ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
@@ -255,6 +255,21 @@ try {
       var origin = params.origin ? params.origin.toLowerCase() : 'web';
       window.eyorigin = origin;
       var userId = window.getUser().userId;
+
+      var es1 = document.createElement("script");
+      es1.src = remoteURL + '/iframeResizer.min.js';
+      document.body.appendChild(es1);
+      if (username) {
+        var es2 = document.createElement("script");
+        es2.src = cssURL + '/' + username + '/behavior.js';
+        document.body.appendChild(es2);
+      }
+      if (flowname) {
+        var es2 = document.createElement("script");
+        es2.src = cssURL + '/' + flowname + '/behavior.js';
+        document.body.appendChild(es2);
+      }
+
       loadHistory();
       if (window.location.host.indexOf('eyelevel.ai') < 0 && typeof mixpanel !== 'undefined') {
         mixpanel.identify(userId);
@@ -275,7 +290,10 @@ try {
           eb.classList.add("ey-app-open");
           window.isOpen = true;
         }
-        eb.innerHTML = '<iframe id="eyAppFrame" class="ey-app-container ey-iframe"></iframe>';
+        eb.innerHTML = '<iframe id="eyAppFrame" class="ey-app-container ey-iframe" data-hj-allow-iframe=""></iframe>';
+        if(window.hideChat) {
+          return;
+        }
         document.body.appendChild(eb);
         var isn = document.getElementById("eyAppFrame");
         isn = isn.contentWindow || ( isn.contentDocument.document || isn.contentDocument);
@@ -304,7 +322,10 @@ try {
         sn.classList.add("ey-section-invisible");
       }
       sn.id = "eySection";
-      sn.innerHTML = '<iframe id="eyFrame" class="ey-container ey-iframe"></iframe>';
+      sn.innerHTML = '<iframe id="eyFrame" class="ey-container ey-iframe" data-hj-allow-iframe=""></iframe>';
+      if (window.hideChat) {
+        return;
+      }
       if (origin === 'linkedin') {
         var mainCnt = document.getElementById('linkedinContainer');
         mainCnt.appendChild(sn);
@@ -314,7 +335,7 @@ try {
       var is = document.getElementById("eyFrame");
       is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
       is.document.open();
-      is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.3"; document.body.appendChild(as); }</script></body></html>');
+      is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.4"; document.body.appendChild(as); }</script></body></html>');
       is.document.close();
       window.addEventListener("message", function(e) {
         if (e.data && e.data && e.data.indexOf && e.data.indexOf("track:") === 0) {
@@ -333,19 +354,6 @@ try {
           window.location.href = window.location.pathname + window.location.search + window.location.hash;
         }
       }, true);
-      var es1 = document.createElement("script");
-      es1.src = remoteURL + '/iframeResizer.min.js';
-      document.body.appendChild(es1);
-      if (username) {
-        var es2 = document.createElement("script");
-        es2.src = cssURL + '/' + username + '/behavior.js';
-        document.body.appendChild(es2);
-      }
-      if (flowname) {
-        var es2 = document.createElement("script");
-        es2.src = cssURL + '/' + flowname + '/behavior.js';
-        document.body.appendChild(es2);
-      }
     },
   };
   var execute = function() {

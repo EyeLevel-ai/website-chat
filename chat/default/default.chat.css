@@ -21,6 +21,11 @@
   background: linear-gradient(0deg, hsl(219, 20%, 34%), hsl(219, 21%, 33%));
 }
 
+/* Close button color */
+.ey-close-btn {
+  text-shadow: 0 0 0 #fff;
+}
+
 /* Chat background */
 .ey-chat .ey_result {
   background: #d8d8d8;

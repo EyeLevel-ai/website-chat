@@ -662,6 +662,7 @@ window.menu = null;
                 }, this.initializeWS = function(isRestart) {
                   window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username+'&origin='+(window.origin || web));
                   window.eySocket.connectTime = Date.now();
+                  window.eySocket.queuedMessages = [];
                   if (isRestart) {
                     window.eySocket.isStarted = true;
                   } else {
@@ -700,6 +701,14 @@ window.menu = null;
                   } else {
                     t.handleInput();
                   }
+                }, this.processQueue = function() {
+                  if (window.eySocket.queuedMessages.length) {
+                    var wsRes = window.eySocket.queuedMessages.shift();
+                    return t.createMessage(wsRes, window.eySocket.typingElement)
+                      .then(function(r) {
+                        return t.processQueue();
+                      });
+                  }
                 }, this.handleWSMessage = function(n) {
                   window.isChatting = false;
                   if (n && n.data) {
@@ -707,21 +716,23 @@ window.menu = null;
                       var wsRes = JSON.parse(n.data);
                       if (wsRes) {
                         if (wsRes.action && wsRes.action !== 'heartbeat' && wsRes.action !== 'reconnect' && wsRes.action !== 'reconnect-empty') {
-                          if (window.eySocket.typingElement) {
-                            t.createMessage(wsRes, window.eySocket.typingElement);
-                          } else {
-                            t.createMessage(wsRes);
-                          }
                           wsRes.sender = "server";
                           window.eySocket.lastInteraction = wsRes;
+                          if (!window.eySocket.queuedMessages.length) {
+                            window.eySocket.queuedMessages.push(wsRes);
+                            t.processQueue();
+                          } else {
+                            window.eySocket.queuedMessages.push(wsRes);
+                          }
                           saveInteraction(wsRes);
                         } else if (wsRes.action && wsRes.action === 'reconnect') {
-                          if (window.eySocket.typingElement) {
-                            t.createMessage(wsRes, window.eySocket.typingElement);
-                          } else {
-                            t.createMessage(wsRes);
-                          }
                           wsRes.sender = "server";
+                          if (!window.eySocket.queuedMessages.length) {
+                            window.eySocket.queuedMessages.push(wsRes);
+                            t.processQueue();
+                          } else {
+                            window.eySocket.queuedMessages.push(wsRes);
+                          }
                         } else if (wsRes.action && wsRes.action === 'reconnect-empty') {
                           if (window.eySocket.typingElement) {
                             t.removeEmpty(window.eySocket.typingElement);
@@ -964,6 +975,9 @@ window.menu = null;
                         var img = t.domHelper.workplace.createElement('img');
                         img.src = data;
                         img.classList.add('chat-image');
+                        img.addEventListener('load', function() {
+                          t.scrollToBottom();
+                        });
                         return img;
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
@@ -1179,10 +1193,12 @@ window.menu = null;
                         }
                         t.updateResponses();
                         if (msg.typing) {
+                          window.eySocket.typingElement = t.empty();
+                          window.eySocket.typingElement.style.display = 'none';
                           setTimeout(function() {
-                            window.eySocket.typingElement = t.empty();
+                            window.eySocket.typingElement.style.display = 'flex';
                             resolve();
-                          }, Math.floor(Math.random()*(600-400+1)+400));
+                          }, Math.floor(Math.random()*300 + 100));
                         } else {
                           window.eySocket.typingElement = null;
                           resolve();
