@@ -103,6 +103,16 @@ saveInteraction = function(interaction) {
   window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
 }
 
+saveSession = function(pos) {
+  if (pos.flowUUID && pos.turnID && pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(pos.turnID) !== 0) {
+    window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify({ position: pos }));
+  }
+}
+
+getSession = function() {
+  return JSON.parse(window.localStorage.getItem('eyelevel.conversation.session'));
+}
+
 retrieveInteractions = function() {
   return JSON.parse(window.localStorage.getItem('eyelevel.conversation.history'));
 }
@@ -354,8 +364,9 @@ window.menu = null;
             }, {
                 key: "reconnect",
                 value: function(ben) {
+                  var sess = getSession();
                   setTimeout(function() {
-                    ben.handleEvent('reconnect', 'reconnect');
+                    ben.handleEvent('reconnect', 'reconnect', null, sess && sess.position);
                     return
                   }, 0);
                 }
@@ -714,6 +725,7 @@ window.menu = null;
                   if (n && n.data) {
                     try {
                       var wsRes = JSON.parse(n.data);
+                      saveSession(wsRes.position);
                       if (wsRes) {
                         if (wsRes.action && wsRes.action !== 'heartbeat' && wsRes.action !== 'reconnect' && wsRes.action !== 'reconnect-empty') {
                           wsRes.sender = "server";
@@ -898,6 +910,7 @@ window.menu = null;
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
                         if (n === 'clear all') {
                           window.localStorage.removeItem('eyelevel.conversation.history');
+                          window.localStorage.removeItem('eyelevel.conversation.position');
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
                           window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
                           t.domHelper.setInputValue("");
@@ -1010,14 +1023,24 @@ window.menu = null;
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
                         button.classList.add('chat-button');
+                        var objData = data;
                         if (data.type === 'phone_number') {
                           button.classList.add('click-to-call');
                         } else if (data.type === 'web_url') {
                           button.classList.add('web-url');
                           button.value = data.url;
+                        } else {
+                          try {
+                            var jsonPay = JSON.parse(objData.payload);
+                            if (jsonPay && jsonPay.title && jsonPay.action && jsonPay.position) {
+                              button.setAttribute('data-flow-uuid', jsonPay.position.flowUUID);
+                              button.setAttribute('data-turn-id', jsonPay.position.turnID);
+                            }
+                            objData.payload = objData.title;
+                          } catch (e) {}
                         }
-                        button.setAttribute('id', data.payload);
-                        button.innerHTML = data.title;
+                        button.setAttribute('id', objData.payload);
+                        button.innerHTML = objData.title;
                         button.onclick = t.sendButton.bind(t);
                         return button;
                     }, button_facebook: function(data) {
@@ -1117,10 +1140,19 @@ window.menu = null;
                       cnt.appendChild(status);
                       return cnt;
                     }, quick_reply: function(data) {
+                      var objData = data;
+                      if (objData.content_type === 'text') {
+                        try {
+                          var jsonPay = JSON.parse(objData.payload);
+                          if (jsonPay && jsonPay.title && jsonPay.action && jsonPay.position) {
+                            return t.chat.button({ title: jsonPay.title, type: "postback", payload: objData.payload });
+                          }
+                        } catch (e) {}
+                      }
                       var button = t.domHelper.workplace.createElement('button');
                       button.classList.add('chat-button');
-                      button.setAttribute('id', data.payload);
-                      button.innerHTML = data.payload;
+                      button.setAttribute('id', objData.payload);
+                      button.innerHTML = objData.payload;
                       button.onclick = t.sendButton.bind(t);
                       return button;
                     }, is_input: function(msg) {
@@ -1149,6 +1181,8 @@ window.menu = null;
                     }
                 }, this.createMessage = function(msg, obj) {
                     return new Promise(function(resolve, reject) {
+                        delete window.eySocket.turnType;
+                        delete window.eySocket.turnID;
                         var ttt;
                         if (obj) {
                             ttt = obj;
@@ -1316,7 +1350,6 @@ window.menu = null;
             }, {
                 key: "sendButton",
                 value: function(ee) {
-//                  ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
                   if (ee.target.classList.contains('click-to-call')) {
                     var aa = document.createElement('a');
                     aa.href = 'tel:'+ee.target.id;
@@ -1333,7 +1366,15 @@ window.menu = null;
                     this.handleEvent('web}'+ee.target.value);
                     this.scrollToBottom();
                   } else {
-                    this.handleEvent(ee.target.id);
+                    delete window.eySocket.turnType;
+                    delete window.eySocket.turnID;
+                    var flowUUID = ee.target.getAttribute('data-flow-uuid');
+                    var turnID = parseInt(ee.target.getAttribute('data-turn-id'));
+                    var pos;
+                    if (flowUUID && turnID && !isNaN(turnID)) {
+                      pos = { flowUUID: flowUUID, turnID: turnID };
+                    }
+                    this.handleEvent(ee.target.id, null, null, pos);
                   }
                 }
             }, {
@@ -1356,7 +1397,7 @@ window.menu = null;
                 }
             }, {
                 key: "handleEvent",
-                value: function(evt, type, dt) {
+                value: function(evt, type, dt, pos) {
                   var t = this;
                   window.isChatting = true;
                   var txt = evt || t.domHelper.getInputValue();
@@ -1392,14 +1433,14 @@ window.menu = null;
                       delete window.eySocket.turnType;
                       delete window.eySocket.turnID;
                     }
-                    window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt)));
+                    window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt, pos)));
                   }
                   window.isChatting = false;
                   this.scrollToBottom();
                 }
             }, {
                 key: "buildPayLoad",
-                value: function(e, ty, dt) {
+                value: function(e, ty, dt, pos) {
                     var ben = {
                         type: ty || 'text',
                         data: e,
@@ -1407,6 +1448,7 @@ window.menu = null;
                         path: window.location.pathname,
                         uid: user.userId,
                         origin: window.origin || 'web',
+                        position: pos && pos,
                         ref: window.location.href
                     };
                     if (typeof window.flowname !== 'undefined') {
