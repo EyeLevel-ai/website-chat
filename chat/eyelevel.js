@@ -154,11 +154,16 @@ try {
     var domB;
     var pathB;
     for (var k in config) {
-      if (window.location.hostname.indexOf(k) > -1) {
+      if (window.location.hostname === k) {
         chatBehavior = config[k].config;
         for (var j in config[k].path) {
-          if (window.location.pathname.indexOf(j) > -1) {
-            chatBehavior = config[k].path[j];
+          if (j.indexOf('*') > -1) {
+            if (window.location.pathname.indexOf(j.replace('*','')) > -1) {
+              chatBehavior = config[k].path[j].config;
+              break;
+            }
+          } else if (window.location.pathname === j) {
+            chatBehavior = config[k].path[j].config;
             break;
           }
         }
@@ -168,8 +173,13 @@ try {
     if (!chatBehavior && config['*']) {
       chatBehavior = config['*'].config;
       for (var j in config['*'].path) {
-        if (window.location.pathname.indexOf(j) > -1) {
-          chatBehavior = config['*'].path[j];
+        if (j.indexOf('*') > -1) {
+          if (window.location.pathname.indexOf(j.replace('*','')) > -1) {
+            chatBehavior = config['*'].path[j].config;
+            break;
+          }
+        } else if (window.location.pathname === j) {
+          chatBehavior = config['*'].path[j].config;
           break;
         }
       }
@@ -362,6 +372,17 @@ try {
 
   var eyelevel = {
     init: function(params) {
+      var gaid = params.gaid || "UA-173447538-1";
+      var googleScript = document.createElement('script');
+		  googleScript.src = "https://www.googletagmanager.com/gtag/js?id=" + gaid;
+		  googleScript.async = true;
+		  var firstScript = document.getElementsByTagName('script')[0];
+		  firstScript.parentNode.insertBefore(googleScript, firstScript);
+		  var googlePixel = document.createElement('script');
+		  googlePixel.text = "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '" + gaid + "');"
+		  googlePixel.async = true;
+		  firstScript.parentNode.insertBefore(googlePixel, firstScript);
+
       var username = params.username;
       var un = getQueryVar("un");
       if (un) {
@@ -420,7 +441,7 @@ try {
       if (window.eyorigin !== 'linkedin') {
         setTimeout(function() {
           window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen);
-        }, 200);
+        }, 1000);
       }
       var es = document.createElement("style");
       es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';width:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((channel && channel === 'email') ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + (window.eyorigin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;overflow: hidden;height:calc(100% - 120px);}.ey-section-visible{max-height:704px;}.ey-section-open{max-height:704px;top:123px;bottom:auto}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
@@ -428,7 +449,7 @@ try {
 
       setTimeout(function() {
         window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin);
-      }, 200);
+      }, 1000);
 
       window.addEventListener("message", function(e) {
         if (e.data && e.data && e.data.indexOf && e.data.indexOf("track:") === 0) {
