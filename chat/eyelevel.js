@@ -6,6 +6,8 @@ try {
   window.chatURL = chatURL;
   window.cssURL = cssURL;
 
+  var shouldTrack = (window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('speatly') > -1 || typeof gtag === 'undefined') ? false : true;
+
   function getQueryVar(vn) {
     var qq = window.location.search.substring(1);
     var vr = qq.split('&');
@@ -53,6 +55,22 @@ try {
     );
   }
 
+  window.initEYScripts = function() {
+    var es1 = document.createElement("script");
+    es1.src = remoteURL + '/iframeResizer.min.js';
+    document.body.appendChild(es1);
+    if (window.eyusername) {
+      var es2 = document.createElement("script");
+      es2.src = cssURL + '/' + window.eyusername + '/behavior.js';
+      document.body.appendChild(es2);
+    }
+    if (window.eyflowname) {
+      var es2 = document.createElement("script");
+      es2.src = cssURL + '/' + window.eyflowname + '/behavior.js';
+      document.body.appendChild(es2);
+    }
+  }
+
   window.initBadgeFrame = function(n) {
     var af = document.createElement("section");
     af.classList.add("ey-badge-cnt");
@@ -70,12 +88,12 @@ try {
     var af = document.createElement("section");
     af.classList.add("ey-alert-cnt");
     af.id = "eyAlertCnt";
-    af.innerHTML = '<iframe id="eyAlert" class="ey-alert-frame ey-iframe" data-hj-allow-iframe=""></iframe>';
+    af.innerHTML = '<iframe id="eyAlert" class="ey-alert-frame ey-iframe" data-hj-allow-iframe="" style="background: transparent;"></iframe>';
     document.body.appendChild(af);
     var ei = document.getElementById("eyAlert");
     ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
     ei.document.open();
-    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body"><div class="ey-chat"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
+    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
   }
@@ -107,7 +125,7 @@ try {
     var isn = document.getElementById("eyAppFrame");
     isn = isn.contentWindow || ( isn.contentDocument.document || isn.contentDocument);
     isn.document.open();
-    isn.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{overflow:hidden;}@keyframes growIcon{from{transform: scale(0);-webkit-transform:scale(0);-moz-transform:scale(0);-ms-transform:scale(0);-o-transform:scale(0);}to{transform:scale(1);-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);}}.ey-app-icon-container{position:relative;}.ey-app-icon-active{height:90px;width:90px;animation:growIcon 0.1s;-webkit-animation:growIcon 0.1s;-ms-animation:growIcon 0.1s;-o-animation:growIcon 0.1s;-moz-animation:growIcon 0.1s;}.ey-app-icon-inactive{width:0;height:0;animation:growIcon 0.1s;-webkit-animation:growIcon 0.1s;-ms-animation:growIcon 0.1s;-moz-animation:growIcon 0.1s;-o-animation:growIcon 0.1s;}.ey-app-icon-inactive svg{width:0;height:0;}.ey-close-btn {position: absolute;top:-4px;left:0;font-size:60px;color:transparent;text-shadow: 0 0 0 #7197c9;display:flex;justify-content:center;align-items:center;}.ey-close-btn svg{margin:0;position:absolute;top:50%;left:50%;margin-right:-50%;transform:translate(-50%,-50%);-webkit-transform:translate3d(-50%,-50%,0);-moz-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);-o-transform:translate(-50%,-50%);}.ey-icon-btn{position:absolute;top:-3px;left:0;}.ey-icon-btn svg{margin:0;position:absolute;top:50%;left:50%;margin-right:-50%;transform:translate(-50%,-50%);-webkit-transform:translate3d(-50%,-50%,0);-moz-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);-o-transform:translate(-50%,-50%);}.ey-app-icon-img{overflow:visible;}</style>' + (username ? '<link href="' + cssURL + '/' + username + '/bubble.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/bubble.css" rel="stylesheet" type="text/css">'  : '') + '<script>function toggleIcon(e){if(e && e.data === "open"){var ci = document.getElementById("eyChatOpen");ci.classList.remove("ey-app-icon-active");void ci.offsetWidth;ci.classList.add("ey-app-icon-inactive");var cbi = document.getElementById("eyChatClose");cbi.classList.remove("ey-app-icon-inactive");void cbi.offsetWidth;cbi.classList.add("ey-app-icon-active");}else if(e && e.data === "close"){var ci = document.getElementById("eyChatOpen");ci.classList.remove("ey-app-icon-inactive");void ci.offsetWidth;ci.classList.add("ey-app-icon-active");var cbi = document.getElementById("eyChatClose");cbi.classList.remove("ey-app-icon-active");void cbi.offsetWidth;cbi.classList.add("ey-app-icon-inactive");}}window.addEventListener("message", toggleIcon, false);</script></head><body><div class="ey-app-icon-container"><svg class="ey-app-icon-img" width="82px" height="82px" viewBox="0 0 64 63" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><rect id="path-1" x="0" y="0" width="52" height="52" rx="8"></rect><filter x="-27.9%" y="-24.0%" width="155.8%" height="155.8%" filterUnits="objectBoundingBox" id="filter-2"><feMorphology radius="1" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology><feOffset dx="0" dy="2" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset><feGaussianBlur stdDeviation="3.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur><feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.354102928 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix></filter></defs><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-5-Copy" transform="translate(9.000000, 4.000000)"><g id="Rectangle"><use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use><use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use></g></g></g></svg><div id="eyChatOpen" class="ey-icon-btn ' + (shouldOpen ? "ey-app-icon-inactive" : "ey-app-icon-active") + '"><svg class="ey-o-icon" width="45px" height="45px" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path d="M7.9558011,0 L56.0441989,0 C60.4465856,0 64,3.89804392 64,8.7273982 L64,43.636991 C64,48.4659574 60.4465856,52.3643892 56.0441989,52.3643892 L53.3922652,52.3643892 L53.3922652,61.0917874 C53.3922652,63.1935388 51.408442,64.7155971 49.4674033,63.6518242 C49.4143646,63.5936416 49.3081105,63.5936416 49.2550718,63.535265 C34.6666077,52.8034743 37.9360884,55.196333 34.6694365,52.8296565 C34.2453039,52.5387432 33.7679558,52.3643892 33.2375691,52.3643892 L7.9558011,52.3643892 C3.55341436,52.3643892 0,48.4659574 0,43.636991 L0,8.7273982 C0,3.89804392 3.55341436,0 7.9558011,0 Z M12,14 C10.8954305,14 10,14.8954305 10,16 L10,18 C10,19.1045695 10.8954305,20 12,20 L52,20 C53.1045695,20 54,19.1045695 54,18 L54,16 C54,14.8954305 53.1045695,14 52,14 L12,14 Z M12,28 C10.8954305,28 10,28.8954305 10,30 L10,32 C10,33.1045695 10.8954305,34 12,34 L40,34 C41.1045695,34 42,33.1045695 42,32 L42,30 C42,28.8954305 41.1045695,28 40,28 L12,28 Z" id="Combined-Shape" fill="#6897CD" fill-rule="nonzero"></path></g></svg></div><div id="eyChatClose" class="ey-close-btn ' + (shouldOpen ? "ey-app-icon-active" : "ey-app-icon-inactive") + '"><svg class="ey-x-icon" width="36px" height="36px" viewBox="0 0 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-11" fill="#6897CD" fill-rule="nonzero"><path d="M19.7250963,10.8364044 L-0.576929453,10.8364044 C-2.47047641,10.8364044 -2.47823332,8 -0.576929453,8 L19.7250963,8 C21.6186433,8 21.6264002,10.8364044 19.7250963,10.8364044 Z" id="Path-Copy-2" transform="translate(9.574083, 9.418202) scale(-1, 1) rotate(45.000000) translate(-9.574083, -9.418202) "></path><path d="M19.7250963,10.8364044 L-0.576929453,10.8364044 C-2.47047641,10.8364044 -2.47823332,8 -0.576929453,8 L19.7250963,8 C21.6186433,8 21.6264002,10.8364044 19.7250963,10.8364044 Z" id="Path-Copy-3" transform="translate(9.574083, 9.418202) scale(-1, -1) rotate(45.000000) translate(-9.574083, -9.418202) "></path></g></g></svg></div></div></body></html>');
+    isn.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{overflow:hidden;}@keyframes growIcon{from{transform: scale(0);-webkit-transform:scale(0);-moz-transform:scale(0);-ms-transform:scale(0);-o-transform:scale(0);}to{transform:scale(1);-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);}}.ey-app-icon-container{position:relative;}.ey-app-icon-active{height:90px;width:90px;animation:growIcon 0.1s;-webkit-animation:growIcon 0.1s;-ms-animation:growIcon 0.1s;-o-animation:growIcon 0.1s;-moz-animation:growIcon 0.1s;}.ey-app-icon-inactive{width:0;height:0;animation:growIcon 0.1s;-webkit-animation:growIcon 0.1s;-ms-animation:growIcon 0.1s;-moz-animation:growIcon 0.1s;-o-animation:growIcon 0.1s;}.ey-app-icon-inactive svg{width:0;height:0;}.ey-close-btn {position: absolute;top:-4px;left:0;font-size:60px;color:transparent;text-shadow: 0 0 0 #7197c9;display:flex;justify-content:center;align-items:center;}.ey-close-btn svg{margin:0;position:absolute;top:50%;left:50%;margin-right:-50%;transform:translate(-50%,-50%);-webkit-transform:translate3d(-50%,-50%,0);-moz-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);-o-transform:translate(-50%,-50%);}.ey-icon-btn{position:absolute;top:-3px;left:0;}.ey-icon-btn svg{margin:0;position:absolute;top:50%;left:50%;margin-right:-50%;transform:translate(-50%,-50%);-webkit-transform:translate3d(-50%,-50%,0);-moz-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);-o-transform:translate(-50%,-50%);}.ey-app-icon-img{overflow:visible;}</style>' + (username ? '<link href="' + cssURL + '/' + username + '/bubble.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/bubble.css" rel="stylesheet" type="text/css">'  : '') + '<script>function toggleIcon(e){if(e && e.data === "open"){var ci = document.getElementById("eyChatOpen");ci.classList.remove("ey-app-icon-active");void ci.offsetWidth;ci.classList.add("ey-app-icon-inactive");var cbi = document.getElementById("eyChatClose");cbi.classList.remove("ey-app-icon-inactive");void cbi.offsetWidth;cbi.classList.add("ey-app-icon-active");}else if(e && e.data === "close"){var ci = document.getElementById("eyChatOpen");ci.classList.remove("ey-app-icon-inactive");void ci.offsetWidth;ci.classList.add("ey-app-icon-active");var cbi = document.getElementById("eyChatClose");cbi.classList.remove("ey-app-icon-active");void cbi.offsetWidth;cbi.classList.add("ey-app-icon-inactive");}}window.addEventListener("message", toggleIcon, false);</script></head><body><div class="ey-app-icon-container"><svg class="ey-app-icon-img" width="82px" height="82px" viewBox="0 0 64 63" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><rect id="path-1" x="0" y="0" width="52" height="52" rx="8"></rect><filter x="-27.9%" y="-24.0%" width="155.8%" height="155.8%" filterUnits="objectBoundingBox" id="filter-2"><feMorphology radius="1" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology><feOffset dx="0" dy="2" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset><feGaussianBlur stdDeviation="3.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur><feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.354102928 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix></filter></defs><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-5-Copy" transform="translate(9.000000, 4.000000)"><g id="Rectangle"><use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use><use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use></g></g></g></svg><div id="eyChatOpen" class="ey-icon-btn ' + (shouldOpen ? "ey-app-icon-inactive" : "ey-app-icon-active") + '"><svg class="ey-o-icon" width="45px" height="45px" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path d="M7.9558011,0 L56.0441989,0 C60.4465856,0 64,3.89804392 64,8.7273982 L64,43.636991 C64,48.4659574 60.4465856,52.3643892 56.0441989,52.3643892 L53.3922652,52.3643892 L53.3922652,61.0917874 C53.3922652,63.1935388 51.408442,64.7155971 49.4674033,63.6518242 C49.4143646,63.5936416 49.3081105,63.5936416 49.2550718,63.535265 C34.6666077,52.8034743 37.9360884,55.196333 34.6694365,52.8296565 C34.2453039,52.5387432 33.7679558,52.3643892 33.2375691,52.3643892 L7.9558011,52.3643892 C3.55341436,52.3643892 0,48.4659574 0,43.636991 L0,8.7273982 C0,3.89804392 3.55341436,0 7.9558011,0 Z M12,14 C10.8954305,14 10,14.8954305 10,16 L10,18 C10,19.1045695 10.8954305,20 12,20 L52,20 C53.1045695,20 54,19.1045695 54,18 L54,16 C54,14.8954305 53.1045695,14 52,14 L12,14 Z M12,28 C10.8954305,28 10,28.8954305 10,30 L10,32 C10,33.1045695 10.8954305,34 12,34 L40,34 C41.1045695,34 42,33.1045695 42,32 L42,30 C42,28.8954305 41.1045695,28 40,28 L12,28 Z" id="Combined-Shape" fill="#6897CD" fill-rule="nonzero"></path></g></svg></div><div id="eyChatClose" class="ey-close-btn ' + (shouldOpen ? "ey-app-icon-active" : "ey-app-icon-inactive") + '"><svg class="ey-x-icon" width="36px" height="36px" viewBox="0 0 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Launcher-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Group-11" fill="#6897CD" fill-rule="nonzero"><path d="M19.7250963,10.8364044 L-0.576929453,10.8364044 C-2.47047641,10.8364044 -2.47823332,8 -0.576929453,8 L19.7250963,8 C21.6186433,8 21.6264002,10.8364044 19.7250963,10.8364044 Z" id="Path-Copy-2" transform="translate(9.574083, 9.418202) scale(-1, 1) rotate(45.000000) translate(-9.574083, -9.418202) "></path><path d="M19.7250963,10.8364044 L-0.576929453,10.8364044 C-2.47047641,10.8364044 -2.47823332,8 -0.576929453,8 L19.7250963,8 C21.6186433,8 21.6264002,10.8364044 19.7250963,10.8364044 Z" id="Path-Copy-3" transform="translate(9.574083, 9.418202) scale(-1, -1) rotate(45.000000) translate(-9.574083, -9.418202) "></path></g></g></svg></div></div><script>window.addEventListener("load", function() { window.parent.postMessage("bubble-loaded", "*"); });</script></body></html>');
     isn.document.close();
     isn.addEventListener("click", toggleChat);
     isn.addEventListener("touchstart", toggleChat, supportsPassive() ? {passive : false} : false);
@@ -337,8 +355,8 @@ try {
       var cw = document.getElementById("eySection");
       cw.classList.remove("ey-section-visible");
       cw.classList.add("ey-section-invisible");
-      if (typeof mixpanel !== 'undefined') {
-        mixpanel.track("Close Chat", { host: window.location.host, pathname: window.location.pathname, uid: window.getUser().userId, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin });
+      if (shouldTrack) {
+        gtag('event', 'chat_close', { event_category: "chat", uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
       }
       setTimeout(function() {
         var eis = document.getElementById("eyAppFrame");
@@ -355,8 +373,8 @@ try {
       var cw = document.getElementById("eySection");
       cw.classList.remove("ey-section-invisible");
       cw.classList.add("ey-section-visible");
-      if (typeof mixpanel !== "undefined") {
-        mixpanel.track("Open Chat", { host: window.location.host, pathname: window.location.pathname, uid: window.getUser().userId, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin });
+      if (shouldTrack) {
+        gtag('event', 'chat_open', { event_category: "chat", uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
       }
       setTimeout(function() {
         var is = document.getElementById("eyFrame");
@@ -411,52 +429,54 @@ try {
       var origin = params.origin ? params.origin.toLowerCase() : 'web';
       window.eyorigin = origin;
       var userId = window.getUser().userId;
+      window.eyuserid = userId;
 
-      var es1 = document.createElement("script");
-      es1.src = remoteURL + '/iframeResizer.min.js';
-      document.body.appendChild(es1);
-      if (window.eyusername) {
-        var es2 = document.createElement("script");
-        es2.src = cssURL + '/' + window.eyusername + '/behavior.js';
-        document.body.appendChild(es2);
-      }
-      if (window.eyflowname) {
-        var es2 = document.createElement("script");
-        es2.src = cssURL + '/' + window.eyflowname + '/behavior.js';
-        document.body.appendChild(es2);
+      if (document && document.body) {
+        window.initEYScripts();
+      } else {
+        document.addEventListener('DOMContentLoaded', function () {
+          window.initEYScripts();
+        });
       }
 
       loadHistory();
-      if (window.location.host.indexOf('eyelevel.ai') < 0 && typeof mixpanel !== 'undefined') {
-        mixpanel.identify(userId);
-        mixpanel.track("Page Loaded", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin });
+      if (shouldTrack) {
+        gtag('event', 'chat_load', { event_category: "chat", uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
       }
 
       if (!window.WebSocket || !window.addEventListener) {
-        if (typeof mixpanel !== 'undefined') {
-          mixpanel.track("Chat Not Shown", { host: window.location.host, pathname: window.location.pathname, uid: userId, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin });
+        if (shouldTrack) {
+          gtag('event', 'chat_hidden', { event_category: "chat", uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
         }
         return;
       }
-      if (window.eyorigin !== 'linkedin') {
-        setTimeout(function() {
-          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen);
-        }, 1000);
-      }
+
       var es = document.createElement("style");
-      es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';width:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((channel && channel === 'email') ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + (window.eyorigin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;overflow: hidden;height:calc(100% - 120px);}.ey-section-visible{max-height:704px;}.ey-section-open{max-height:704px;top:123px;bottom:auto}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
+      es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{display:none;position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';width:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((channel && channel === 'email') ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + (window.eyorigin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;overflow: hidden;height:calc(100% - 120px);}.ey-section-visible{max-height:704px;}.ey-section-open{max-height:704px;top:123px;bottom:auto}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
       document.body.appendChild(es);
 
-      setTimeout(function() {
+      if (window.eyorigin === 'linkedin') {
         window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin);
-      }, 1000);
+      } else {
+        window.addEventListener("load", function() {
+          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen);
+          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin);
+        }, true);
+      }
 
       window.addEventListener("message", function(e) {
         if (e.data && e.data && e.data.indexOf && e.data.indexOf("track:") === 0) {
           var jsonStr = e.data.replace("track:", "");
           var jsonObj = JSON.parse(jsonStr);
-          if (typeof mixpanel !== 'undefined') {
-            mixpanel.track("CHAT INTERACTION", jsonObj);
+          if (shouldTrack) {
+            jsonObj.event_category = "chat";
+            jsonObj.uid = window.eyuserid;
+            jsonObj.username = window.eyusername;
+            jsonObj.flowname = window.eyflowname;
+            jsonObj.origin = window.eyorigin;
+            jsonObj.channel = window.eychannel;
+            jsonObj.shouldOpen = window.eyshouldopen;
+            gtag('event', 'chat_interaction', jsonObj);
           }
         } else if (e.data && e.data === "close") {
           toggleChat();
@@ -466,6 +486,9 @@ try {
           toggleChat();
         } else if (e.data && e.data === "clear all") {
           window.location.href = window.location.pathname + window.location.search + window.location.hash;
+        } else if (e.data && e.data === "bubble-loaded") {
+          var eyb = document.getElementById("eyBubble");
+          eyb.style.display = "block";
         }
       }, true);
     },
@@ -483,16 +506,8 @@ try {
   execute();
 })();
 } catch(e) {
-console.error(e);
-  var userId;
-  if (window.localStorage) {
-    userId = window.localStorage.getItem('eyelevel.user.userId');
+  console.error(e);
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'chat_ey_error', { event_category: "chat", event_label: e, uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
   }
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
-  xhr.setRequestHeader('Content-type', 'application/json');
-  xhr.onload = function () {
-    console.log(this.responseText);
-  };
-  xhr.send(JSON.stringify({ event: "CATCH EYELEVEL.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin }));
 }

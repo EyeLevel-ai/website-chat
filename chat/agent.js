@@ -1259,11 +1259,7 @@ window.menu = null;
                         t.updateResponses();
                         if (msg.typing) {
                           window.eySocket.typingElement = t.empty();
-                          window.eySocket.typingElement.style.display = 'none';
-                          setTimeout(function() {
-                            window.eySocket.typingElement.style.display = 'flex';
-                            resolve();
-                          }, Math.floor(Math.random()*300 + 100));
+                          resolve();
                         } else {
                           window.eySocket.typingElement = null;
                           resolve();
@@ -2380,16 +2376,12 @@ window.menu = null;
 }]);
 
 } catch(e) {
-console.error(e);
+  console.error(e);
   var userId;
   if (window.localStorage) {
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.eyelevel.ai/webhook/web/event', true);
-  xhr.setRequestHeader('Content-type', 'application/json');
-  xhr.onload = function () {
-    console.log(this.responseText);
-  };
-  xhr.send(JSON.stringify({ event: "CATCH AGENT.JS ERROR", error: e.message, stack: e.stack, uid: userId, username: window.username, flowname: window.flowname || '', origin: window.origin || 'web' }));
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'chat_agent_error', { event_category: "chat", event_label: e, uid: userId || window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
+  }
 }
