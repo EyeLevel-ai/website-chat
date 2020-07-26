@@ -94,13 +94,18 @@ saveInteraction = function(interaction) {
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   }
   var h = window.localStorage.getItem('eyelevel.conversation.history');
-  var history = JSON.parse(h);
-  if (history) {
-    history.push(interaction)
+  if (h && typeof h !== 'undefined') {
+    var history = JSON.parse(h);
+    if (history) {
+      history.push(interaction)
+    } else {
+      history = [interaction];
+    }
+    window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
   } else {
-    history = [interaction];
+    var history = [interaction];
+    window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
   }
-  window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
 }
 
 saveSession = function(pos) {
@@ -110,11 +115,17 @@ saveSession = function(pos) {
 }
 
 getSession = function() {
-  return JSON.parse(window.localStorage.getItem('eyelevel.conversation.session'));
+  var s = window.localStorage.getItem('eyelevel.conversation.session');
+  if (s && typeof s !== 'undefined') {
+    return JSON.parse(s);
+  }
 }
 
 retrieveInteractions = function() {
-  return JSON.parse(window.localStorage.getItem('eyelevel.conversation.history'));
+  var h = window.localStorage.getItem('eyelevel.conversation.history');
+  if (h && typeof h !== 'undefined') {
+    return JSON.parse(h);
+  }
 }
 
 var user = window.getUser();
@@ -912,10 +923,12 @@ window.menu = null;
                           window.localStorage.removeItem('eyelevel.conversation.history');
                           window.localStorage.removeItem('eyelevel.conversation.position');
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
-                          window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
-                          t.domHelper.setInputValue("");
-                          t.domHelper.handleStopSend();
-                          window.parent.postMessage('clear all', "*");
+                          setTimeout(function() {
+                            window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
+                            t.domHelper.setInputValue("");
+                            t.domHelper.handleStopSend();
+                            window.parent.postMessage('clear all', "*");
+                          }, 500);
                         } else if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
                           var inBtn = document.getElementById(window.eySocket.turnID);
                           var input = document.getElementById(window.eySocket.turnID + '-input');
@@ -1107,7 +1120,7 @@ window.menu = null;
                           inBtn.type = 'email';
                           input.type = 'email';
                           input.autocomplete = 'email';
-                          input.name = data.content_type;
+                          input.name = 'email';
                           holder.appendChild(inBtn);
                           cnt.appendChild(label);
                           cnt.appendChild(holder);
@@ -1118,7 +1131,7 @@ window.menu = null;
                           inBtn.type = 'tel';
                           input.type = 'tel';
                           input.autocomplete = 'tel';
-                          input.name = data.content_type;
+                          input.name = 'tel';
                           holder.appendChild(inBtn);
                           cnt.appendChild(label);
                           cnt.appendChild(holder);
@@ -1129,7 +1142,7 @@ window.menu = null;
                           inBtn.type = 'name';
                           input.type = 'text';
                           input.autocomplete = 'name';
-                          input.name = data.content_type;
+                          input.name = 'name';
                           holder.appendChild(inBtn);
                           cnt.appendChild(label);
                           cnt.appendChild(holder);
