@@ -391,6 +391,19 @@ noscript h1 {
   bottom: 55px;
   width: 100%;
 }
+.ey-chat .gdpr-overlay {
+  z-index: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.ey-chat .gdpr-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
 .ey-chat .ey_result-table {
   table-layout: fixed;
   height: 100%;

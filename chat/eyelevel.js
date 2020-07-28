@@ -54,7 +54,45 @@ try {
     );
   }
 
+  function loadGDPR(consent) {
+    var es1 = document.createElement("script");
+    es1.src = '//geoip-js.com/js/apis/geoip2/v2.1/geoip2.js';
+    es1.type = 'text/javascript';
+    es1.onload = function() {
+      geoip2.country(function(d) {
+        window.GDPR = (d && d.continent && d.continent.code && d.continent.code === 'EU') ? true : false;
+        var is = document.getElementById("eyFrame");
+        if (is) {
+          is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
+          is.postMessage("GDPR||" + JSON.stringify(consent), "*");
+        }
+      });
+    };
+    document.body.appendChild(es1);
+  }
+
+  window.GDPRCheck = function(consent) {
+    window.GDPR = true;
+    window.GDPRConsent = consent;
+    if (document && document.body) {
+      loadGDPR(consent);
+    } else {
+      document.addEventListener('DOMContentLoaded', function () {
+        loadGDPR(consent);
+      });
+    }
+  }
+
   window.initEYScripts = function() {
+    var googleScript = document.createElement('script');
+    googleScript.src = "https://www.googletagmanager.com/gtag/js?id=" + window.gaid;
+    googleScript.async = true;
+    var firstScript = document.getElementsByTagName('script')[0];
+    firstScript.parentNode.insertBefore(googleScript, firstScript);
+    var googlePixel = document.createElement('script');
+    googlePixel.text = "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '" + window.gaid + "');"
+    googlePixel.async = true;
+    firstScript.parentNode.insertBefore(googlePixel, firstScript);
     var es1 = document.createElement("script");
     es1.src = remoteURL + '/iframeResizer.min.js';
     document.body.appendChild(es1);
@@ -156,9 +194,6 @@ try {
     }
     sn.id = "eySection";
     sn.innerHTML = '<iframe id="eyFrame" class="ey-container ey-iframe" data-hj-allow-iframe=""></iframe>';
-    if (window.hideChat) {
-      return;
-    }
     if (origin === 'linkedin') {
       var mainCnt = document.getElementById('linkedinContainer');
       mainCnt.appendChild(sn);
@@ -168,7 +203,7 @@ try {
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.41"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.GDPR = '+(window.GDPR ? window.GDPR : false)+';'+(window.GDPRConsent ? "window.GDPRConsent = "+JSON.stringify(window.GDPRConsent)+ ";" : "")+'window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.41"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
   }
 
@@ -309,9 +344,6 @@ try {
 
   function loadHistory() {
     var h = window.localStorage.getItem('eyelevel.conversation.history');
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'chat_error_trace', { event_category: "chat", event_label: h, uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
-    }
     window.isReturn = false;
     if (h && typeof h !== 'undefined') {
       var history = JSON.parse(h);
@@ -371,7 +403,9 @@ try {
       setTimeout(function() {
         var eis = document.getElementById("eyAppFrame");
         eis = eis.contentWindow || ( eis.contentDocument.document || eis.contentDocument);
-        eis.postMessage("close", "*");
+        if (eis) {
+          eis.postMessage("close", "*");
+        }
       }, 200);
     } else {
       setTimeout(function() {
@@ -389,10 +423,14 @@ try {
       setTimeout(function() {
         var is = document.getElementById("eyFrame");
         is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
-        is.postMessage("open", "*");
+        if (is) {
+          is.postMessage("open", "*");
+        }
         var eis = document.getElementById("eyAppFrame");
         eis = eis.contentWindow || ( eis.contentDocument.document || eis.contentDocument);
-        eis.postMessage("open", "*");
+        if (eis) {
+          eis.postMessage("open", "*");
+        }
       }, 200);
     }
   }
@@ -400,17 +438,6 @@ try {
 
   var eyelevel = {
     init: function(params) {
-      var gaid = params.gaid || "UA-173447538-1";
-      var googleScript = document.createElement('script');
-		  googleScript.src = "https://www.googletagmanager.com/gtag/js?id=" + gaid;
-		  googleScript.async = true;
-		  var firstScript = document.getElementsByTagName('script')[0];
-		  firstScript.parentNode.insertBefore(googleScript, firstScript);
-		  var googlePixel = document.createElement('script');
-		  googlePixel.text = "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '" + gaid + "');"
-		  googlePixel.async = true;
-		  firstScript.parentNode.insertBefore(googlePixel, firstScript);
-
       var username = params.username;
       var un = getQueryVar("un");
       if (un) {
@@ -440,6 +467,8 @@ try {
       window.eyorigin = origin;
       var userId = window.getUser().userId;
       window.eyuserid = userId;
+
+      window.gaid = params.gaid || "UA-173447538-1";
 
       if (document && document.body) {
         window.initEYScripts();
@@ -475,9 +504,6 @@ try {
       window.addEventListener("message", function(e) {
         if (e.data && e.data && e.data.indexOf && e.data.indexOf("track:") === 0) {
           var jsonStr = e.data.replace("track:", "");
-          if (typeof gtag !== 'undefined') {
-            gtag('event', 'chat_error_trace', { event_category: "chat", event_label: e.data, uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
-          }
           var jsonObj = JSON.parse(jsonStr);
           if (shouldTrack) {
             jsonObj.event_category = "chat";

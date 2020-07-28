@@ -108,9 +108,24 @@ saveInteraction = function(interaction) {
   }
 }
 
+clearAll = function() {
+  window.localStorage.removeItem('eyelevel.conversation.history');
+  window.localStorage.removeItem('eyelevel.conversation.position');
+  window.localStorage.removeItem('eyelevel.conversation.gdpr');
+}
+
+saveGDPR = function(gdpr) {
+  window.localStorage.setItem('eyelevel.conversation.gdpr', gdpr);
+}
+
+getGDPR = function() {
+  return window.localStorage.getItem('eyelevel.conversation.gdpr');
+}
+
 saveSession = function(pos) {
+  var s = { position: pos };
   if (pos.flowUUID && pos.turnID && pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(pos.turnID) !== 0) {
-    window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify({ position: pos }));
+    window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify(s));
   }
 }
 
@@ -723,6 +738,9 @@ window.menu = null;
                   } else {
                     t.handleInput();
                   }
+                  if (window.GDPR) {
+                    t.loadGDPR();
+                  }
                 }, this.processQueue = function() {
                   if (window.eySocket.queuedMessages.length) {
                     var wsRes = window.eySocket.queuedMessages.shift();
@@ -788,11 +806,15 @@ window.menu = null;
                   window.parent.postMessage("close", "*");
                 }, this.handleChatWindow = function(n) {
                   if (n && n.type === "message") {
-                    if (n.data === "open") {
+                    if (n.data && n.data === "open") {
                       if (!window.eySocket) {
                         t.initializeWS();
                       }
                       t.scrollToBottom();
+                    } else if (n.data && n.data.indexOf("GDPR||") === 0) {
+                      window.GDPR = true;
+                      window.GDPRConsent = JSON.parse(n.data.replace('GDPR||', ''));
+                      t.loadGDPR();
                     }
                   } else if (window.shouldOpen) {
                     if (!window.eySocket) {
@@ -860,18 +882,38 @@ window.menu = null;
                     return q.scrollTop = q.scrollHeight, this
                 }, this.escapeString = function(txt) {
                     return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt
-                }, this.empty = function() {
+                }, this.loadGDPR = function() {
+                  var gd = getGDPR();
+                  if (window.gdprLoaded || gd === 'true') {
+                  } else if (!window.gdprLoaded) {
+                    window.gdprLoaded = true;
+                    var q = t.domHelper.getQueryResultWrapper();
+                    var na = t.domHelper.workplace.createElement('div');
+                    na.id = 'gdprWindow';
+                    na.className = 'ey_result gdpr-overlay';
+                    na.innerHTML = '<div class="gdpr-container"><table class="ey_result-table"><tr><td id="gdprResult"></td></tr></table></div>';
+                    q.appendChild(na);
+                    t.createMessage(window.GDPRConsent, null, true)
+                    var ba = t.domHelper.workplace.getElementById('gdprWindow');
+                    ba.scrollTop = ba.scrollHeight;
+                  }
+                }, this.empty = function(isGDPR) {
                     var na = t.domHelper.workplace.createElement('div');
                     na.className = 'server-response-container';
                     na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response">...</div>';
-                    var aa = t.domHelper.workplace.getElementById('result');
+                    var aa;
+                    if (isGDPR) {
+                      aa = t.domHelper.workplace.getElementById('gdprResult');
+                    } else {
+                      aa = t.domHelper.workplace.getElementById('result');
+                    }
                     aa.appendChild(na);
                     t.scrollToBottom();
                     return na;
                 }, this.removeEmpty = function(nn) {
                     nn.classList.add('remove-item');
                     setTimeout(function() {
-                      nn.remove();
+                      nn.parentNode.removeChild(nn);
                     }, 200);
                 }, this.setText = function(ee, nn) {
                     var sc = nn.getElementsByClassName('server-response');
@@ -920,8 +962,7 @@ window.menu = null;
                     var n = t.domHelper.getInputValue();
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
                         if (n === 'clear all') {
-                          window.localStorage.removeItem('eyelevel.conversation.history');
-                          window.localStorage.removeItem('eyelevel.conversation.position');
+                          clearAll();
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
                           setTimeout(function() {
                             window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
@@ -1005,7 +1046,7 @@ window.menu = null;
                           t.scrollToBottom();
                         });
                         return img;
-                    }, card: function(t, ttt, data) {
+                    }, card: function(t, ttt, data, isGDPR) {
                       var html = [];
                       if (data.length && data.length === 1) {
                         var cd = data[0];
@@ -1021,7 +1062,7 @@ window.menu = null;
                         }
                         if (cd.buttons && cd.buttons.length) {
                           if (needsReset) {
-                            ttt = t.empty();
+                            ttt = t.empty(isGDPR);
                           }
                           var bt = t.chat.buttons(cd.buttons);
                           if (bt && bt.length) {
@@ -1037,11 +1078,15 @@ window.menu = null;
                         var button = t.domHelper.workplace.createElement('button');
                         button.classList.add('chat-button');
                         var objData = data;
-                        if (data.type === 'phone_number') {
+                        if (objData.type === 'phone_number') {
                           button.classList.add('click-to-call');
-                        } else if (data.type === 'web_url') {
+                        } else if (objData.type === 'web_url') {
                           button.classList.add('web-url');
-                          button.value = data.url;
+                          button.value = objData.url;
+                        } else if (objData.type === 'gdpr') {
+                          button.classList.add('gdpr-button');
+                          button.value = objData.value;
+                          objData.payload = objData.title;
                         } else {
                           try {
                             var jsonPay = JSON.parse(objData.payload);
@@ -1192,7 +1237,7 @@ window.menu = null;
                         }
                         return html;
                     }
-                }, this.createMessage = function(msg, obj) {
+                }, this.createMessage = function(msg, obj, isGDPR) {
                     return new Promise(function(resolve, reject) {
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
@@ -1200,7 +1245,7 @@ window.menu = null;
                         if (obj) {
                             ttt = obj;
                         } else {
-                            ttt = t.empty();
+                            ttt = t.empty(isGDPR);
                         }
                         var data = JSON.parse(msg.payload);
                         var html = '';
@@ -1221,14 +1266,14 @@ window.menu = null;
                           if (data.attachment && data.attachment.payload) {
                             if (data.attachment.payload.text) {
                               if (needsReset) {
-                                ttt = t.empty();
+                                ttt = t.empty(isGDPR);
                               }
                               t.setText(t.chat.text(data.attachment.payload.text), ttt);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
                               if (needsReset) {
-                                ttt = t.empty();
+                                ttt = t.empty(isGDPR);
                               }
                               html = t.chat.text(data.attachment.payload.url);
                               t.setText(html, ttt);
@@ -1236,7 +1281,7 @@ window.menu = null;
                             }
                             if (data.attachment.type && data.attachment.type === 'image' && data.attachment.payload.url) {
                               if (needsReset) {
-                                ttt = t.empty();
+                                ttt = t.empty(isGDPR);
                               }
                               html = t.chat.image(data.attachment.payload.url);
                               t.setMultimedia(html, ttt);
@@ -1244,7 +1289,7 @@ window.menu = null;
                             }
                             if (data.attachment.payload.buttons) {
                               if (needsReset) {
-                                ttt = t.empty();
+                                ttt = t.empty(isGDPR);
                               }
                               html = t.chat.buttons(data.attachment.payload.buttons);
                               if (html && html.length) {
@@ -1254,12 +1299,12 @@ window.menu = null;
                               }
                             }
                             if (data.attachment.payload.template_type === 'generic') {
-                              html = t.chat.card(t, ttt, data.attachment.payload.elements);
+                              html = t.chat.card(t, ttt, data.attachment.payload.elements, isGDPR);
                             }
                           }
                           if (data.quick_replies) {
                             if (needsReset) {
-                              ttt = t.empty();
+                              ttt = t.empty(isGDPR);
                             }
                             html = t.chat.quick_replies(msg, data.quick_replies);
                             if (html && html.length) {
@@ -1271,7 +1316,7 @@ window.menu = null;
                         }
                         t.updateResponses();
                         if (msg.typing) {
-                          window.eySocket.typingElement = t.empty();
+                          window.eySocket.typingElement = t.empty(isGDPR);
                           resolve();
                         } else {
                           window.eySocket.typingElement = null;
@@ -1374,6 +1419,16 @@ window.menu = null;
                     aa.click();
                     this.handleEvent('web}'+ee.target.value);
                     this.scrollToBottom();
+                  } else if (ee.target.classList.contains('gdpr-button')) {
+                    if (ee.target.value === 'true') {
+                      saveGDPR(ee.target.value);
+                      var gw = document.getElementById('gdprWindow');
+                      if (gw) {
+                        gw.parentNode.removeChild(gw);
+                      }
+                    } else {
+                      window.parent.postMessage('close', '*');
+                    }
                   } else {
                     delete window.eySocket.turnType;
                     delete window.eySocket.turnID;
