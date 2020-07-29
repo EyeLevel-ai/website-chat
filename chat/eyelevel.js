@@ -109,6 +109,10 @@ try {
   }
 
   window.initBadgeFrame = function(n) {
+    var ck = document.getElementById("eyBadgeCnt");
+    if (ck) {
+      ck.parentNode.removeChild(ck);
+    }
     var af = document.createElement("section");
     af.classList.add("ey-badge-cnt");
     af.id = "eyBadgeCnt";
@@ -122,6 +126,10 @@ try {
   }
 
   window.initAlertFrame = function(txt) {
+    var ck = document.getElementById("eyAlertCnt");
+    if (ck) {
+      ck.parentNode.removeChild(ck);
+    }
     var af = document.createElement("section");
     af.classList.add("ey-alert-cnt");
     af.id = "eyAlertCnt";
