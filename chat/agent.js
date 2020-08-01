@@ -1054,7 +1054,11 @@ window.menu = null;
                         if (cd.title) {
                           var pt = cd.title;
                           if (cd.subtitle) {
-                            pt += cd.subtitle;
+                            if (pt.indexOf('...') === pt.length - 3) {
+                              pt += cd.subtitle;
+                            } else {
+                              pt += '. ' + cd.subtitle;
+                            }
                           }
                           var txt = t.chat.text(pt);
                           t.setText(txt, ttt);
@@ -2450,6 +2454,6 @@ window.menu = null;
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
   if (typeof gtag !== 'undefined') {
-    gtag('event', 'chat_agent_error', { event_category: "chat", event_label: (e && e.stack) ? e.stack : e, uid: userId || window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
+    gtag('event', window.location.hostname, { event_category: 'chat_agent_error', event_label: (e && e.stack) ? e.stack : e, uid: userId || window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
   }
 }

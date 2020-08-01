@@ -388,7 +388,7 @@ noscript h1 {
   background: #d8d8d8;
   position: absolute;
   top: 60px;
-  bottom: 55px;
+  bottom: 75px;
   width: 100%;
 }
 .ey-chat .gdpr-overlay {
@@ -416,7 +416,7 @@ noscript h1 {
 .ey-chat .ey_input {
   position: fixed;
   bottom: 0;
-  height: 55px;
+  height: 75px;
   border-top: 1px solid #d3d3d3;
   background: #ffffff;
   width: 100%;
@@ -431,7 +431,7 @@ noscript h1 {
   border: 0;
   font-weight: 300;
   margin: 0;
-  height: 55px;
+  height: 75px;
   font-size: 0.875em;
 }
 .ey-chat input::placeholder {
