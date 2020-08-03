@@ -383,6 +383,31 @@ noscript h1 {
   padding: 5px 15px 5px 5px;
   text-align: left;
 }
+.ey-chat .card-title {
+  font-weight: 500;
+}
+.ey-chat .card-subtitle {
+  margin-top: 6px;
+}
+.ey-chat .chat-card .chat-buttons {
+  margin-top: 12px;
+}
+.ey-chat .youtube-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+}
+.ey-chat .chat-video .server-response {
+  width: 100%;
+}
+.ey-chat .youtube-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 .ey-chat .ey_result {
   overflow-y: auto;
   background: #d8d8d8;
@@ -502,6 +527,12 @@ noscript h1 {
   color: #417dc3;
   font-weight: normal;
   font-size: 0.875em;
+}
+.ey-chat .chat-card .chat-button {
+  width: 100%;
+  padding: 10px;
+  box-shadow: none;
+  margin: 0;
 }
 .menu {
   overflow: hidden;

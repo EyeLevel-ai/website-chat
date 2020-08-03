@@ -1,5 +1,5 @@
 try {
-
+  var wssURL = 'wss://ws.eyelevel.ai';
 function randomString(length) {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -697,7 +697,7 @@ window.menu = null;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
                   setTimeout(t.heartbeat, 300000);
                 }, this.initializeWS = function(isRestart) {
-                  window.eySocket = new WebSocket('wss://ws.eyelevel.ai?uid='+user.userId+'&username='+window.username+'&origin='+(window.origin || web));
+                  window.eySocket = new WebSocket(wssURL+'?uid='+user.userId+'&username='+window.username+'&origin='+(window.origin || web));
                   window.eySocket.connectTime = Date.now();
                   window.eySocket.queuedMessages = [];
                   if (isRestart) {
@@ -705,10 +705,10 @@ window.menu = null;
                   } else {
                     window.eySocket.isStarted = false;
                   }
-                  if (window.eySocket.connectAttempts) {
-                    window.eySocket.connectAttempts += 1;
+                  if (window.connectAttempts) {
+                    window.connectAttempts += 1;
                   } else {
-                    window.eySocket.connectAttempts = 1;
+                    window.connectAttempts = 1;
                   }
                   window.eySocket.onerror = t.handleWSError;
                   window.eySocket.onopen = t.handleWSOpen;
@@ -717,7 +717,7 @@ window.menu = null;
                 }, this.handleWSClose = function(n) {
                   var now = Date.now();
                   console.log('ws closed');
-                  if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 5000 > now || window.eySocket.connectAttempts < 4)) {
+                  if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 5000 > now || window.connectAttempts < 4)) {
                     console.log('reconnecting');
                     setTimeout(function() {
                       t.initializeWS(true);
@@ -1046,32 +1046,50 @@ window.menu = null;
                           t.scrollToBottom();
                         });
                         return img;
+                    }, video: function(data) {
+                      if (data.indexOf('https://youtu.be/') === 0) {
+                        var cnt = t.domHelper.workplace.createElement('div');
+                        cnt.classList.add('youtube-container');
+                        cnt.innerHTML = '<iframe class="youtube-video" src="https://www.youtube.com/embed/' + data.replace('https://youtu.be/', '') + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+                        return cnt;
+                      }
+                      return;
                     }, card: function(t, ttt, data, isGDPR) {
-                      var html = [];
                       if (data.length && data.length === 1) {
-                        var cd = data[0];
-                        var needsReset = false;
-                        if (cd.title) {
-                          var pt = cd.title;
-                          if (cd.subtitle) {
-                            if (pt.indexOf('...') === pt.length - 3) {
-                              pt += cd.subtitle;
-                            } else {
-                              pt += '. ' + cd.subtitle;
-                            }
+                        var sc = ttt.getElementsByClassName('server-response');
+                        if (sc && sc.length && sc.length === 1) {
+                          while (sc[0].firstChild) {
+                            sc[0].removeChild(sc[0].firstChild);
                           }
-                          var txt = t.chat.text(pt);
-                          t.setText(txt, ttt);
-                          needsReset = true;
+                        }
+                        sc[0].parentElement.classList.add('chat-card');
+
+                        var cd = data[0];
+                        var isEmpty = true;
+                        if (cd.title) {
+                          var title = t.domHelper.workplace.createElement('div');
+                          title.classList.add('card-title');
+                          title.innerHTML = cd.title;
+                          sc[0].appendChild(title);
+                          isEmpty = false;
+                          if (cd.subtitle) {
+                            var subtitle = t.domHelper.workplace.createElement('div');
+                            subtitle.classList.add('card-subtitle');
+                            subtitle.innerHTML = cd.subtitle;
+                            sc[0].appendChild(subtitle);
+                          }
                         }
                         if (cd.buttons && cd.buttons.length) {
-                          if (needsReset) {
-                            ttt = t.empty(isGDPR);
-                          }
                           var bt = t.chat.buttons(cd.buttons);
                           if (bt && bt.length) {
-                            t.setButtons(bt, ttt);
-                          } else {
+                            var buttons = t.domHelper.workplace.createElement('div');
+                            buttons.classList.add('card-buttons');
+                            buttons.classList.add('chat-buttons');
+                            for (var i in bt) {
+                              buttons.appendChild(bt[i]);
+                            }
+                            sc[0].appendChild(buttons);
+                          } else if (isEmpty) {
                             t.removeEmpty(ttt);
                           }
                         }
@@ -1279,8 +1297,14 @@ window.menu = null;
                               if (needsReset) {
                                 ttt = t.empty(isGDPR);
                               }
-                              html = t.chat.text(data.attachment.payload.url);
-                              t.setText(html, ttt);
+                              html = t.chat.video(data.attachment.payload.url);
+                              if (html) {
+                                ttt.classList.add('chat-video');
+                                t.setMultimedia(html, ttt);
+                              } else {
+                                var btn = t.chat.button({ title: "Watch Video", url: data.attachment.payload.url, type: "web_url" });
+                                t.setButtons([btn], ttt);
+                              }
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'image' && data.attachment.payload.url) {
@@ -1417,9 +1441,7 @@ window.menu = null;
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
                     aa.href = ee.target.value;
-                    if (window.origin === 'web') {
-                      aa.target = '_blank';
-                    }
+                    aa.target = '_blank';
                     aa.click();
                     this.handleEvent('web}'+ee.target.value);
                     this.scrollToBottom();
