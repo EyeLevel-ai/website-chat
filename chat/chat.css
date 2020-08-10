@@ -235,10 +235,10 @@ noscript h1 {
 .ey-chat .user-request,
 .ey-chat .server-response {
   display: inline-block;
-  padding: 15px 25px;
+  padding: 18px 24px;
   margin-bottom: 5px;
   clear: both;
-  font-size: 1.0rem;
+  font-size: 1.125rem;
 }
 .ey-chat .user-request.server-response-error,
 .ey-chat .server-response.server-response-error {
@@ -413,7 +413,7 @@ noscript h1 {
   background: #d8d8d8;
   position: absolute;
   top: 60px;
-  bottom: 75px;
+  bottom: 66px;
   width: 100%;
 }
 .ey-chat .gdpr-overlay {
@@ -441,7 +441,7 @@ noscript h1 {
 .ey-chat .ey_input {
   position: fixed;
   bottom: 0;
-  height: 75px;
+  height: 66px;
   border-top: 1px solid #d3d3d3;
   background: #ffffff;
   width: 100%;
@@ -456,7 +456,7 @@ noscript h1 {
   border: 0;
   font-weight: 300;
   margin: 0;
-  height: 75px;
+  height: 66px;
   font-size: 0.875em;
 }
 .ey-chat input::placeholder {
@@ -526,7 +526,7 @@ noscript h1 {
   background: #fff;
   color: #417dc3;
   font-weight: normal;
-  font-size: 0.875em;
+  font-size: 0.9em;
 }
 .ey-chat .chat-card .chat-button {
   width: 100%;

@@ -72,13 +72,14 @@ if (!window.localStorage) {
 
 window.getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
+  var aid = window.localStorage.getItem('eyelevel.user.aid');
   var newUser = false;
   if (!userId) {
     newUser = true;
     userId = randomString(32);
     window.localStorage.setItem('eyelevel.user.userId', userId);
   }
-  return { userId: userId, newUser: newUser };
+  return { userId: userId, aid: aid, GUID: aid + ":" + userId, newUser: newUser };
 }
 
 saveInteraction = function(interaction) {
@@ -110,7 +111,7 @@ saveInteraction = function(interaction) {
 
 clearAll = function() {
   window.localStorage.removeItem('eyelevel.conversation.history');
-  window.localStorage.removeItem('eyelevel.conversation.position');
+  window.localStorage.removeItem('eyelevel.conversation.session');
   window.localStorage.removeItem('eyelevel.conversation.gdpr');
 }
 
@@ -122,17 +123,27 @@ getGDPR = function() {
   return window.localStorage.getItem('eyelevel.conversation.gdpr');
 }
 
-saveSession = function(pos) {
-  var s = { position: pos };
-  if (pos.flowUUID && pos.turnID && pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(pos.turnID) !== 0) {
-    window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify(s));
+saveSession = function(sess) {
+  if (sess.Pos.flowUUID && sess.Pos.turnID && sess.Pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(sess.Pos.turnID) !== 0) {
+    window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify(sess));
+    if (sess.GUID && sess.GUID.refUserId && sess.GUID.aid && parseInt(sess.GUID.aid) > 0) {
+      window.localStorage.setItem('eyelevel.user.aid', parseInt(sess.GUID.aid));
+      window.localStorage.setItem('eyelevel.user.userId', sess.GUID.refUserId);
+      window.user = window.getUser();
+    }
   }
 }
 
 getSession = function() {
   var s = window.localStorage.getItem('eyelevel.conversation.session');
   if (s && typeof s !== 'undefined') {
-    return JSON.parse(s);
+    var sess = JSON.parse(s);
+    if (sess) {
+      if (sess.position) {
+        sess.Pos = sess.position;
+      }
+    }
+    return sess;
   }
 }
 
@@ -143,7 +154,7 @@ retrieveInteractions = function() {
   }
 }
 
-var user = window.getUser();
+window.user = window.getUser();
 window.isChatting = false;
 window.menu = null;
 
@@ -392,7 +403,7 @@ window.menu = null;
                 value: function(ben) {
                   var sess = getSession();
                   setTimeout(function() {
-                    ben.handleEvent('reconnect', 'reconnect', null, sess && sess.position);
+                    ben.handleEvent('reconnect', 'reconnect', null, sess && sess.Pos);
                     return
                   }, 0);
                 }
@@ -697,7 +708,7 @@ window.menu = null;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
                   setTimeout(t.heartbeat, 300000);
                 }, this.initializeWS = function(isRestart) {
-                  window.eySocket = new WebSocket(wssURL+'?uid='+user.userId+'&username='+window.username+'&origin='+(window.origin || web));
+                  window.eySocket = new WebSocket(wssURL+'?uid='+window.user.userId+'&username='+window.username+'&origin='+(window.origin || 'web')+(window.eyid ? '&guid='+window.eyid : ''));
                   window.eySocket.connectTime = Date.now();
                   window.eySocket.queuedMessages = [];
                   if (isRestart) {
@@ -724,7 +735,8 @@ window.menu = null;
                     }, 1000);
                   }
                 }, this.handleWSError = function(n) {
-                  console.error('WS error', window.eySocket);
+                  console.error(window.eySocket);
+                  throw 'WS error';
                 }, this.handleWSOpen = function(n) {
                   if (!window.eySocket.isStarted) {
                     var inter = retrieveInteractions();
@@ -754,43 +766,43 @@ window.menu = null;
                   if (n && n.data) {
                     try {
                       var wsRes = JSON.parse(n.data);
-                      saveSession(wsRes.position);
+                      saveSession(wsRes.session);
                       if (wsRes) {
-                        if (wsRes.action && wsRes.action !== 'heartbeat' && wsRes.action !== 'reconnect' && wsRes.action !== 'reconnect-empty') {
-                          wsRes.sender = "server";
-                          window.eySocket.lastInteraction = wsRes;
-                          if (!window.eySocket.queuedMessages.length) {
-                            window.eySocket.queuedMessages.push(wsRes);
-                            t.processQueue();
+                        if (wsRes.action) {
+                          if (wsRes.action === 'reconnect') {
+                            wsRes.sender = "server";
+                            if (!window.eySocket.queuedMessages.length) {
+                              window.eySocket.queuedMessages.push(wsRes);
+                              t.processQueue();
+                            } else {
+                              window.eySocket.queuedMessages.push(wsRes);
+                            }
+                          } else if (wsRes.action === 'reconnect-empty') {
+                            if (window.eySocket.typingElement) {
+                              t.removeEmpty(window.eySocket.typingElement);
+                              delete window.eySocket.typingElement;
+                            }
+                          } else if (wsRes.action === 'heartbeat') {
                           } else {
-                            window.eySocket.queuedMessages.push(wsRes);
-                          }
-                          saveInteraction(wsRes);
-                        } else if (wsRes.action && wsRes.action === 'reconnect') {
-                          wsRes.sender = "server";
-                          if (!window.eySocket.queuedMessages.length) {
-                            window.eySocket.queuedMessages.push(wsRes);
-                            t.processQueue();
-                          } else {
-                            window.eySocket.queuedMessages.push(wsRes);
-                          }
-                        } else if (wsRes.action && wsRes.action === 'reconnect-empty') {
-                          if (window.eySocket.typingElement) {
-                            t.removeEmpty(window.eySocket.typingElement);
-                            delete window.eySocket.typingElement;
+                            wsRes.sender = "server";
+                            window.eySocket.lastInteraction = wsRes;
+                            if (!window.eySocket.queuedMessages.length) {
+                              window.eySocket.queuedMessages.push(wsRes);
+                              t.processQueue();
+                            } else {
+                              window.eySocket.queuedMessages.push(wsRes);
+                            }
+                            saveInteraction(wsRes);
                           }
                         }
                       } else {
-//TODO alert
-                        console.error("Invalid WS response payload");
+                        throw "Invalid WS response payload";
                       }
                     } catch(err) {
-//TODO alert
-                      console.error(err);
+                      throw err;
                     }
                   } else {
-//TODO alert
-                      console.error("Invalid WS response");
+                      throw "Invalid WS response";
                   }
                 }, this.checkWS = function() {
                   if (!window.eySocket || window.eySocket.readyState !== 1) {
@@ -961,7 +973,7 @@ window.menu = null;
                 }, this.handleInput = function(type) {
                     var n = t.domHelper.getInputValue();
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
-                        if (n === 'clear all') {
+                        if (n === 'clear all' || n === 'reset chat') {
                           clearAll();
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
                           setTimeout(function() {
@@ -1536,7 +1548,8 @@ window.menu = null;
                         data: e,
                         username: window.username,
                         path: window.location.pathname,
-                        uid: user.userId,
+                        uid: window.user.userId,
+                        guid: window.eyid && window.eyid,
                         origin: window.origin || 'web',
                         position: pos && pos,
                         ref: window.location.href
@@ -2476,6 +2489,6 @@ window.menu = null;
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
   if (typeof gtag !== 'undefined') {
-    gtag('event', window.location.hostname, { event_category: 'chat_agent_error', event_label: (e && e.stack) ? e.stack : e, uid: userId || window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
+    gtag('event', window.location.hostname, { event_category: 'chat_agent_error', event_label: (e && e.stack) ? e.stack : e, uid: userId || window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
   }
 }

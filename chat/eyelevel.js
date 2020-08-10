@@ -1,4 +1,5 @@
 try {
+  var version = '2.0';
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
   var cssURL = 'https://css.eyelevel.ai';
@@ -16,6 +17,14 @@ try {
         return decodeURIComponent(pr[1]);
       }
     }
+  }
+
+  function getAlertStatus() {
+    var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
+    if (ah) {
+      return JSON.parse(ah);
+    }
+    return;
   }
 
   function supportsPassive() {
@@ -125,7 +134,16 @@ try {
     ei.document.close();
   }
 
-  window.initAlertFrame = function(txt) {
+  window.initAlertFrame = function(txt, eyType, eyConfig) {
+    var ah = getAlertStatus();
+    if (ah && eyType && eyConfig) {
+			var tAlert = ah[eyType + ":" + eyConfig];
+			var now = Date.now();
+      if (tAlert && tAlert.closed && (now - parseInt(tAlert.closed)) < 24 * 60 * 60 * 1000) {
+        return;
+      }
+    }
+    window.eyAlert = { type: eyType, config: eyConfig, text: txt };
     var ck = document.getElementById("eyAlertCnt");
     if (ck) {
       ck.parentNode.removeChild(ck);
@@ -154,9 +172,9 @@ try {
     }
   }
 
-  window.initChatStyle = function(channel, origin) {
+  window.initChatStyle = function(origin) {
     var es = document.createElement("style");
-    es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{display:none;position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';width:' + ((channel && channel === 'email') ? 'calc(100% - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((channel && channel === 'email') ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + (origin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{' + (origin === 'linkedin' ? 'height: 100%;min-width:376px;max-width:466px;display:block;width:40%;top:unset;bottom:unset;left:unset;right:unset;position:relative;' : 'width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;height:calc(100% - 120px);') + 'overflow: hidden;}.ey-section-visible{max-height:704px;}.ey-section-open{' + (origin === 'linkedin' ? '' : 'max-height:704px;top:123px;bottom:auto') + '}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
+    es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{display:none;position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:' + ((origin && origin === 'email') ? 'calc(100% - 40px)' : '100%') + ';width:' + ((origin && origin === 'email') ? 'calc(100% - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((origin && origin === 'email') ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + (origin === 'linkedin' ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{' + (origin === 'linkedin' ? 'height: 100%;min-width:376px;max-width:466px;display:block;width:40%;top:unset;bottom:unset;left:unset;right:unset;position:relative;' : 'width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;height:calc(100% - 120px);') + 'overflow: hidden;}.ey-section-visible{max-height:704px;}.ey-section-open{' + (origin === 'linkedin' ? '' : 'max-height:704px;top:123px;bottom:auto') + '}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
     document.body.appendChild(es);
   }
 
@@ -211,7 +229,7 @@ try {
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.GDPR = '+(window.GDPR ? window.GDPR : false)+';'+(window.GDPRConsent ? "window.GDPRConsent = "+JSON.stringify(window.GDPRConsent)+ ";" : "")+'window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.41"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.GDPR = '+(window.GDPR ? window.GDPR : false)+';'+(window.GDPRConsent ? "window.GDPRConsent = "+JSON.stringify(window.GDPRConsent)+ ";" : "")+'window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<style>' + (screen.width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.41"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
   }
 
@@ -252,10 +270,11 @@ try {
     }
 
     if (chatBehavior) {
+      var fn = getQueryVar("fn");
       if (chatBehavior.hidden) {
         window.isOpen = true;
         window.hideChat = true;
-      } else if (chatBehavior.flowname && chatBehavior.flowname !== window.eyflowname) {
+      } else if (!fn && chatBehavior.flowname && chatBehavior.flowname !== window.eyflowname) {
         window.eyflowname = chatBehavior.flowname;
         var bb = document.getElementById('eyBubble');
         if (bb) {
@@ -271,14 +290,14 @@ try {
         if (window.isReturn && chatBehavior.returnText) {
           setTimeout(function() {
             if (!window.isOpen) {
-              window.initAlertFrame(chatBehavior.returnText);
+              window.initAlertFrame(chatBehavior.returnText, config.eyType, config.eyConfig);
               window.initBadgeFrame(1);
             }
           }, chatBehavior.returnTime || 5000);
         } else if (chatBehavior.alertText) {
           setTimeout(function() {
             if (!window.isOpen && chatBehavior.alertText) {
-              window.initAlertFrame(chatBehavior.alertText);
+              window.initAlertFrame(chatBehavior.alertText, config.eyType, config.eyConfig);
               window.initBadgeFrame(1);
             }
           }, chatBehavior.alertTime || 5000);
@@ -390,6 +409,15 @@ try {
     if (cad) {
       cad.style.display = "none";
     }
+    var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
+    if (!ah && window.eyAlert) {
+      ah = {};
+    } else {
+      ah = JSON.parse(ah);
+    }
+    window.eyAlert.closed = Date.now();
+    ah[window.eyAlert.type+":"+window.eyAlert.config] = window.eyAlert;
+    window.localStorage.setItem('eyelevel.conversation.alerts', JSON.stringify(ah));
   }
 
   function toggleChat(e) {
@@ -471,18 +499,35 @@ try {
       }
       window.eyshouldopen = shouldOpen;
 
-      var origin = params.origin ? params.origin.toLowerCase() : 'web';
+      var origin = params.origin && params.origin.toLowerCase();
+      var og = getQueryVar("eyorigin");
+      if (og) {
+        origin = og;
+      }
+      if (!origin) {
+        if (channel) {
+          origin = channel;
+        } else {
+          origin = "web";
+        }
+      }
       window.eyorigin = origin;
       var userId = window.getUser().userId;
       window.eyuserid = userId;
 
       window.gaid = params.gaid || "UA-173447538-1";
 
+      var eyid = params.eyid;
+      eyid = getQueryVar("eyid");
+      if (eyid) {
+        window.eyid = eyid;
+      }
+
       if (document && document.body) {
         window.initEYScripts();
         shouldTrack = (window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('speatly') > -1 || typeof gtag === 'undefined') ? false : true;
         if (shouldTrack) {
-          gtag('event', window.location.hostname, { event_category: 'chat_load', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
+          gtag('event', window.location.hostname, { event_category: 'chat_load:' + version, uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, channel: window.eychannel, shouldOpen: window.eyshouldopen });
         }
         if (!window.WebSocket || !window.addEventListener) {
           if (shouldTrack) {
