@@ -159,8 +159,16 @@ try {
     ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
-    var now = Date.now();
-    window.localStorage.setItem('eyelevel.conversation.alerts.lastSeen', now);
+    if (eyType && eyConfig) {
+      var now = Date.now();
+      var ls = window.localStorage.getItem('eyelevel.conversation.alerts.lastSeen');
+      ls = JSON.parse(ls);
+      if (!ls) {
+        ls = {};
+      }
+      ls[eyType + ":" + eyConfig] = now;
+      window.localStorage.setItem('eyelevel.conversation.alerts.lastSeen', JSON.stringify(ls));
+    }
   }
 
   window.removeChat = function() {

@@ -113,6 +113,7 @@ clearAll = function() {
   window.localStorage.removeItem('eyelevel.conversation.history');
   window.localStorage.removeItem('eyelevel.conversation.session');
   window.localStorage.removeItem('eyelevel.conversation.gdpr');
+  window.localStorage.removeItem('eyelevel.conversation.alerts');
 }
 
 saveGDPR = function(gdpr) {
