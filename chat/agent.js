@@ -754,6 +754,78 @@ window.menu = null;
                   if (window.GDPR) {
                     t.loadGDPR();
                   }
+                }, this.onFirstClick = function() {
+                  if (window.attnElm) {
+                    for (var k = 0; k < window.attnElm.childNodes.length; k++) {
+                      var bt = cn[0].childNodes[k];
+                      if (bt && bt.classList.contains('btn--shockwave')) {
+                        bt.classList.remove('btn--shockwave');
+                        bt.classList.remove('is-active');
+                      }
+                    }
+                    window.attnElm = false;
+                  }
+                  if (window.videoElm) {
+                    window.videoElm.parentNode.removeChild(window.videoElm);
+                    window.videoElm = false;
+                  }
+                  return false;
+                }, this.initVideo = function() {
+                  window.isInit = true;
+                  var w = t.domHelper.getChatWindow();
+	                window.videoElm = t.domHelper.workplace.createElement('div');
+	                window.videoElm.classList.add('ey-class-video-cnt');
+	                var vc = t.domHelper.workplace.createElement('video');
+	                vc.preload = true;
+	                vc.autoplay = true;
+	                vc.loop = false;
+	                vc.playsinline = true;
+	                vc.controls = true;
+	                vc.classList.add('ey-class-video');
+	                var s1 = t.domHelper.workplace.createElement('source');
+	                s1.type = 'video/webm';
+	                vc.appendChild(s1);
+	                var s2 = t.domHelper.workplace.createElement('source');
+	                s2.type = 'video/mp4';
+	                s2.src = window.eyvideo.full;
+	                vc.appendChild(s2);
+	                window.videoElm.appendChild(vc);
+	                w.appendChild(window.videoElm);
+                  w.onclick = t.onFirstClick;
+                }, this.initAnimation = function() {
+	                window.isInit = true;
+	                var le;
+                  var aa = t.domHelper.workplace.getElementById('result');
+                  if (aa.childNodes.length) {
+                    var le = aa.childNodes[aa.childNodes.length - 1];
+                    for (var j = aa.childNodes.length - 1; j >= 0; j--) {
+                      if (aa.childNodes[j].classList.contains('user-request-container')) {
+                        break;
+                      } else if (aa.childNodes[j].classList.contains('server-response-container') && !aa.childNodes[j].classList.contains('remove-item')) {
+                        le = aa.childNodes[j];
+                        break;
+                      }
+                    }
+                    if (le) {
+                      var cn = aa.childNodes[j].getElementsByClassName('server-response');
+                      if (!cn || !cn.length || cn.length !== 1) {
+                        throw 'Unexpected element in initAnimation';
+                      } else if (!cn[0].classList.contains('chat-buttons')) {
+                        return;
+                      }
+                      window.attnElm = cn[0];
+                      for (var k = 0; k < cn[0].childNodes.length; k++) {
+                        var bt = cn[0].childNodes[k];
+                        if (!bt || !bt.classList.contains('chat-button')) {
+                          throw 'Malformed chat-button';
+                        }
+                        bt.classList.add('btn--shockwave');
+                        bt.classList.add('is-active');
+                      }
+                      var w = t.domHelper.getChatWindow();
+                      w.onclick = t.onFirstClick;
+                    }
+                  }
                 }, this.processQueue = function() {
                   if (window.eySocket.queuedMessages.length) {
                     var wsRes = window.eySocket.queuedMessages.shift();
@@ -774,7 +846,17 @@ window.menu = null;
                             wsRes.sender = "server";
                             if (!window.eySocket.queuedMessages.length) {
                               window.eySocket.queuedMessages.push(wsRes);
-                              t.processQueue();
+                              t.processQueue()
+                                .then(function() {
+                                  if (!window.isInit) {
+                                    if (window.attn) {
+                                      t.initAnimation();
+                                    }
+                                    if (window.eyvideo) {
+                                      t.initVideo();
+                                    }
+                                  }
+                                });
                             } else {
                               window.eySocket.queuedMessages.push(wsRes);
                             }
@@ -783,13 +865,31 @@ window.menu = null;
                               t.removeEmpty(window.eySocket.typingElement);
                               delete window.eySocket.typingElement;
                             }
+                            if (!window.isInit) {
+                              if (window.attn) {
+                                t.initAnimation();
+                              }
+                              if (window.eyvideo) {
+                                t.initVideo();
+                              }
+                            }
                           } else if (wsRes.action === 'heartbeat') {
                           } else {
                             wsRes.sender = "server";
                             window.eySocket.lastInteraction = wsRes;
                             if (!window.eySocket.queuedMessages.length) {
                               window.eySocket.queuedMessages.push(wsRes);
-                              t.processQueue();
+                              t.processQueue()
+                                .then(function() {
+                                  if (!window.isInit) {
+                                    if (window.attn) {
+                                      t.initAnimation();
+                                    }
+                                    if (window.eyvideo) {
+                                      t.initVideo();
+                                    }
+                                  }
+                                });
                             } else {
                               window.eySocket.queuedMessages.push(wsRes);
                             }
@@ -816,6 +916,10 @@ window.menu = null;
                 }, this.handleCloseWindow = function(n) {
                   n.preventDefault();
                   n.stopPropagation();
+                  if (window.videoElm) {
+                    window.videoElm.parentNode.removeChild(window.videoElm);
+                    window.videoElm = false;
+                  }
                   window.parent.postMessage("close", "*");
                 }, this.handleChatWindow = function(n) {
                   if (n && n.type === "message") {
@@ -828,6 +932,11 @@ window.menu = null;
                       window.GDPR = true;
                       window.GDPRConsent = JSON.parse(n.data.replace('GDPR||', ''));
                       t.loadGDPR();
+                    } else if (n.data && n.data.indexOf("close") === 0) {
+                      if (window.videoElm) {
+                        window.videoElm.parentNode.removeChild(window.videoElm);
+                        window.videoElm = false;
+                      }
                     }
                   } else if (window.shouldOpen) {
                     if (!window.eySocket) {
@@ -2490,6 +2599,6 @@ window.menu = null;
     userId = window.localStorage.getItem('eyelevel.user.userId');
   }
   if (typeof gtag !== 'undefined') {
-    gtag('event', window.location.hostname, { event_category: 'chat_agent_error', event_label: (e && e.stack) ? e.stack : e, uid: userId || window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
+    gtag('event', window.location.hostname, { event_category: 'chat_agent_error', event_label: (e && e.stack) ? e.stack : e, uid: userId, username: window.username, flowname: window.flowname, origin: window.origin, shouldOpen: window.shouldOpen });
   }
 }
