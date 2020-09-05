@@ -8,8 +8,14 @@ try {
   window.cssURL = cssURL;
   var shouldTrack = (window.location.host.indexOf('localhost') > -1 || typeof gtag === 'undefined') ? false : true;
 
-  function getQueryVar(vn) {
+  function getQueryVar(vn, isIframe) {
     var qq = window.location.search.substring(1);
+    if (isIframe) {
+      if (document.referrer && document.referrer.indexOf('?') > -1) {
+        qq = document.referrer.substring(document.referrer.indexOf('?'));
+        qq = qq.substring(1);
+      }
+    }
     var vr = qq.split('&');
     for (var i = 0; i < vr.length; i++) {
       var pr = vr[i].split('=');
@@ -142,7 +148,7 @@ try {
     var ei = document.getElementById("eyBadge");
     ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
     ei.document.open();
-    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body class="badge-body"><div class="badge-cnt"><div class="badge">' + n + '</div></div></body></html>');
+    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.14" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '</head><body class="badge-body"><div class="badge-cnt"><div class="badge">' + n + '</div></div></body></html>');
     ei.document.close();
   }
 
@@ -168,7 +174,7 @@ try {
     var ei = document.getElementById("eyAlert");
     ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
     ei.document.open();
-    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
+    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css?v=1.14" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
     if (eyType && eyConfig) {
@@ -256,7 +262,7 @@ try {
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.GDPR = '+(window.GDPR ? window.GDPR : false)+';'+(window.GDPRConsent ? "window.GDPRConsent = "+JSON.stringify(window.GDPRConsent)+ ";" : "")+'window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.11" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<style>' + (screen.width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.41"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>window.GDPR = '+(window.GDPR ? window.GDPR : false)+';'+(window.GDPRConsent ? "window.GDPRConsent = "+JSON.stringify(window.GDPRConsent)+ ";" : "")+'window.username = "'+username+'";'+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css?v=1.14" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css" rel="stylesheet" type="text/css">' : '') + '<style>' + (screen.width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || screen.width > 450) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></div></form></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=1.43"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
   }
 
@@ -273,9 +279,32 @@ try {
               chatBehavior = config[k].path[j].config;
               break;
             }
-          } else if (window.location.pathname === j) {
-            chatBehavior = config[k].path[j].config;
-            break;
+            if (config[k].path[j].config && config[k].path[j].config.isIframe) {
+              if (document.referrer && document.referrer.indexOf('/') > -1) {
+                var qq = document.referrer.substring(document.referrer.indexOf('/'));
+                qq = qq.substring(1);
+                if (qq.indexOf(j.replace('*','')) > -1) {
+                  chatBehavior = config[k].path[j].config;
+                  break;
+                }
+              }
+            }
+          } else {
+            if (window.location.pathname === j) {
+              chatBehavior = config[k].path[j].config;
+              break;
+            }
+            if (config[k].path[j].config && config[k].path[j].config.isIframe) {
+              if (document.referrer && document.referrer.indexOf('/') > -1) {
+                var qq = document.referrer.substring(document.referrer.indexOf('/'));
+                qq = qq.substring(1);
+                qq = qq.split('?')[0];
+                if (qq === j) {
+                  chatBehavior = config[k].path[j].config;
+                  break;
+                }
+              }
+            }
           }
         }
         break;
@@ -289,15 +318,40 @@ try {
             chatBehavior = config['*'].path[j].config;
             break;
           }
-        } else if (window.location.pathname === j) {
-          chatBehavior = config['*'].path[j].config;
-          break;
+          if (config['*'].path[j].config && config['*'].path[j].config.isIframe) {
+            if (document.referrer && document.referrer.indexOf('/') > -1) {
+              var qq = document.referrer.substring(document.referrer.indexOf('/'));
+              qq = qq.substring(1);
+              qq = qq.split('?')[0];
+              if (qq.indexOf(j.replace('*','')) > -1) {
+                chatBehavior = config['*'].path[j].config;
+                break;
+              }
+            }
+          }
+        } else {
+          if (window.location.pathname === j) {
+            chatBehavior = config['*'].path[j].config;
+            break;
+          }
+          if (config['*'].path[j].config && config['*'].path[j].config.isIframe) {
+            if (document.referrer && document.referrer.indexOf('/') > -1) {
+              var qq = document.referrer.substring(document.referrer.indexOf('/'));
+              qq = qq.substring(1);
+              qq = qq.split('?')[0];
+
+              if (qq === j) {
+                chatBehavior = config['*'].path[j].config;
+                break;
+              }
+            }
+          }
         }
       }
     }
 
     if (chatBehavior) {
-      var fn = getQueryVar("fn");
+      var fn = getQueryVar("fn", chatBehavior.isIframe);
       window.eyvideo = chatBehavior.video;
       if (chatBehavior.hidden) {
         window.isOpen = true;
@@ -512,21 +566,21 @@ try {
   var eyelevel = {
     init: function(params) {
       var username = params.username;
-      var un = getQueryVar("un");
+      var un = getQueryVar("un", params.isIframe);
       if (un) {
         username = un;
       }
       window.eyusername = username;
 
       var flowname = params.flowname;
-      var fn = getQueryVar("fn");
+      var fn = getQueryVar("fn", params.isIframe);
       if (fn) {
         flowname = fn;
       }
       window.eyflowname = flowname;
 
       var channel = params.channel;
-      var ch = getQueryVar("eychannel");
+      var ch = getQueryVar("eychannel", params.isIframe);
       if (ch) {
         channel = ch;
       }
@@ -535,7 +589,7 @@ try {
       }
 
       var origin = params.origin;
-      var og = getQueryVar("eyorigin");
+      var og = getQueryVar("eyorigin", params.isIframe);
       if (og) {
         origin = og;
       }
@@ -548,7 +602,7 @@ try {
       }
 
       var shouldOpen = params.state && params.state === "open";
-      var op = getQueryVar("eystate");
+      var op = getQueryVar("eystate", params.isIframe);
       if (op) {
         shouldOpen = op === "open";
       }
@@ -560,13 +614,13 @@ try {
       window.gaid = params.gaid || "UA-173447538-1";
 
       var eyid = params.eyid;
-      eyid = getQueryVar("eyid");
+      eyid = getQueryVar("eyid", params.isIframe);
       if (eyid) {
         window.eyid = eyid;
       }
 
       var attention = params.attention;
-      var attn = getQueryVar("eyattn");
+      var attn = getQueryVar("eyattn", params.isIframe);
       if (attn) {
         attention = attn;
       }
