@@ -206,6 +206,12 @@ try {
     document.body.appendChild(es);
   }
 
+  function invertChat() {
+    var es = document.createElement("style");
+    es.innerHTML = '.ey-app{right:auto !important;left:15px !important;}.ey-alert-cnt{right:auto !important;left:24px !important; bottom:108px !important;}.ey-badge-cnt{right:auto !important;left:90px !important;}@media(min-width: 800px){.ey-section{right:auto !important;left:34px !important;}}';
+    document.body.appendChild(es);
+  }
+
   window.initChatBubble = function(username, flowname, shouldOpen, video) {
     if(window.hideChat) {
       return;
@@ -270,6 +276,11 @@ try {
     var chatBehavior;
     var domB;
     var pathB;
+    var isInverted = false;
+    if (config && config.invert) {
+      invertChat();
+      isInverted = true;
+    }
     for (var k in config) {
       if (window.location.hostname === k) {
         chatBehavior = config[k].config;
@@ -353,6 +364,10 @@ try {
     if (chatBehavior) {
       var fn = getQueryVar("fn", chatBehavior.isIframe);
       window.eyvideo = chatBehavior.video;
+      if (chatBehavior.invert && !isInverted) {
+        invertChat();
+        isInverted = true;
+      }
       if (chatBehavior.hidden) {
         window.isOpen = true;
         window.hideChat = true;
