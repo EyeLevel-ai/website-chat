@@ -703,6 +703,9 @@ window.menu = null;
                     } else {
                       t.domHelper.handleStopSend();
                     }
+                }, this.handleInputFocus = function(n) {
+                  window.scrollTo(0, 0);
+                  document.body.scrollTop = 0;
                 }, this.heartbeat = function() {
                   if (!window.eySocket) return;
                   if (window.eySocket.readyState !== 1) return;
@@ -770,34 +773,53 @@ window.menu = null;
                     window.videoElm = false;
                   }
                   return false;
+                }, this.loadVideo = function() {
+                  if (window.eyvideo) {
+                    var w = t.domHelper.getChatWindow();
+                    window.videoElm = t.domHelper.workplace.createElement('div');
+                    window.videoElm.classList.add('ey-class-video-cnt');
+                    window.videoElm.onclick = function(e) {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      var vic = t.domHelper.workplace.getElementById('eyVideo');
+                      vic.play();
+                    };
+                    if (window.eyvideo.img) {
+                      var pimg = t.domHelper.workplace.createElement('img');
+                      pimg.id = 'eyVideoImg';
+                      pimg.classList.add('ey-class-video');
+                      pimg.src = window.eyvideo.img;
+                      window.videoElm.appendChild(pimg);
+                    }
+                    w.appendChild(window.videoElm);
+                    w.onclick = t.onFirstClick;
+                  }
                 }, this.initVideo = function() {
-                  window.isInit = true;
-                  var w = t.domHelper.getChatWindow();
-                  window.videoElm = t.domHelper.workplace.createElement('div');
-                  window.videoElm.classList.add('ey-class-video-cnt');
-                  window.videoElm.onclick = function(e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    var vic = t.domHelper.workplace.getElementById('eyVideo');
-                    vic.play();
-                  };
-                  var vc = t.domHelper.workplace.createElement('video');
-                  vc.id = 'eyVideo';
-                  vc.preload = true;
-                  vc.autoplay = true;
-                  vc.loop = false;
-                  vc.playsinline = true;
-                  vc.classList.add('ey-class-video');
-                  var s1 = t.domHelper.workplace.createElement('source');
-                  s1.type = 'video/webm';
-                  vc.appendChild(s1);
-                  var s2 = t.domHelper.workplace.createElement('source');
-                  s2.type = 'video/mp4';
-                  s2.src = window.eyvideo.full;
-                  vc.appendChild(s2);
-                  window.videoElm.appendChild(vc);
-                  w.appendChild(window.videoElm);
-                  w.onclick = t.onFirstClick;
+                  if (window.videoElm) {
+                    var vc = t.domHelper.workplace.createElement('video');
+                    vc.id = 'eyVideo';
+                    vc.preload = true;
+                    vc.autoplay = true;
+                    vc.loop = false;
+                    vc.playsinline = true;
+                    vc.classList.add('ey-class-video');
+                    vc.addEventListener('play', function(e) {
+                      if (window.eyvideo.img) {
+                        var pimg = t.domHelper.workplace.getElementById('eyVideoImg');
+                        if (pimg) {
+                          pimg.parentNode.removeChild(pimg);
+                        }
+                      }
+                    }, !1);
+                    var s1 = t.domHelper.workplace.createElement('source');
+                    s1.type = 'video/webm';
+                    vc.appendChild(s1);
+                    var s2 = t.domHelper.workplace.createElement('source');
+                    s2.type = 'video/mp4';
+                    s2.src = window.eyvideo.full;
+                    vc.appendChild(s2);
+                    window.videoElm.appendChild(vc);
+                  }
                 }, this.initAnimation = function() {
                   window.isInit = true;
                   var le;
@@ -858,9 +880,6 @@ window.menu = null;
                                     if (window.attn) {
                                       t.initAnimation();
                                     }
-                                    if (window.eyvideo) {
-                                      t.initVideo();
-                                    }
                                   }
                                 });
                             } else {
@@ -875,9 +894,6 @@ window.menu = null;
                               if (window.attn) {
                                 t.initAnimation();
                               }
-                              if (window.eyvideo) {
-                                t.initVideo();
-                              }
                             }
                           } else if (wsRes.action === 'heartbeat') {
                           } else {
@@ -890,9 +906,6 @@ window.menu = null;
                                   if (!window.isInit) {
                                     if (window.attn) {
                                       t.initAnimation();
-                                    }
-                                    if (window.eyvideo) {
-                                      t.initVideo();
                                     }
                                   }
                                 });
@@ -930,6 +943,9 @@ window.menu = null;
                 }, this.handleChatWindow = function(n) {
                   if (n && n.type === "message") {
                     if (n.data && n.data === "open") {
+                      if (window.eyvideo) {
+                        t.initVideo();
+                      }
                       if (!window.eySocket) {
                         t.initializeWS();
                       }
@@ -1490,7 +1506,9 @@ window.menu = null;
                     this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, !1),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1),
-                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1), window.shouldOpen && this.handleChatWindow()
+                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1), window.shouldOpen && this.handleChatWindow(),
+                    this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, !1),
+                    this.loadVideo()
                 }
             }, {
                 key: "handleMenuItemClick",
