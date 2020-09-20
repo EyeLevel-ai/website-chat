@@ -50,6 +50,9 @@ try {
     googlePixel.text = "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '" + window.gaid + "');"
     googlePixel.async = true;
     firstScript.parentNode.insertBefore(googlePixel, firstScript);
+    var es1 = document.createElement("script");
+    es1.src = window.eySession.chatURL + '/client.js?v=' + window.eySession.chatVersion;
+    firstScript.parentNode.insertBefore(es1, firstScript);
   };
 
   function randomString(length) {
@@ -148,11 +151,11 @@ try {
     function initChat() {
       window.initEYScripts();
       if (!window.eySession.isDev) {
-        gtag('event', window.location.hostname, { event_category: 'sales_load', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen, version: window.eySession.chatVersion });
+        gtag('event', window.location.hostname, { event_category: 'sales_load', version: window.eySession.chatVersion });
       }
       if (!window.WebSocket || !window.addEventListener) {
         if (!window.eySession.isDev) {
-          gtag('event', window.location.hostname, { event_category: 'sales_hidden', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
+          gtag('event', window.location.hostname, { event_category: 'sales_hidden', version: window.eySession.chatVersion });
         }
         return false;
       }
@@ -177,7 +180,14 @@ try {
       }
 
       window.addEventListener("load", function() {
-        window.startChat();
+        if (window.eyc) {
+          window.eyc.startChat();
+        } else {
+          console.error("failed to load EyeLevel chat client");
+          if (typeof gtag !== 'undefined' && !window.eySession.isDev) {
+            gtag('event', window.location.hostname, { event_category: 'sales_error', event_label: 'chat client load error', version: window.eySession.chatVersion });
+          }
+        }
       }, true);
     }
 
@@ -185,16 +195,9 @@ try {
 
   })();
 
-  window.startChat = function() {
-  };
-
 } catch(e) {
   console.error(e);
-  var userId;
-  if (window.localStorage) {
-    userId = window.localStorage.getItem('eyelevel.sales.userId');
-  }
   if (typeof gtag !== 'undefined') {
-    gtag('event', window.location.hostname, { event_category: 'sales_error', event_label: (e && e.stack) ? e.stack : e, uid: userId, username: window.username, flowname: window.flowname, origin: window.origin, shouldOpen: window.shouldOpen });
+    gtag('event', window.location.hostname, { event_category: 'sales_error', event_label: (e && e.stack) ? e.stack : e });
   }
 }

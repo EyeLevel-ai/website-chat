@@ -40,6 +40,9 @@
     <title>Chat with Leads | EyeLevel.ai</title>
 
     <link rel="stylesheet" href="/chat/chat.css?v=1.15">
+    <style>
+      .ey-chat .ey_result { top: 0 !important; }
+    </style>
 
     <script>
       if (typeof Promise !== "function") {
@@ -58,13 +61,6 @@
   <body>
 
     <div class="ey-chat-only ey-chat" id="eyChat">
-
-      <div class="ey-chat-nav">
-        <div class="ey-chat-logo-container">
-          <div class="ey-chat-logo"></div>
-          <div id="eyChatName" class="ey-chat-name"></div>
-        </div>
-      </div>
 
       <div class="ey_result" id="resultWrapper">
         <table class="ey_result-table">

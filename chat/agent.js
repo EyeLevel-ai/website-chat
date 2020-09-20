@@ -760,7 +760,7 @@ window.menu = null;
                 }, this.onFirstClick = function() {
                   if (window.attnElm) {
                     for (var k = 0; k < window.attnElm.childNodes.length; k++) {
-                      var bt = cn[0].childNodes[k];
+                      var bt = window.attnElm.childNodes[k];
                       if (bt && bt.classList.contains('btn--shockwave')) {
                         bt.classList.remove('btn--shockwave');
                         bt.classList.remove('is-active');
