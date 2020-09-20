@@ -352,13 +352,17 @@ noscript h1 {
   bottom: 66px;
   width: 100%;
 }
-.ey-chat .gdpr-overlay {
-  z-index: 1;
-  position: relative;
-  width: 100%;
-  height: 100%;
+.ey-chat .ey_result.consent-screen {
+  bottom: 0px !important;
 }
-.ey-chat .gdpr-container {
+.ey-chat .consent-overlay {
+  z-index: 25;
+  position: fixed;
+  width: 100%;
+  height: calc(100% - 60px);
+  bottom: 0px !important;
+}
+.ey-chat .consent-container {
   position: absolute;
   top: 0;
   bottom: 0;

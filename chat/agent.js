@@ -112,16 +112,16 @@ saveInteraction = function(interaction) {
 clearAll = function() {
   window.localStorage.removeItem('eyelevel.conversation.history');
   window.localStorage.removeItem('eyelevel.conversation.session');
-  window.localStorage.removeItem('eyelevel.conversation.gdpr');
+  window.localStorage.removeItem('eyelevel.conversation.consent');
   window.localStorage.removeItem('eyelevel.conversation.alerts');
 }
 
-saveGDPR = function(gdpr) {
-  window.localStorage.setItem('eyelevel.conversation.gdpr', gdpr);
+saveConsent = function(consent) {
+  window.localStorage.setItem('eyelevel.conversation.consent', consent);
 }
 
-getGDPR = function() {
-  return window.localStorage.getItem('eyelevel.conversation.gdpr');
+getConsent = function() {
+  return window.localStorage.getItem('eyelevel.conversation.consent');
 }
 
 saveSession = function(sess) {
@@ -754,8 +754,8 @@ window.menu = null;
                   } else {
                     t.handleInput();
                   }
-                  if (window.GDPR) {
-                    t.loadGDPR();
+                  if (window.Consent) {
+                    t.loadConsent();
                   }
                 }, this.onFirstClick = function() {
                   if (window.attnElm) {
@@ -950,10 +950,10 @@ window.menu = null;
                         t.initializeWS();
                       }
                       t.scrollToBottom();
-                    } else if (n.data && n.data.indexOf("GDPR||") === 0) {
-                      window.GDPR = true;
-                      window.GDPRConsent = JSON.parse(n.data.replace('GDPR||', ''));
-                      t.loadGDPR();
+                    } else if (n.data && n.data.indexOf("Consent||") === 0) {
+                      window.Consent = true;
+                      window.ConsentContent = JSON.parse(n.data.replace('Consent||', ''));
+                      t.loadConsent();
                     } else if (n.data && n.data.indexOf("close") === 0) {
                       if (window.videoElm) {
                         window.videoElm.parentNode.removeChild(window.videoElm);
@@ -1026,28 +1026,29 @@ window.menu = null;
                     return q.scrollTop = q.scrollHeight, this
                 }, this.escapeString = function(txt) {
                     return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt
-                }, this.loadGDPR = function() {
-                  var gd = getGDPR();
-                  if (window.gdprLoaded || gd === 'true') {
-                  } else if (!window.gdprLoaded) {
-                    window.gdprLoaded = true;
+                }, this.loadConsent = function() {
+                  var gd = getConsent();
+                  if (window.consentLoaded || gd === 'true') {
+                  } else if (!window.consentLoaded) {
+                    window.consentLoaded = true;
                     var q = t.domHelper.getQueryResultWrapper();
+                    q.classList.add('consent-screen');
                     var na = t.domHelper.workplace.createElement('div');
-                    na.id = 'gdprWindow';
-                    na.className = 'ey_result gdpr-overlay';
-                    na.innerHTML = '<div class="gdpr-container"><table class="ey_result-table"><tr><td id="gdprResult"></td></tr></table></div>';
+                    na.id = 'consentWindow';
+                    na.className = 'ey_result consent-overlay';
+                    na.innerHTML = '<div class="consent-container"><table class="ey_result-table"><tr><td id="consentResult"></td></tr></table></div>';
                     q.appendChild(na);
-                    t.createMessage(window.GDPRConsent, null, true)
-                    var ba = t.domHelper.workplace.getElementById('gdprWindow');
+                    t.createMessage(window.ConsentContent, null, true)
+                    var ba = t.domHelper.workplace.getElementById('consentWindow');
                     ba.scrollTop = ba.scrollHeight;
                   }
-                }, this.empty = function(isGDPR) {
+                }, this.empty = function(isConsent) {
                     var na = t.domHelper.workplace.createElement('div');
                     na.className = 'server-response-container';
                     na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response">...</div>';
                     var aa;
-                    if (isGDPR) {
-                      aa = t.domHelper.workplace.getElementById('gdprResult');
+                    if (isConsent) {
+                      aa = t.domHelper.workplace.getElementById('consentResult');
                     } else {
                       aa = t.domHelper.workplace.getElementById('result');
                     }
@@ -1198,7 +1199,7 @@ window.menu = null;
                         return cnt;
                       }
                       return;
-                    }, card: function(t, ttt, data, isGDPR) {
+                    }, card: function(t, ttt, data, isConsent) {
                       if (data.length && data.length === 1) {
                         var sc = ttt.getElementsByClassName('server-response');
                         if (sc && sc.length && sc.length === 1) {
@@ -1249,8 +1250,8 @@ window.menu = null;
                         } else if (objData.type === 'web_url') {
                           button.classList.add('web-url');
                           button.value = objData.url;
-                        } else if (objData.type === 'gdpr') {
-                          button.classList.add('gdpr-button');
+                        } else if (objData.type === 'consent') {
+                          button.classList.add('consent-button');
                           button.value = objData.value;
                           objData.payload = objData.title;
                         } else {
@@ -1403,7 +1404,7 @@ window.menu = null;
                         }
                         return html;
                     }
-                }, this.createMessage = function(msg, obj, isGDPR) {
+                }, this.createMessage = function(msg, obj, isConsent) {
                     return new Promise(function(resolve, reject) {
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
@@ -1411,7 +1412,7 @@ window.menu = null;
                         if (obj) {
                             ttt = obj;
                         } else {
-                            ttt = t.empty(isGDPR);
+                            ttt = t.empty(isConsent);
                         }
                         var data = JSON.parse(msg.payload);
                         var html = '';
@@ -1432,14 +1433,14 @@ window.menu = null;
                           if (data.attachment && data.attachment.payload) {
                             if (data.attachment.payload.text) {
                               if (needsReset) {
-                                ttt = t.empty(isGDPR);
+                                ttt = t.empty(isConsent);
                               }
                               t.setText(t.chat.text(data.attachment.payload.text), ttt);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
                               if (needsReset) {
-                                ttt = t.empty(isGDPR);
+                                ttt = t.empty(isConsent);
                               }
                               html = t.chat.video(data.attachment.payload.url);
                               if (html) {
@@ -1453,7 +1454,7 @@ window.menu = null;
                             }
                             if (data.attachment.type && data.attachment.type === 'image' && data.attachment.payload.url) {
                               if (needsReset) {
-                                ttt = t.empty(isGDPR);
+                                ttt = t.empty(isConsent);
                               }
                               html = t.chat.image(data.attachment.payload.url);
                               t.setMultimedia(html, ttt);
@@ -1461,7 +1462,7 @@ window.menu = null;
                             }
                             if (data.attachment.payload.buttons) {
                               if (needsReset) {
-                                ttt = t.empty(isGDPR);
+                                ttt = t.empty(isConsent);
                               }
                               html = t.chat.buttons(data.attachment.payload.buttons);
                               if (html && html.length) {
@@ -1471,12 +1472,12 @@ window.menu = null;
                               }
                             }
                             if (data.attachment.payload.template_type === 'generic') {
-                              html = t.chat.card(t, ttt, data.attachment.payload.elements, isGDPR);
+                              html = t.chat.card(t, ttt, data.attachment.payload.elements, isConsent);
                             }
                           }
                           if (data.quick_replies) {
                             if (needsReset) {
-                              ttt = t.empty(isGDPR);
+                              ttt = t.empty(isConsent);
                             }
                             html = t.chat.quick_replies(msg, data.quick_replies);
                             if (html && html.length) {
@@ -1488,7 +1489,7 @@ window.menu = null;
                         }
                         t.updateResponses();
                         if (msg.typing) {
-                          window.eySocket.typingElement = t.empty(isGDPR);
+                          window.eySocket.typingElement = t.empty(isConsent);
                           resolve();
                         } else {
                           window.eySocket.typingElement = null;
@@ -1591,11 +1592,12 @@ window.menu = null;
                     aa.click();
                     this.handleEvent('web}'+ee.target.value);
                     this.scrollToBottom();
-                  } else if (ee.target.classList.contains('gdpr-button')) {
+                  } else if (ee.target.classList.contains('consent-button')) {
                     if (ee.target.value === 'true') {
-                      saveGDPR(ee.target.value);
-                      var gw = document.getElementById('gdprWindow');
+                      saveConsent(ee.target.value);
+                      var gw = document.getElementById('consentWindow');
                       if (gw) {
+                        gw.parentNode.classList.remove('consent-screen');
                         gw.parentNode.removeChild(gw);
                       }
                     } else {
