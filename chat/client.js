@@ -1,5 +1,5 @@
 try {
-  var wssURL = 'wss://ws.eyelevel.ai';
+  var wssURL = 'wss://inbox.eyelevel.ai';
 
   if (!window.getUser) {
     window.getUser = function() {
@@ -130,11 +130,11 @@ try {
       var ben = {
         type: ty || 'text',
         data: e,
-        username: 'f95ae20b-6988-407e-95d3-0d1c4620e2de',
+        channelID: window.channelID,
         path: window.location.pathname,
-        uid: window.getUser().userId,
-        guid: window.eyid && window.eyid,
-        origin: 'web',
+        agentID: window.agentID,
+        guid: window.guid,
+        origin: window.origin,
         position: pos && pos,
         ref: window.location.href
       };
@@ -488,7 +488,7 @@ try {
       eyc.isChatting = true;
       var txt = evt || eyc.getInputValue();
       var shouldSend = true;
-      if (txt !== 'startWelcome' && txt !== 'reconnect' && type !== 'user_input') {
+      if (txt !== 'loadTranscript' && txt !== 'reconnect' && type !== 'user_input') {
         if (eyc.socket.turnType && eyc.socket.turnID && (eyc.socket.turnType === 'email' || eyc.socket.turnType === 'tel' || eyc.socket.turnType === 'name')) {
           shouldSend = false;
           var inBtn = eyc.workplace.getElementById(eyc.socket.turnId);
@@ -529,7 +529,7 @@ try {
       if ("" !== n.replace(/\s/g, "") && !eyc.isChatting) {
         if (n === 'clear all' || n === 'reset chat') {
           clearAll();
-          eyc.addUserRequestNode({text: 'cleared'});
+          eyc.createMessage({ payload: JSON.stringify({ text: 'cleared' }) });
           setTimeout(function() {
             eyc.socket.send(JSON.stringify(eyc.buildPayLoad("", "clear all")));
             eyc.setInputValue("");
@@ -543,11 +543,11 @@ try {
           inBtn.click();
           eyc.setInputValue("");
         } else {
-          eyc.addUserRequestNode({text: eyc.escapeString(n)});
+          eyc.createMessage({ payload: JSON.stringify({ text: n }) });
           eyc.isChatting = true;
-          if (n !== 'startWelcome' && n !== 'reconnect') {
-            eyc.socket.lastInteraction = { action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "user" };
-            saveInteraction({ action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "user" });
+          if (n !== 'loadTranscript' && n !== 'reconnect') {
+            eyc.socket.lastInteraction = { action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "agent" };
+            saveInteraction({ action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "agent" });
           }
           delete eyc.turnType;
           delete eyc.turnID;
@@ -585,8 +585,7 @@ try {
     },
     handleWSClose:      function(n) {
       var now = Date.now();
-      console.log('ws closed', eyc.connectAttempts);
-      if (eyc.socket && eyc.socket.connectTime && (eyc.socket.connectTime + 5000 > now || eyc.connectAttempts < 4)) {
+      if (eyc.socket && eyc.socket.connectTime && (eyc.socket.connectTime + 10000 < now || eyc.connectAttempts < 4)) {
         console.log('reconnecting');
         setTimeout(function() {
           eyc.initializeWS(true);
@@ -608,26 +607,18 @@ try {
         }
         if (wsRes) {
           switch (wsRes.action) {
-            case 'reconnect-empty':
-              if (eyc.socket.typingElement) {
-                eyc.removeEmpty(eyc.socket.typingElement);
-                delete eyc.socket.typingElement;
-              }
+            case 'loadTranscript':
+              eyc.loadTranscript(wsRes);
             case 'heartbeat':
               return;
             default:
-              wsRes.sender = "server";
-              if (wsRes.action !== 'reconnect') {
-                eyc.socket.lastInteraction = wsRes;
-              }
-              if (!eyc.socket.queuedMessages.length) {
-                eyc.socket.queuedMessages.push(wsRes);
-                eyc.processQueue();
-              } else {
-                eyc.socket.queuedMessages.push(wsRes);
-              }
-              if (wsRes.action !== 'reconnect') {
-                saveInteraction(wsRes);
+              if (wsRes.payload) {
+                var pay = JSON.parse(wsRes.payload);
+                wsRes.sender = "user";
+                eyc.addUserRequestNode(pay);
+                if (wsRes.action !== 'reconnect') {
+                  saveInteraction({ action: "message", payload: JSON.stringify({ text: pay.text }), typing: false, sender: "user" });
+                }
               }
               return;
           }
@@ -640,7 +631,7 @@ try {
     },
     handleWSOpen:       function(n) {
       if (!eyc.socket || !eyc.socket.isStarted) {
-        eyc.loadTranscript();
+        eyc.startLoad();
       } else {
         eyc.handleInput();
       }
@@ -652,7 +643,7 @@ try {
       setTimeout(eyc.heartbeat, 300000);
     },
     initializeWS:       function(isRestart) {
-      eyc.socket = new WebSocket(wssURL+'?uid='+window.getUser().userId+'&username=f95ae20b-6988-407e-95d3-0d1c4620e2de&origin=web');
+      eyc.socket = new WebSocket(wssURL+'?agentID='+window.getUser().userId+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
       eyc.socket.connectTime = Date.now();
       eyc.socket.queuedMessages = [];
       if (isRestart) {
@@ -714,8 +705,24 @@ try {
         }
       }
     },
-    loadTranscript:     function() {
-      return eyc.handleEvent('startWelcome', 'startWelcome');
+    loadTranscript:     function(data) {
+      if (data && data.payload) {
+        var transcript = JSON.parse(data.payload);
+        for (var i in transcript) {
+          var inp = transcript[i];
+          if (inp.sender === 'user') {
+            eyc.addUserRequestNode({ text: inp.message });
+          } else if (inp.sender === 'server') {
+            if (eyc.socket.typingElement) {
+              eyc.createMessage({ payload: JSON.stringify({ text: inp.message }) }, eyc.socket.typingElement);
+            } else {
+              eyc.createMessage({ payload: JSON.stringify({ text: inp.message }) });
+            }
+          }
+        }
+      } else {
+        throw 'malformed transcript data';
+      }
     },
     processQueue:       function() {
       if (eyc.socket.queuedMessages.length) {
@@ -823,7 +830,9 @@ try {
         eyc.initializeWS();
       }
       eyc.scrollToBottom();
-console.log('test', eyc.socket);
+    },
+    startLoad:          function() {
+      return eyc.handleEvent('loadTranscript', 'loadTranscript');
     },
     updateResponses:    function() {
       var tc = [];

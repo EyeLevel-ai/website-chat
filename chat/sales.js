@@ -53,6 +53,10 @@ try {
     var es1 = document.createElement("script");
     es1.src = window.eySession.chatURL + '/client.js?v=' + window.eySession.chatVersion;
     firstScript.parentNode.insertBefore(es1, firstScript);
+    var css1 = document.createElement("link");
+    css1.rel = "stylesheet";
+    css1.href = "https://css.eyelevel.ai/01EJYT8PFJ5XRSS91JP3DVRXK8/chat.css";
+		firstScript.parentNode.insertBefore(css1, firstScript);
   };
 
   function randomString(length) {
@@ -164,6 +168,11 @@ try {
 
     function loadChat(params) {
       window.gaid = (params && params.gaid) || "UA-173447538-1";
+
+      window.channelID = getQueryVar("channelID", false);
+      window.agentID = getQueryVar("agentID", false);
+      window.origin = getQueryVar("origin", false);
+      window.guid = getQueryVar("guid", false);
 
       if (document && document.body) {
 	      var ok = initChat();

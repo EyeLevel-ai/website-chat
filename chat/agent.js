@@ -732,7 +732,7 @@ window.menu = null;
                 }, this.handleWSClose = function(n) {
                   var now = Date.now();
                   console.log('ws closed');
-                  if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 5000 > now || window.connectAttempts < 4)) {
+                  if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 8000 < now || window.connectAttempts < 4)) {
                     console.log('reconnecting');
                     setTimeout(function() {
                       t.initializeWS(true);
