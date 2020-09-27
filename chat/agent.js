@@ -93,6 +93,11 @@ saveInteraction = function(interaction) {
       interaction.flowname = window.flowname;
     }
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
+  } else if (interaction && interaction.payload) {
+    var pay = JSON.parse(interaction.payload);
+    if (pay && pay.set_attributes) {
+      return;
+    }
   }
   var h = window.localStorage.getItem('eyelevel.conversation.history');
   if (h && typeof h !== 'undefined') {
@@ -1417,6 +1422,12 @@ window.menu = null;
                         var data = JSON.parse(msg.payload);
                         var html = '';
                         var needsReset = false;
+                        if (data.set_attributes) {
+                          if (data.set_attributes.event) {
+                            window.parent.postMessage('set-event:'+data.set_attributes.event, '*');
+                          }
+                          return resolve();
+                        }
                         if (t.chat.is_input(msg)) {
                           html = t.chat.user_input(msg);
                           if (html) {

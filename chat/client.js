@@ -109,11 +109,10 @@ try {
         sendBtn:            eyc.workplace.getElementById(eIDs.sendBtn)
       };
     },
-
     addUserRequestNode: function(n) {
       var t = eyc.workplace.createElement("div");
       if (n.text) {
-        return t.className = 'user-request-container', t.innerHTML = '<div class="user-request">' + n.text + '</div>', eyc.elements.queryResult.appendChild(t);
+        t.className = 'user-request-container', t.innerHTML = '<div class="user-request">' + n.text + '</div>', eyc.elements.queryResult.appendChild(t);
       } else if (n.input_value && n.id) {
         var input = eyc.workplace.getElementById(n.id + '-input');
         var cnt = eyc.workplace.getElementById(n.id);
@@ -125,6 +124,8 @@ try {
           cnt.classList.add('icon-success');
         }
       }
+      eyc.scrollToBottom();
+      return;
     },
     buildPayLoad:       function(e, ty, dt, pos) {
       var ben = {
@@ -365,7 +366,7 @@ try {
         for (var i in data) {
           if (data[i].content_type) {
             if (data[i].content_type === 'text') {
-              html.push(eyc	.chat.quick_reply(data[i]));
+              html.push(eyc.chat.quick_reply(data[i]));
             }
           }
         }

@@ -1,6 +1,6 @@
 try {
-  var chatV = '2.11';
-  var agentV = '1.45';
+  var chatV = '2.12';
+  var agentV = '1.46';
   var cssV = '1.16';
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
@@ -552,6 +552,7 @@ try {
         gtag('event', window.location.hostname, { event_category: 'chat_close', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
       }
       setTimeout(function() {
+        window.postMessage("chat-closed", "*");
         var is = document.getElementById("eyFrame");
         is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
         if (is) {
@@ -578,6 +579,7 @@ try {
         gtag('event', window.location.hostname, { event_category: 'chat_open', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
       }
       setTimeout(function() {
+        window.postMessage("chat-opened", "*");
         var is = document.getElementById("eyFrame");
         is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
         if (is) {
