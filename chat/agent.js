@@ -405,6 +405,14 @@ window.menu = null;
                   }, 0);
                 }
             }, {
+                key: "restartWelcome",
+                value: function(ben) {
+                  setTimeout(function() {
+                    ben.handleEvent('restartWelcome', 'restartWelcome');
+                    return
+                  }, 0);
+                }
+            }, {
                 key: "reconnect",
                 value: function(ben) {
                   var sess = getSession();
@@ -748,14 +756,22 @@ window.menu = null;
                   throw 'WS error';
                 }, this.handleWSOpen = function(n) {
                   if (!window.eySocket.isStarted) {
-                    var inter = retrieveInteractions();
-                    if (inter && inter.length) {
-                      t.loadInteractions(0, inter);
+                    if (window.eyreset) {
+                      clearAll();
+                      t.domHelper.setInputValue("");
+                      t.domHelper.handleStopSend();
+                      t.domHelper.restartWelcome(t);
+                      window.eyreset = false;
                     } else {
-                      t.domHelper.startWelcome(t);
+                      var inter = retrieveInteractions();
+                      if (inter && inter.length) {
+                        t.loadInteractions(0, inter);
+                      } else {
+                        t.domHelper.startWelcome(t);
+                      }
+                      window.eySocket.isStarted = true;
+                      t.heartbeat();
                     }
-                    window.eySocket.isStarted = true;
-                    t.heartbeat();
                   } else {
                     t.handleInput();
                   }
@@ -1129,7 +1145,7 @@ window.menu = null;
                         } else {
                           t.domHelper.addUserRequestNode({text: t.escapeString(n)}, t);
                           window.isChatting = true;
-                          if (n !== 'startWelcome' && n !== 'reconnect') {
+                          if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
                             window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
                             saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" });
                           }
@@ -1651,7 +1667,7 @@ window.menu = null;
                   window.isChatting = true;
                   var txt = evt || t.domHelper.getInputValue();
                   var shouldSend = true;
-                  if (txt !== 'startWelcome' && txt !== 'reconnect' && type !== 'user_input') {
+                  if (txt !== 'startWelcome' && txt !== 'restartWelcome' && txt !== 'reconnect' && type !== 'user_input') {
                     if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
                     shouldSend = false;
                     var inBtn = document.getElementById(window.eySocket.turnId);
