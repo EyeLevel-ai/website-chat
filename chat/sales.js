@@ -1,7 +1,7 @@
 try {
   window.eySession = {
-    chatVersion: '1.02',
-    cssVersion: '1.15',
+    chatVersion: '1.04',
+    cssVersion: '1.16',
     cssURL: 'https://css.eyelevel.ai',
     chatURL: 'https://cdn.eyelevel.ai/chat',
   };
@@ -171,6 +171,9 @@ try {
   (function() {
 
     function initChat() {
+      if (window.eyEnv) {
+        loadEnv(window.eyEnv);
+      }
       window.initEYScripts();
       if (!window.eySession.isDev) {
         gtag('event', window.location.hostname, { event_category: 'sales_load', version: window.eySession.chatVersion });
@@ -191,6 +194,10 @@ try {
       window.agentID = getQueryVar("agentID", false);
       window.origin = getQueryVar("origin", false);
       window.guid = getQueryVar("guid", false);
+      var en = getQueryVar("eyEnv", false);
+      if (en) {
+        window.eyEnv = en;
+      }
 
       if (document && document.body) {
 	      var ok = initChat();
@@ -209,7 +216,6 @@ try {
       window.addEventListener("load", function() {
         if (window.eyc) {
           if (window.eyEnv) {
-            loadEnv(window.eyEnv);
             window.eyc.env = window.eyEnv;
           }
           window.eyc.startChat();

@@ -2,88 +2,17 @@ try {
   var wssURL = 'wss://inbox.eyelevel.ai';
   var devURL = 'wss://dinbox.eyelevel.ai'
 
-  if (!window.getUser) {
-    window.getUser = function() {
-      var userId = window.localStorage.getItem('eyelevel.sales.userId');
-      var aid = window.localStorage.getItem('eyelevel.sales.aid');
-      var newUser = false;
-      if (!userId) {
-        newUser = true;
-        userId = randomString(32);
-        window.localStorage.setItem('eyelevel.sales.userId', userId);
-      }
-      return { userId: userId, aid: aid, GUID: aid + ":" + userId, newUser: newUser };
-    }
-  }
-
-  saveSession = function(sess) {
-    if (sess.Pos.flowUUID && sess.Pos.turnID && sess.Pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(sess.Pos.turnID) !== 0) {
-      window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify(sess));
-      if (sess.GUID && sess.GUID.refUserId && sess.GUID.aid && parseInt(sess.GUID.aid) > 0) {
-        window.localStorage.setItem('eyelevel.sales.aid', parseInt(sess.GUID.aid));
-        window.localStorage.setItem('eyelevel.sales.userId', sess.GUID.refUserId);
-        window.user = window.getUser();
-      }
-    }
-  }
-
-  saveInteraction = function(interaction) {
-    if (interaction && interaction.sender && interaction.sender === 'user') {
-      interaction.host = window.location.host;
-      interaction.pathname = window.location.pathname;
-      interaction.uid = window.getUser().userId;
-      interaction.username = window.username;
-      interaction.origin = window.origin || 'web';
-      if (typeof window.flowname !== 'undefined') {
-        interaction.flowname = window.flowname;
-      }
-      window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
-    }
-    var h = window.localStorage.getItem('eyelevel.conversation.history');
-    if (h && typeof h !== 'undefined') {
-      var history = JSON.parse(h);
-      if (history) {
-        history.push(interaction)
-      } else {
-        history = [interaction];
-      }
-      window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
-    } else {
-      var history = [interaction];
-      window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(history));
-    }
-  }
-
   clearAll = function() {
-    window.localStorage.removeItem('eyelevel.conversation.history');
-    window.localStorage.removeItem('eyelevel.conversation.session');
-  }
-
-  getSession = function() {
-    var s = window.localStorage.getItem('eyelevel.conversation.session');
-    if (s && typeof s !== 'undefined') {
-      var sess = JSON.parse(s);
-      if (sess) {
-        if (sess.position) {
-          sess.Pos = sess.position;
-        }
-      }
-      return sess;
-    }
-  }
-
-  retrieveInteractions = function() {
-    var h = window.localStorage.getItem('eyelevel.conversation.history');
-    if (h && typeof h !== 'undefined') {
-      return JSON.parse(h);
-    }
   }
 
   var eIDs = {
     queryInput:         'query',
+    queryInputWrapper:  'inputWrapper',
     queryResult:        'result',
     queryResultWrapper: 'resultWrapper',
     sendBtn:            'ey-send',
+    statusMessage:      'statusMessage',
+    statusMessageData:  'statusMessageData',
     window:             'eyChat'
   };
 
@@ -96,7 +25,6 @@ try {
     connectAttempts:    0,
     isChatting:         false,
     socket:             null,
-    user:               null,
 
     getInputValue:      function() {
       return eyc.elements.queryInput.value;
@@ -105,6 +33,7 @@ try {
       return eyc.elements = {
         chatWindow:         eyc.workplace.getElementById(eIDs.window),
         queryInput:         eyc.workplace.getElementById(eIDs.queryInput),
+        queryInputWrapper:  eyc.workplace.getElementById(eIDs.queryInputWrapper),
         queryResult:        eyc.workplace.getElementById(eIDs.queryResult),
         queryResultWrapper: eyc.workplace.getElementById(eIDs.queryResultWrapper),
         sendBtn:            eyc.workplace.getElementById(eIDs.sendBtn)
@@ -124,6 +53,22 @@ try {
           cnt.classList.remove('icon-send');
           cnt.classList.add('icon-success');
         }
+      }
+      eyc.scrollToBottom();
+      return;
+    },
+    addStatusMessage: function(msg) {
+      var status = eyc.workplace.getElementById(eIDs.statusMessage);
+      if (!status) {
+        status = eyc.workplace.createElement("div");
+        status.id = eIDs.statusMessage;
+        status.className = 'status-container';
+        status.innerHTML = '<div class="status-update">' + msg + '</div>';
+        eyc.elements.queryResult.appendChild(status);
+      } else {
+        status.innerHTML = '<div class="status-update">' + msg + '</div>';
+        status.parentNode.removeChild(status);
+        eyc.elements.queryResult.appendChild(status);
       }
       eyc.scrollToBottom();
       return;
@@ -502,7 +447,6 @@ try {
             if (txt.indexOf('web}') < 0) {
               eyc.addUserRequestNode({text: txt});
               eyc.socket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
-              saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
             } else {
               shouldSend = false;
             }
@@ -511,7 +455,6 @@ try {
           }
         }
       } else if (type === 'user_input') {
-        saveInteraction({ action: "input_value", payload: JSON.stringify({ input_value: txt, id: dt }), typing: false, sender: "user" });
         dt = null;
       }
       if (shouldSend) {
@@ -549,7 +492,6 @@ try {
           eyc.isChatting = true;
           if (n !== 'loadTranscript' && n !== 'reconnect') {
             eyc.socket.lastInteraction = { action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "agent" };
-            saveInteraction({ action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "agent" });
           }
           delete eyc.turnType;
           delete eyc.turnID;
@@ -602,7 +544,6 @@ try {
       eyc.isChatting = false;
       if (n && n.data) {
         var wsRes = JSON.parse(n.data);
-        saveSession(wsRes.session);
         if (!eyc.socket.isStarted) {
           eyc.socket.isStarted = true;
           eyc.heartbeat();
@@ -610,17 +551,26 @@ try {
         if (wsRes) {
           switch (wsRes.action) {
             case 'loadTranscript':
-              eyc.loadTranscript(wsRes);
+              return eyc.loadTranscript(wsRes);
             case 'heartbeat':
               return;
+            case 'reconnect':
+              if (wsRes.session && wsRes.session.User) {
+                return eyc.userReconnected(wsRes.session.User);
+              } else {
+                throw "Invalid WS disconnect payload";
+              }
+            case 'disconnect':
+              if (wsRes.session && wsRes.session.User) {
+                return eyc.userDisconnected(wsRes.session.User);
+              } else {
+                throw "Invalid WS disconnect payload";
+              }
             default:
               if (wsRes.payload) {
                 var pay = JSON.parse(wsRes.payload);
                 wsRes.sender = "user";
                 eyc.addUserRequestNode(pay);
-                if (wsRes.action !== 'reconnect') {
-                  saveInteraction({ action: "message", payload: JSON.stringify({ text: pay.text }), typing: false, sender: "user" });
-                }
               }
               return;
           }
@@ -645,10 +595,10 @@ try {
       setTimeout(eyc.heartbeat, 300000);
     },
     initializeWS:       function(isRestart) {
-      if (eyc.eyEnv) {
+      if (eyc.env) {
         eyc.loadEnv();
       }
-      eyc.socket = new WebSocket(wssURL+'?agentID='+window.getUser().userId+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
+      eyc.socket = new WebSocket(wssURL+'?agentID='+window.agentID+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
       eyc.socket.connectTime = Date.now();
       eyc.socket.queuedMessages = [];
       if (isRestart) {
@@ -711,7 +661,7 @@ try {
       }
     },
     loadEnv:            function() {
-      switch(eyc.eyEnv) {
+      switch(eyc.env) {
         case 'dev':
         case 'local-chat-dev':
         case 'local-css-dev':
@@ -834,7 +784,6 @@ try {
     },
     startChat:          function() {
       eyc.mapElements();
-      eyc.user = window.getUser();
       eyc.elements.queryInput.addEventListener("keydown", eyc.handleInputKeyDown, !1);
       window.addEventListener("message", eyc.handleChatWindow, !1);
       eyc.elements.queryInput.addEventListener("input", eyc.handleInputChange, !1);
@@ -844,6 +793,11 @@ try {
       if (!eyc.socket) {
         eyc.initializeWS();
       }
+      eyc.inputHeight = Math.max(
+        eyc.elements.queryInputWrapper.clientHeight,
+        eyc.elements.queryInputWrapper.offsetHeight,
+        eyc.elements.queryInputWrapper.scrollHeight
+      );
       eyc.scrollToBottom();
     },
     startLoad:          function() {
@@ -886,6 +840,44 @@ try {
         }
       }
       eyc.scrollToBottom();
+    },
+    userReconnected:    function(user) {
+      eyc.addStatusMessage(user.first_name + ' ' + user.last_name + ' just came back online');
+      eyc.elements.queryInputWrapper.style.display = 'block';
+      var status = eyc.workplace.getElementById(eIDs.statusMessageData);
+      if (status) {
+        status.parentNode.removeChild(status);
+        eyc.scrollToBottom();
+      }
+    },
+    userDisconnected:   function(user) {
+      eyc.addStatusMessage(user.first_name + ' ' + user.last_name + ' is currently offline');
+      eyc.elements.queryInputWrapper.style.display = 'none';
+      if (user.email || user.phone) {
+        var msg = 'You can reach them at ';
+        if (user.phone) {
+          msg += '<a href="tel:' + user.phone + '">' + user.phone + '</a>';
+        }
+        if (user.email) {
+          if (user.phone) {
+            msg += ' or ';
+          }
+          msg += '<a href="mailto:' + user.email + '">' + user.email + '</a>';
+        }
+        var status = eyc.workplace.getElementById(eIDs.statusMessageData);
+        if (!status) {
+          status = eyc.workplace.createElement("div");
+          status.id = eIDs.statusMessageData;
+          status.className = 'status-container';
+          status.innerHTML = '<div class="status-update">' + msg + '</div>';
+          eyc.elements.queryResult.appendChild(status);
+        } else {
+          status.innerHTML = '<div class="status-update">' + msg + '</div>';
+          status.parentNode.removeChild(status);
+          eyc.elements.queryResult.appendChild(status);
+        }
+        eyc.scrollToBottom();
+      }
     }
   };
   window.eyc = eyc;
