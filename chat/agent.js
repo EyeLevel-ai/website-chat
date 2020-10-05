@@ -1,5 +1,7 @@
 try {
   var wssURL = 'wss://ws.eyelevel.ai';
+  var devURL = 'wss://dws.eyelevel.ai'
+
 function randomString(length) {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -724,7 +726,19 @@ window.menu = null;
                   if (window.eySocket.readyState !== 1) return;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
                   setTimeout(t.heartbeat, 300000);
+                }, this.loadEnv = function() {
+                  switch(window.eyEnv) {
+                    case 'dev':
+                    case 'local-chat-dev':
+                    case 'local-css-dev':
+                    case 'local-dev':
+                      wssURL = devURL;
+                      break;
+                  }
                 }, this.initializeWS = function(isRestart) {
+                  if (window.eyEnv) {
+                    t.loadEnv();
+                  }
                   window.eySocket = new WebSocket(wssURL+'?uid='+window.user.userId+'&username='+window.username+'&origin='+(window.origin || 'web')+(window.eyid ? '&guid='+window.eyid : ''));
                   window.eySocket.connectTime = Date.now();
                   window.eySocket.queuedMessages = [];

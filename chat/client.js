@@ -1,5 +1,6 @@
 try {
   var wssURL = 'wss://inbox.eyelevel.ai';
+  var devURL = 'wss://dinbox.eyelevel.ai'
 
   if (!window.getUser) {
     window.getUser = function() {
@@ -644,7 +645,10 @@ try {
       setTimeout(eyc.heartbeat, 300000);
     },
     initializeWS:       function(isRestart) {
-      eyc.socket = new WebSocket(wssURL+'?agentID='+window.getUser().userId+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
+      if (eyc.eyEnv) {
+        eyc.loadEnv();
+      }
+      eyc.socket = new WebSocket(wssUrl+'?agentID='+window.getUser().userId+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
       eyc.socket.connectTime = Date.now();
       eyc.socket.queuedMessages = [];
       if (isRestart) {
@@ -704,6 +708,16 @@ try {
           default:
             break;
         }
+      }
+    },
+    loadEnv:            function() {
+      switch(eyc.eyEnv) {
+        case 'dev':
+        case 'local-chat-dev':
+        case 'local-css-dev':
+        case 'local-dev':
+          wssURL = devURL;
+          break;
       }
     },
     loadTranscript:     function(data) {

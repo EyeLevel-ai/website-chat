@@ -1,10 +1,12 @@
 try {
   window.eySession = {
-    chatVersion: '1.0',
+    chatVersion: '1.01',
     cssVersion: '1.15',
     cssURL: 'https://css.eyelevel.ai',
-    chatURL: '/chat',
+    chatURL: 'https://cdn.eyelevel.ai/chat',
   };
+  var localChatURL = '/chat';
+  var localCssURL = '/css';
   window.eySession.isDev = (window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('127.0.0.1') > -1) ? true : false;
 
   function getQueryVar(vn, isIframe) {
@@ -21,6 +23,22 @@ try {
       if (decodeURIComponent(pr[0]) == vn) {
         return decodeURIComponent(pr[1]);
       }
+    }
+  }
+
+  function loadEnv(eyEnv) {
+    switch(eyEnv) {
+      case 'local':
+      case 'local-dev':
+        window.eySession.cssURL = localCssURL;
+        window.eySession.chatURL = localChatURL;
+        break;
+      case 'local-chat-dev':
+        window.eySession.chatURL = localChatURL;
+        break;
+      case 'local-css-dev':
+        window.eySession.cssURL = localCssURL;
+        break;
     }
   }
 
@@ -190,6 +208,10 @@ try {
 
       window.addEventListener("load", function() {
         if (window.eyc) {
+          if (window.eyEnv) {
+            loadEnv(window.eyEnv);
+            window.eyc.env = window.eyEnv;
+          }
           window.eyc.startChat();
         } else {
           console.error("failed to load EyeLevel chat client");
