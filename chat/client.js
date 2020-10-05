@@ -648,7 +648,7 @@ try {
       if (eyc.eyEnv) {
         eyc.loadEnv();
       }
-      eyc.socket = new WebSocket(wssUrl+'?agentID='+window.getUser().userId+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
+      eyc.socket = new WebSocket(wssURL+'?agentID='+window.getUser().userId+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
       eyc.socket.connectTime = Date.now();
       eyc.socket.queuedMessages = [];
       if (isRestart) {
