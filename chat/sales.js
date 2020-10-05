@@ -1,6 +1,6 @@
 try {
   window.eySession = {
-    chatVersion: '1.01',
+    chatVersion: '1.02',
     cssVersion: '1.15',
     cssURL: 'https://css.eyelevel.ai',
     chatURL: 'https://cdn.eyelevel.ai/chat',
