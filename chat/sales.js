@@ -1,7 +1,7 @@
 try {
   window.eySession = {
-    chatVersion: '1.04',
-    cssVersion: '1.16',
+    chatVersion: '1.05',
+    cssVersion: '1.18',
     cssURL: 'https://css.eyelevel.ai',
     chatURL: 'https://cdn.eyelevel.ai/chat',
   };
@@ -157,17 +157,6 @@ try {
     })());
   }
 
-  window.getUser = function() {
-    var userId = window.localStorage.getItem('eyelevel.sales.userId');
-    var newUser = false;
-    if (!userId) {
-      newUser = true;
-      userId = randomString(32);
-      window.localStorage.setItem('eyelevel.sales.userId', userId);
-    }
-    return { userId: userId, newUser: newUser };
-  };
-
   (function() {
 
     function initChat() {
@@ -194,7 +183,7 @@ try {
       window.agentID = getQueryVar("agentID", false);
       window.origin = getQueryVar("origin", false);
       window.guid = getQueryVar("guid", false);
-      var en = getQueryVar("eyEnv", false);
+      var en = getQueryVar("eyenv", false);
       if (en) {
         window.eyEnv = en;
       }

@@ -62,7 +62,7 @@ try {
       if (!status) {
         status = eyc.workplace.createElement("div");
         status.id = eIDs.statusMessage;
-        status.className = 'status-container';
+        status.className = 'status-container status-top';
         status.innerHTML = '<div class="status-update">' + msg + '</div>';
         eyc.elements.queryResult.appendChild(status);
       } else {
@@ -326,7 +326,7 @@ try {
         eyc.handleInput();
       }
     },
-    createMessage:      function(msg, obj) {
+    createMessage:      function(msg, obj, inp) {
       return new Promise(function(resolve, reject) {
         delete eyc.socket.turnType;
         delete eyc.socket.turnID;
@@ -342,14 +342,14 @@ try {
         if (eyc.chat.is_input(msg)) {
           html = eyc.chat.user_input(msg);
           if (html) {
-            eyc.setButtons([html], ttt);
+            eyc.setButtons([html], ttt, inp);
           } else {
             eyc.setText("Unsupported user input type", ttt);
           }
         } else {
           if (data.text) {
             html = eyc.chat.text(data.text);
-            eyc.setText(html, ttt);
+            eyc.setText(html, ttt, inp);
             needsReset = true;
           }
           if (data.attachment && data.attachment.payload) {
@@ -357,7 +357,7 @@ try {
               if (needsReset) {
                 ttt = eyc.empty();
               }
-              eyc.setText(eyc.chat.text(data.attachment.payload.text), ttt);
+              eyc.setText(eyc.chat.text(data.attachment.payload.text), ttt, inp);
               needsReset = true;
             }
             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
@@ -367,10 +367,10 @@ try {
               html = eyc.chat.video(data.attachment.payload.url);
               if (html) {
                 ttt.classList.add('chat-video');
-                eyc.setMultimedia(html, ttt);
+                eyc.setMultimedia(html, ttt, inp);
               } else {
                 var btn = eyc.chat.button({ title: "Watch Video", url: data.attachment.payload.url, type: "web_url" });
-                eyc.setButtons([btn], ttt);
+                eyc.setButtons([btn], ttt, inp);
               }
               needsReset = true;
             }
@@ -379,7 +379,7 @@ try {
                 ttt = eyc.empty();
               }
               html = eyc.chat.image(data.attachment.payload.url);
-              eyc.setMultimedia(html, ttt);
+              eyc.setMultimedia(html, ttt, inp);
               needsReset = true;
             }
             if (data.attachment.payload.buttons) {
@@ -388,7 +388,7 @@ try {
               }
               html = eyc.chat.buttons(data.attachment.payload.buttons);
               if (html && html.length) {
-                eyc.setButtons(html, ttt);
+                eyc.setButtons(html, ttt, inp);
               } else {
                 eyc.removeEmpty(ttt);
               }
@@ -403,7 +403,7 @@ try {
             }
             html = eyc.chat.quick_replies(msg, data.quick_replies);
             if (html && html.length) {
-              eyc.setButtons(html, ttt);
+              eyc.setButtons(html, ttt, inp);
             } else {
               eyc.removeEmpty(ttt);
             }
@@ -488,7 +488,7 @@ try {
           inBtn.click();
           eyc.setInputValue("");
         } else {
-          eyc.createMessage({ payload: JSON.stringify({ text: n }) });
+          eyc.createMessage({ payload: JSON.stringify({ text: n }) }, null, { isUser: false, agentID: agentID, message: n, sender: "agent" });
           eyc.isChatting = true;
           if (n !== 'loadTranscript' && n !== 'reconnect') {
             eyc.socket.lastInteraction = { action: "message", payload: JSON.stringify({ text: eyc.escapeString(n) }), typing: false, sender: "agent" };
@@ -569,8 +569,11 @@ try {
             default:
               if (wsRes.payload) {
                 var pay = JSON.parse(wsRes.payload);
-                wsRes.sender = "user";
-                eyc.addUserRequestNode(pay);
+                if (pay && pay.sender && (pay.sender === 'server' || pay.sender === 'agent')) {
+                  eyc.createMessage({ payload: JSON.stringify(pay) }, eyc.socket.typingElement, pay);
+                } else {
+                  eyc.addUserRequestNode(pay);
+                }
               }
               return;
           }
@@ -677,25 +680,19 @@ try {
           var inp = transcript[i];
           if (inp.sender === 'user') {
             eyc.addUserRequestNode({ text: inp.message });
-          } else if (inp.sender === 'server') {
+          } else if (inp.sender === 'server' || inp.sender === 'agent') {
             if (eyc.socket.typingElement) {
-              eyc.createMessage({ payload: JSON.stringify({ text: inp.message }) }, eyc.socket.typingElement);
+              eyc.createMessage({ payload: JSON.stringify({ text: inp.message }) }, eyc.socket.typingElement, inp);
             } else {
-              eyc.createMessage({ payload: JSON.stringify({ text: inp.message }) });
+              eyc.createMessage({ payload: JSON.stringify({ text: inp.message }) }, null, inp);
             }
           }
         }
+        if (data && data.session && data.session.IsOffline) {
+          eyc.userDisconnected(data.session.User);
+        }
       } else {
         throw 'malformed transcript data';
-      }
-    },
-    processQueue:       function() {
-      if (eyc.socket.queuedMessages.length) {
-        var wsRes = eyc.socket.queuedMessages.shift();
-        return eyc.createMessage(wsRes, eyc.socket.typingElement)
-          .then(function(r) {
-            return eyc.processQueue();
-          });
       }
     },
     removeEmpty:        function(nn) {
@@ -734,7 +731,16 @@ try {
         eyc.handleEvent(ee.target.id, null, null, pos);
       }
     },
-    setButtons:         function(ee, nn) {
+    setAuthor:         function(name) {
+      var na = eyc.workplace.createElement('div');
+      na.className = 'server-response-container';
+      na.innerHTML = '<div class="author-name">' + name + '</div>';
+
+      var aa = eyc.workplace.getElementById('result');
+      aa.appendChild(na);
+      eyc.scrollToBottom();
+    },
+    setButtons:         function(ee, nn, inp) {
       var sc = nn.getElementsByClassName('server-response');
       if (sc && sc.length && sc.length === 1) {
         while (sc[0].firstChild) {
@@ -760,7 +766,7 @@ try {
     setInputValue:      function(e) {
       return eyc.elements.queryInput.value = e;
     },
-    setMultimedia:      function(ee, nn) {
+    setMultimedia:      function(ee, nn, inp) {
       var sc = nn.getElementsByClassName('server-response');
       if (sc && sc.length && sc.length === 1) {
         while (sc[0].firstChild) {
@@ -773,10 +779,19 @@ try {
         console.warn('unexpected response', nn);
       }
     },
-    setText:            function(ee, nn) {
+    setText:            function(ee, nn, inp) {
       var sc = nn.getElementsByClassName('server-response');
       if (sc && sc.length && sc.length === 1) {
         sc[0].innerHTML = ee;
+        if (inp && inp.sender && inp.sender === 'agent') {
+          var name = inp.name;
+          if (inp.agentID === agentID) {
+            name = "Me";
+          }
+          if (name) {
+            eyc.setAuthor(name);
+          }
+        }
         return nn;
       } else {
         console.warn('unexpected response', nn);
@@ -805,26 +820,30 @@ try {
     },
     updateResponses:    function() {
       var tc = [];
-      var aa = eyc.workplace.getElementById('result');
-      for (var j = aa.childNodes.length - 1; j >= 0; j--) {
+      var aa = eyc.workplace.getElementById(eIDs.queryResult);
+      var j = aa.childNodes.length - 1;
+      while (j >= 0) {
         if (aa.childNodes[j].classList.contains('user-request-container') || aa.childNodes[j].classList.contains('remove-item')) {
           break;
         } else {
           var cn = aa.childNodes[j].getElementsByClassName('server-response');
-          if (!cn || !cn.length || cn.length !== 1) {
+          if (cn.length > 1) {
             console.warn('unexpected element', cn);
             break;
-          } else if (!cn[0].classList.contains('chat-buttons') && !cn[0].classList.contains('user-input-wrapper')) {
+          } else if (cn.length > 0 && !cn[0].classList.contains('chat-buttons') && !cn[0].classList.contains('user-input-wrapper') &&
+                  !cn[0].classList.contains('author-name')) {
             tc.push(j);
           } else {
             var icon = aa.childNodes[j].getElementsByClassName('server-icon');
-            if (!icon || !icon.length || icon.length !== 1) {
+            if (icon.length > 1) {
               console.warn('unexpected element', icon);
               break;
+            } else if (cn.length > 0) {
+              icon[0].innerHTML = '';
             }
-            icon[0].innerHTML = '';
           }
         }
+        j--;
       }
       for (var k = 0; k < tc.length; k++) {
         var idx = tc[k];
