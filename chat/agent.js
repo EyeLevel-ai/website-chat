@@ -723,7 +723,7 @@ window.menu = null;
                   document.body.scrollTop = 0;
                 }, this.heartbeat = function() {
                   if (!window.eySocket) return;
-                  if (window.eySocket.readyState !== 1) return;
+                  window.eySocket.heartbeat = true;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
                   setTimeout(t.heartbeat, 300000);
                 }, this.loadEnv = function() {
@@ -791,6 +791,9 @@ window.menu = null;
                   }
                   if (window.Consent) {
                     t.loadConsent();
+                  }
+                  if (!window.eySocket.heartbeat) {
+                    t.heartbeat();
                   }
                 }, this.onFirstClick = function() {
                   if (window.attnElm) {
