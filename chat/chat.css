@@ -68,6 +68,7 @@ noscript h1 {
   background-repeat: no-repeat;
   background-size: 32px 32px;
   background-position: center;
+  object-fit: cover;
 }
 .ey-chat-name::before {
   font-size: 1.125rem;
@@ -301,6 +302,7 @@ noscript h1 {
   background-repeat: no-repeat;
   background-size: 32px 32px;
   background-position: center;
+  object-fit: cover;
   box-shadow: rgba(0, 0, 0, 0.1) 4px 4px 8px;
 }
 .ey-alert .server-icon-img {

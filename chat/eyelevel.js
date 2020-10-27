@@ -1,7 +1,7 @@
 try {
   var chatV = '2.12';
   var agentV = '1.46';
-  var cssV = '1.16';
+  var cssV = '1.17';
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
   var localChatURL = '/chat';
@@ -748,7 +748,7 @@ try {
 
       window.addEventListener("message", function(e) {
         if (e.data) {
-          if (e.data.indexOf("track:") === 0) {
+          if (typeof e.data.indexOf === 'function' && e.data.indexOf("track:") === 0) {
             var jsonStr = e.data.replace("track:", "");
             var jsonObj = JSON.parse(jsonStr);
             if (shouldTrack) {
