@@ -1144,7 +1144,8 @@ window.menu = null;
                 }, this.handleInput = function(type) {
                     var n = t.domHelper.getInputValue();
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
-                        if (n === 'clear all' || n === 'reset chat') {
+                        var lower = n.toLowerCase();
+                        if (lower === 'clear all' || lower === 'reset chat') {
                           clearAll();
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
                           setTimeout(function() {

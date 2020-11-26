@@ -472,7 +472,8 @@ try {
     handleInput:        function(type) {
       var n = eyc.getInputValue();
       if ("" !== n.replace(/\s/g, "") && !eyc.isChatting) {
-        if (n === 'clear all' || n === 'reset chat') {
+        var lower = n.toLowerCase();
+        if (lower === 'clear all' || lower === 'reset chat') {
           clearAll();
           eyc.createMessage({ payload: JSON.stringify({ text: 'cleared' }) });
           setTimeout(function() {

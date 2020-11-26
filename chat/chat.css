@@ -36,6 +36,7 @@ noscript h1 {
   left: 0;
   width: 100%;
   background: linear-gradient(0deg, hsl(219, 20%, 34%), hsl(219, 21%, 33%));
+  z-index: 10;
 }
 .ey-close-btn {
   height: 60px;
@@ -408,6 +409,7 @@ noscript h1 {
   height: 66px;
   background: #ffffff;
   width: 100%;
+  z-index: 10;
 }
 .ey-chat #agentDemoForm {
   display: block;

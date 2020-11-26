@@ -10,7 +10,7 @@ try {
   window.remoteURL = remoteURL;
   window.chatURL = chatURL;
   window.cssURL = cssURL;
-  var shouldTrack = (window.location.host.indexOf('localhost') > -1 || typeof gtag === 'undefined') ? false : true;
+  var shouldTrack = window.location.host.indexOf('localhost') > -1 ? false : true;
 
   function getQueryVar(vn, isIframe) {
     var qq = window.location.search.substring(1);
