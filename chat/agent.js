@@ -711,7 +711,7 @@ window.menu = null;
                 o()(this, e), this.domHelper = n, this.handleSend = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleInputKeyDown = function(n) {
-                    n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.checkWS())
+                    n.keyCode === e.KEY_CODES.ENTER && (n.preventDefault(), n.stopPropagation(), t.checkWS(n.target.value))
                 }, this.handleInputChange = function(n) {
                     if (n.target.value && n.target.value.length) {
                       t.domHelper.handleStartSend();
@@ -729,6 +729,7 @@ window.menu = null;
                 }, this.loadEnv = function() {
                   switch(window.eyEnv) {
                     case 'dev':
+                    case 'local':
                     case 'local-chat-dev':
                     case 'local-css-dev':
                     case 'local-dev':
@@ -787,7 +788,7 @@ window.menu = null;
                       t.heartbeat();
                     }
                   } else {
-                    t.handleInput();
+                    t.handleInput(t.domHelper.getInputValue());
                   }
                   if (window.Consent) {
                     t.loadConsent();
@@ -962,11 +963,13 @@ window.menu = null;
                   } else {
                       throw "Invalid WS response";
                   }
-                }, this.checkWS = function() {
+                }, this.checkWS = function(n) {
                   if (!window.eySocket || window.eySocket.readyState !== 1) {
                     t.initializeWS(window.eySocket ? true : false);
+                  } else if (n) {
+                    t.handleInput(n);
                   } else {
-                    t.handleInput();
+                    t.handleInput(t.domHelper.getInputValue());
                   }
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
@@ -1141,8 +1144,7 @@ window.menu = null;
                     } else {
                       console.warn('unexpected response', nn);
                     }
-                }, this.handleInput = function(type) {
-                    var n = t.domHelper.getInputValue();
+                }, this.handleInput = function(n) {
                     if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
                         var lower = n.toLowerCase();
                         if (lower === 'clear all' || lower === 'reset chat') {
@@ -1154,7 +1156,12 @@ window.menu = null;
                             t.domHelper.handleStopSend();
                             window.parent.postMessage('clear all', "*");
                           }, 500);
-                        } else if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
+                        } else if (window.eySocket.turnType
+                          && window.eySocket.turnID
+                          && (window.eySocket.turnType === 'email'
+                          || window.eySocket.turnType === 'tel'
+                          || window.eySocket.turnType === 'name'
+                          || window.eySocket.turnType === 'custom')) {
                           var inBtn = document.getElementById(window.eySocket.turnID);
                           var input = document.getElementById(window.eySocket.turnID + '-input');
                           input.value = n;
@@ -1239,28 +1246,63 @@ window.menu = null;
                       }
                       return;
                     }, card: function(t, ttt, data, isConsent) {
-                      if (data.length && data.length === 1) {
-                        var sc = ttt.getElementsByClassName('server-response');
-                        if (sc && sc.length && sc.length === 1) {
-                          while (sc[0].firstChild) {
-                            sc[0].removeChild(sc[0].firstChild);
-                          }
+                      var now = Date.now();
+                      var sc = ttt.getElementsByClassName('server-response');
+                      if (sc && sc.length && sc.length === 1) {
+                        while (sc[0].firstChild) {
+                          sc[0].removeChild(sc[0].firstChild);
                         }
-                        sc[0].parentElement.classList.add('chat-card');
+                      }
+                      sc[0].parentElement.classList.add('chat-cards');
+                      sc[0].classList.add('card-main');
+                      if (data.length === 1){
+                        sc[0].classList.add('card-single');
+                      }
+                      var cardWrap = t.domHelper.workplace.createElement('div');
+                      cardWrap.classList.add('card-wrapper');
+                      var cardInner = t.domHelper.workplace.createElement('div');
+                      cardInner.classList.add('card-inner');
+                      cardInner.id = 'card-slider-' + now;
 
-                        var cd = data[0];
+                      var indicators = [];
+                      for (var idx in data) {
+                        var indicator = t.domHelper.workplace.createElement('button');
+                        indicator.classList.add('card-indicator');
+                        if (indicators.length === 0) {
+                          indicator.classList.add('active');
+                        }
+                        indicator.id = 'indicator-' + idx + '-' + now;
+                        indicators.push(indicator);
+                        var cd = data[idx];
                         var isEmpty = true;
+                        var cardCnt = t.domHelper.workplace.createElement('div');
+                        cardCnt.classList.add('card-container');
+                        if (cd.image_url) {
+                          var imgCnt = t.domHelper.workplace.createElement('div');
+                          imgCnt.classList.add('card-image-container');
+                          var imgHolder = t.domHelper.workplace.createElement('div');
+                          imgHolder.classList.add('card-image-holder');
+                          var img = t.domHelper.workplace.createElement('img');
+                          img.classList.add('card-image');
+                          img.src = cd.image_url;
+                          img.addEventListener('load', function() {
+                            t.scrollToBottom();
+                          });
+                          imgHolder.appendChild(img);
+                          imgCnt.appendChild(imgHolder);
+                          cardCnt.appendChild(imgCnt);
+                        }
                         if (cd.title) {
                           var title = t.domHelper.workplace.createElement('div');
                           title.classList.add('card-title');
                           title.innerHTML = cd.title;
-                          sc[0].appendChild(title);
+                          cardCnt.appendChild(title);
                           isEmpty = false;
                           if (cd.subtitle) {
                             var subtitle = t.domHelper.workplace.createElement('div');
                             subtitle.classList.add('card-subtitle');
                             subtitle.innerHTML = cd.subtitle;
-                            sc[0].appendChild(subtitle);
+                            cardCnt.appendChild(subtitle);
                           }
                         }
                         if (cd.buttons && cd.buttons.length) {
@@ -1272,13 +1314,60 @@ window.menu = null;
                             for (var i in bt) {
                               buttons.appendChild(bt[i]);
                             }
-                            sc[0].appendChild(buttons);
+                            cardCnt.appendChild(buttons);
                           } else if (isEmpty) {
                             t.removeEmpty(ttt);
                           }
                         }
-                      } else {
-                        t.removeEmpty(ttt);
+                        cardInner.appendChild(cardCnt);
+                        cardWrap.appendChild(cardInner);
+                        sc[0].appendChild(cardWrap);
+                      }
+                      if (indicators.length > 1) {
+                        var map = t.domHelper.workplace.createElement('div');
+                        map.classList.add('card-indicators');
+                        for (var idx in indicators) {
+                          map.appendChild(indicators[idx]);
+                        }
+                        map.addEventListener('click', function(e) {
+                          if (e.target.nodeName === 'BUTTON') {
+                            for (var idx in indicators) {
+                              indicators[idx].classList.remove('active');
+                            }
+                          }
+                          try {
+                            var iArr = e.target.id.split('-');
+                            if (iArr.length === 3) {
+                              var idx = parseInt(iArr[1]);
+                              var slider = t.domHelper.workplace.getElementById('card-slider-' + iArr[2]);
+                              var xAmt = idx * (-100 / indicators.length);
+                              if (!isNaN(xAmt)) {
+                                slider.setAttribute('style', 'transform:translateX(' + xAmt + '%);-webkit-transform:translateX(' + xAmt + '%);-moz-transform:translateX(' + xAmt + '%);-ms-transform:translateX(' + xAmt + '%);-o-transform:translateX(' + xAmt + '%);');
+                                e.target.classList.add('active');
+                              }
+                            }
+                          } catch(e){}
+                        });
+                        map.addEventListener('touchstart', function(e) {
+                          if (e.target.nodeName === 'BUTTON') {
+                            for (var idx in indicators) {
+                              indicators[idx].classList.remove('active');
+                            }
+                          }
+                          try {
+                            var iArr = e.target.id.split('-');
+                            if (iArr.length === 3) {
+                              var idx = parseInt(iArr[1]);
+                              var slider = t.domHelper.workplace.getElementById('card-slider-' + iArr[2]);
+                              var xAmt = idx * (-100 / indicators.length);
+                              if (!isNaN(xAmt)) {
+                                slider.setAttribute('style', 'transform:translateX(' + xAmt + '%);-webkit-transform:translateX(' + xAmt + '%);-moz-transform:translateX(' + xAmt + '%);-ms-transform:translateX(' + xAmt + '%);-o-transform:translateX(' + xAmt + '%);');
+                                e.target.classList.add('active');
+                              }
+                            }
+                          } catch(e){}
+                        });
+                        sc[0].appendChild(map);
                       }
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
@@ -1324,7 +1413,10 @@ window.menu = null;
                       var payload = JSON.parse(msg.payload);
                       var data;
                       for (var i in payload.quick_replies) {
-                        if (payload.quick_replies[i].content_type && (payload.quick_replies[i].content_type === 'user_email' || payload.quick_replies[i].content_type === 'user_phone_number')) {
+                        if (payload.quick_replies[i].content_type
+                          && (payload.quick_replies[i].content_type === 'user_email'
+                          || payload.quick_replies[i].content_type === 'user_phone_number'
+                          || payload.quick_replies[i].content_type === 'custom')) {
                           data = payload.quick_replies[i];
                           break;
                         }
@@ -1351,6 +1443,7 @@ window.menu = null;
                       input.classList.add('user-input');
                       input.id = idPrefix + '-input';
                       input.required = true;
+                      input.addEventListener("keydown", t.handleInputKeyDown, !1);
                       holder.appendChild(input);
                       var status = t.domHelper.workplace.createElement('div');
                       status.classList.add('user-input-status');
@@ -1398,6 +1491,16 @@ window.menu = null;
                           cnt.appendChild(label);
                           cnt.appendChild(holder);
                           break;
+                        case 'custom':
+                            window.eySocket.turnID = idPrefix;
+                            window.eySocket.turnType = 'custom';
+                            inBtn.type = 'custom';
+                            input.type = 'text';
+                            input.name = 'custom';
+                            holder.appendChild(inBtn);
+                            cnt.appendChild(label);
+                            cnt.appendChild(holder);
+                            break;
                         default:
                           return;
                       }
@@ -1423,7 +1526,10 @@ window.menu = null;
                       var data = JSON.parse(msg.payload);
                       if (data.quick_replies) {
                         for (var i in data.quick_replies) {
-                          if (data.quick_replies[i].content_type && (data.quick_replies[i].content_type === 'user_email' || data.quick_replies[i].content_type === 'user_phone_number')) {
+                          if (data.quick_replies[i].content_type
+                            && (data.quick_replies[i].content_type === 'user_email'
+                            || data.quick_replies[i].content_type === 'user_phone_number'
+                            || data.quick_replies[i].content_type === 'custom')) {
                             return true;
                           }
                         }
@@ -1616,6 +1722,18 @@ window.menu = null;
                           status.innerHTML = 'Invalid Name';
                         }
                         break;
+                      case 'custom':
+                          if (input.value.length > 2) {
+                            ee.target.classList.remove('icon-send');
+                            ee.target.classList.add('icon-success');
+                            var ae = this;
+                            setTimeout(function() {
+                              ae.handleEvent(input.value, 'user_input', ee.target.id);
+                            }, 250);
+                          } else {
+                            status.innerHTML = 'Invalid Input';
+                          }
+                          break;
                       default:
                         break;
                     }
@@ -1686,7 +1804,12 @@ window.menu = null;
                   var txt = evt || t.domHelper.getInputValue();
                   var shouldSend = true;
                   if (txt !== 'startWelcome' && txt !== 'restartWelcome' && txt !== 'reconnect' && type !== 'user_input') {
-                    if (window.eySocket.turnType && window.eySocket.turnID && (window.eySocket.turnType === 'email' || window.eySocket.turnType === 'tel' || window.eySocket.turnType === 'name')) {
+                    if (window.eySocket.turnType
+                      && window.eySocket.turnID
+                      && (window.eySocket.turnType === 'email'
+                      || window.eySocket.turnType === 'tel'
+                      || window.eySocket.turnType === 'name'
+                      || window.eySocket.turnType === 'custom')) {
                     shouldSend = false;
                     var inBtn = document.getElementById(window.eySocket.turnId);
                     var input = document.getElementById(window.eySocket.turnId + '-input');

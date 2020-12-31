@@ -1,13 +1,17 @@
 try {
   window.eySession = {
-    chatVersion: '1.05',
-    cssVersion: '1.18',
+    chatVersion: '1.11',
+    cssVersion: '1.3',
     cssURL: 'https://css.eyelevel.ai',
     chatURL: 'https://cdn.eyelevel.ai/chat',
   };
   var localChatURL = '/chat';
   var localCssURL = '/css';
   window.eySession.isDev = (window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('127.0.0.1') > -1) ? true : false;
+
+  function sanitizeChannelID(cid) {
+    return cid.replace(':', '').replace('@', '');
+  }
 
   function getQueryVar(vn, isIframe) {
     var qq = window.location.search.substring(1);
@@ -71,10 +75,12 @@ try {
     var es1 = document.createElement("script");
     es1.src = window.eySession.chatURL + '/client.js?v=' + window.eySession.chatVersion;
     firstScript.parentNode.insertBefore(es1, firstScript);
+    if (window.channelID) {
     var css1 = document.createElement("link");
-    css1.rel = "stylesheet";
-    css1.href = "https://css.eyelevel.ai/01EJYT8PFJ5XRSS91JP3DVRXK8/chat.css";
-		firstScript.parentNode.insertBefore(css1, firstScript);
+      css1.rel = "stylesheet";
+      css1.href = "https://css.eyelevel.ai/msteams/" + sanitizeChannelID(window.channelID) + "/chat.css";
+      firstScript.parentNode.insertBefore(css1, firstScript);
+    }
   };
 
   function randomString(length) {

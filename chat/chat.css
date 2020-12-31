@@ -7,7 +7,7 @@ form {
   margin: 0;
 }
 noscript h1 {
-  padding:20px
+  padding:20px;
 }
 @keyframes fadein {
   from { opacity: 0; }
@@ -35,7 +35,7 @@ noscript h1 {
   top: 0;
   left: 0;
   width: 100%;
-  background: linear-gradient(0deg, hsl(219, 20%, 34%), hsl(219, 21%, 33%));
+  background-color: #5d5d5d;
   z-index: 10;
 }
 .ey-close-btn {
@@ -59,22 +59,20 @@ noscript h1 {
   width: 100%;
 }
 .ey-chat-logo {
-  height: 38px;
-  width: 38px;
+  height: calc(100% - 10px);
+  width: auto;
   padding: 0;
-  border-radius: 50%;
-  background-color: #fff;
-  margin: 0 10px 0 20px;
-  background-image: url(https://css.eyelevel.ai/default.icon.png);
-  background-repeat: no-repeat;
-  background-size: 32px 32px;
-  background-position: center;
+  margin: 0;
   object-fit: cover;
+}
+.ey-chat-name {
+  padding-left: 20px;
+  text-align: left;
+  width: 100%;
 }
 .ey-chat-name::before {
   font-size: 1.125rem;
   font-weight: 300;
-  content: "EyeLevel.ai";
   color: #fff;
 }
 .ey-chat .chat-buttons {
@@ -141,8 +139,8 @@ noscript h1 {
   font-weight: 300;
   width: 100%;
   height: auto;
-  color: #2b313f;
-  font-size: 1.25em;
+  color: #4f4f4f;
+  font-size: 1.25rem;
 }
 .ey-chat-only {
   overflow: hidden;
@@ -184,8 +182,8 @@ noscript h1 {
   margin-right: 15px;
   margin-top: 15px;
   margin-left: 15px;
-  color: #fff;
-  background: #417dc3;
+  color: #ffffff;
+  background: #2076f2;
   border-radius: 16px 16px 0 16px;
 }
 .ey-chat .server-response-container {
@@ -225,7 +223,7 @@ noscript h1 {
   border-radius: 8px !important;
   padding: 10px 25px;
   width: 100%;
-  box-shadow: rgba(0, 0, 0, 0.1) 4px 4px 8px;
+  box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
 .ey-chat .user-input-container {
   padding-top: 4px;
@@ -257,13 +255,17 @@ noscript h1 {
   bottom: 0;
   left: auto;
   width: 40px;
-  background: #417dc3;
+  background: #2076f2;
   border-radius: 0 4px 4px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
   color: #fff;
+}
+.ey-chat .user-input-button:focus {
+  outline: none;
+  box-shadow: none;
 }
 .ey-chat .user-input-button.icon-success {
   color: #81ff00;
@@ -295,29 +297,25 @@ noscript h1 {
 }
 .ey-chat .server-icon-img {
   border-radius: 50%;
-  background-color: #fff;
   height: 32px;
   width: 32px;
   padding: 0;
-  background-image: url(https://css.eyelevel.ai/default.icon.png);
-  background-repeat: no-repeat;
-  background-size: 32px 32px;
-  background-position: center;
+  content: url(https://css.eyelevel.ai/default.icon.svg);
   object-fit: cover;
-  box-shadow: rgba(0, 0, 0, 0.1) 4px 4px 8px;
+  box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
 .ey-alert .server-icon-img {
   box-shadow: rgba(0,0,0,0.35) 2px 2px 10px;
 }
 .ey-chat .server-response {
-  color: #4a4a4a;
+  color: #4f4f4f;
   float: left;
   margin-top: 15px;
   margin-right: 15px;
   margin-left: 15px;
   border-radius: 16px 16px 16px 0;
   background: #ffffff;
-  box-shadow: rgba(0, 0, 0, 0.1) 4px 4px 8px;
+  box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
 .ey-chat .status-update {
   background: transparent !important;
@@ -345,13 +343,111 @@ noscript h1 {
   box-shadow: none;
 }
 .ey-chat .card-title {
+  margin-top: 18px;
   font-weight: 500;
+  padding: 0 16px;
 }
 .ey-chat .card-subtitle {
   margin-top: 6px;
+  padding: 0 16px;
 }
-.ey-chat .chat-card .chat-buttons {
-  margin-top: 12px;
+.ey-chat .card-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  box-shadow: unset;
+  background: transparent;
+  padding: 0;
+}
+.ey-chat .card-main.card-single {
+  width: 100%;
+}
+.ey-chat .card-wrapper {
+  display: flex;
+}
+.ey-chat .card-single .card-wrapper {
+  width: 100%;
+}
+.ey-chat .card-inner {
+  display: flex;
+  transition: all 0.5s ease-in-out;
+  -webkit-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+}
+.ey-chat .card-single .card-inner {
+  width: 100%;
+}
+.ey-chat .card-container {
+  border-radius: 0.5em;
+  box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
+  width: calc(100vw - 124px);
+  background-color: #ffffff;
+  display: flex;
+  flex-flow: column wrap;
+  justify-content: flex-end;
+  margin: 0 0.5em;
+}
+.ey-chat .card-single .card-container {
+  width: 100%;
+}
+.ey-chat .card-image-container {
+  overflow: hidden;
+  border-radius: 0.5em 0.5em 0 0;
+  height: 0;
+  padding-bottom: 100%;
+  position: relative;
+}
+.ey-chat .card-image-holder {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+.ey-chat .card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ey-chat .card-indicators {
+  display: flex;
+  align-self: flex-start;
+  justify-content: center;
+  padding-top: 16px;
+  width: calc(100vw - 124px);
+}
+.ey-chat .card-indicator {
+  all: unset;
+  background: #ffffff;
+  cursor: pointer;
+  margin: 0 0.5em;
+  position: relative;
+  user-select: none;
+  border-radius: 100%;
+  height: 1em;
+  width: 1em;
+  box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
+}
+.ey-chat .card-indicator.active {
+  background: #708090;
+}
+.ey-chat .chat-cards .chat-buttons {
+  margin-top: 0.75em;
+}
+.card-buttons {
+ padding: 0 16px 16px !important;
+}
+.card-buttons .chat-button {
+  border: 1px solid #2076f2;
+}
+.card-buttons .chat-button:focus {
+  outline: none;
+  box-shadow: none;
 }
 .ey-chat .youtube-container {
   position: relative;
@@ -371,7 +467,9 @@ noscript h1 {
 }
 .ey-chat .ey_result {
   overflow-y: auto;
+  overflow-x: hidden;
   background: #d8d8d8;
+  border-top: 1px solid #5d5d5d;
   position: absolute;
   top: 60px;
   bottom: 66px;
@@ -422,7 +520,7 @@ noscript h1 {
   font-weight: 300;
   margin: 0;
   height: 66px;
-  font-size: 0.875em;
+  font-size: 1.0rem;
 }
 .ey-chat input::placeholder {
   color: #9b9b9b;
@@ -434,7 +532,7 @@ noscript h1 {
 .ey-chat .ey_input-send {
   display: none;
   position: absolute;
-  font-size: 1.75em;
+  font-size: 1.75rem;
   width: 54px;
   height: 54px;
   right: 0;
@@ -447,36 +545,8 @@ noscript h1 {
   color: #ffffff;
 }
 .ey-chat .ey_input-send.active {
-  color: #7197c9;
+  color: #2076f2;
   display: block;
-}
-.ey-chat .b-agent-demo_powered_by {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 60px;
-  height: 30px;
-  background: #F8F8F8;
-  vertical-align: middle;
-}
-.ey-chat .b-agent-demo_powered_by span {
-  color: #B7BBC4;
-  text-transform: uppercase;
-  float: right;
-  vertical-align: middle;
-  line-height: 20px;
-  margin-top: 5px;
-  margin-right: 10px;
-  font-size: 0.75em;
-  margin-left: -10px;
-}
-.ey-chat .b-agent-demo_powered_by img {
-  margin-top: 7px;
-  height: 16px;
-  margin-right: 20px;
-  float: right;
-  vertical-align: middle;
-  border: 0;
 }
 .clearfix {
   clear: both;
@@ -487,14 +557,18 @@ noscript h1 {
   margin-right: 0;
   margin-top: 10px;
   border-radius: 4px;
-  border: 1px solid #c4c4c4;
+  border: 1px solid #2076f2;
   background: #fff;
-  color: #417dc3;
+  color: #2076f2;
   font-weight: normal;
-  font-size: 0.9em;
-  box-shadow: rgba(0, 0, 0, 0.1) 4px 4px 8px;
+  font-size: 0.9rem;
+  box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
-.ey-chat .chat-card .chat-button {
+.ey-chat .chat-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+.ey-chat .chat-cards .chat-button {
   width: 100%;
   padding: 10px;
   box-shadow: none;
@@ -525,8 +599,8 @@ noscript h1 {
   overflow: hidden;
 }
 .menu-input input {
-  color: #2b313f;
-  font-size: 16px;
+  color: #4f4f4f;
+  font-size: 1.0rem;
   background: #ffffff;
 }
 .main-menu {
