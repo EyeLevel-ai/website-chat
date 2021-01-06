@@ -11,6 +11,23 @@ function randomString(length) {
   return text;
 }
 
+function supportsPassive() {
+  var cold = false,
+  hike = function() {};
+
+  try {
+    var aid = Object.defineProperty({}, 'passive', {
+      get: function() {
+        cold = true;
+      }
+    });
+    window.addEventListener('test', hike, aid);
+    window.removeEventListener('test', hike, aid);
+  } catch (e) {}
+  return cold;
+}
+window.supportsPassive = supportsPassive;
+
 if (!window.localStorage) {
   Object.defineProperty(window, "localStorage", new (function () {
     var aKeys = [], oStorage = {};
@@ -1235,7 +1252,7 @@ window.menu = null;
                         img.classList.add('chat-image');
                         img.addEventListener('load', function() {
                           t.scrollToBottom();
-                        });
+                        }, !1);
                         return img;
                     }, video: function(data) {
                       if (data.indexOf('https://youtu.be/') === 0) {
@@ -1287,7 +1304,7 @@ window.menu = null;
                           img.src = cd.image_url;
                           img.addEventListener('load', function() {
                             t.scrollToBottom();
-                          });
+                          }, !1);
                           imgHolder.appendChild(img);
                           imgCnt.appendChild(imgHolder);
                           cardCnt.appendChild(imgCnt);
@@ -1347,7 +1364,7 @@ window.menu = null;
                               }
                             }
                           } catch(e){}
-                        });
+                        }, supportsPassive() ? {passive : false} : false);
                         map.addEventListener('touchstart', function(e) {
                           if (e.target.nodeName === 'BUTTON') {
                             for (var idx in indicators) {
@@ -1366,7 +1383,7 @@ window.menu = null;
                               }
                             }
                           } catch(e){}
-                        });
+                        }, supportsPassive() ? {passive : false} : false);
                         sc[0].appendChild(map);
                       }
                     }, button: function(data) {
@@ -1652,14 +1669,14 @@ window.menu = null;
             return a()(e, [{
                 key: "bindEventHandlers",
                 value: function() {
-                    this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, !1),
+                    this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, supportsPassive() ? {passive : false} : false),
                     window.addEventListener("message", this.handleChatWindow, !1),
-                    this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, !1),
-                    this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, !1),
-                    this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, !1),
-                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, !1),
-                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, !1), window.shouldOpen && this.handleChatWindow(),
-                    this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, !1),
+                    this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
+                    this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
                     this.loadVideo()
                 }
             }, {
