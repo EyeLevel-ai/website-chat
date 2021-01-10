@@ -1017,6 +1017,12 @@ window.menu = null;
                         window.videoElm.parentNode.removeChild(window.videoElm);
                         window.videoElm = false;
                       }
+                    } else if (n.data && n.data.indexOf("hide close") === 0) {
+                      var w = t.domHelper.getCloseWindow();
+                      w.style.display = 'none';
+                    } else if (n.data && n.data.indexOf("show close") === 0) {
+                      var w = t.domHelper.getCloseWindow();
+                      w.style.display = 'block';
                     }
                   } else if (window.shouldOpen) {
                     if (!window.eySocket) {
@@ -1715,8 +1721,18 @@ window.menu = null;
                         }
                         break;
                       case 'tel':
-                        var testNum = input.value.replace(/\D+/gm, '');
-                        if (testNum && testNum.length > 6) {
+                        var testNum;
+                        if (phoneNumberParser) {
+                          testNum = phoneNumberParser(input.value, 'US');
+                        } else {
+                          testNum = input.value.replace(/\D+/gm, '');
+                          if (testNum && testNum > 6) {
+                            testNum = true;
+                          } else {
+                            testNum = false;
+                          }
+                        }
+                        if (testNum) {
                           ee.target.classList.remove('icon-send');
                           ee.target.classList.add('icon-success');
                           var ae = this;
