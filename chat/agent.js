@@ -1777,7 +1777,12 @@ window.menu = null;
                 value: function(ee) {
                   if (ee.target.classList.contains('click-to-call')) {
                     var aa = document.createElement('a');
-                    aa.href = 'tel:'+ee.target.id;
+                    var splitNum = ee.target.id.split('url=');
+                    if (splitNum.length === 2) {
+                      aa.href = decodeURIComponent(splitNum[1].split('&')[0]);
+                    } else {
+                      aa.href = ee.target.id;
+                    }
                     aa.click();
                     this.handleEvent('tel:'+ee.target.id);
                     this.scrollToBottom();

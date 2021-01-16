@@ -1,6 +1,6 @@
 try {
   var chatV = '2.25';
-  var agentV = '2.2';
+  var agentV = '2.23';
   var cssV = '1.31';
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
