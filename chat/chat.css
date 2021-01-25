@@ -44,8 +44,8 @@ noscript h1 {
   position: absolute;
   top: 0;
   right: 0;
-  padding: 10px 20px 0 0;
-  font-size: 30px;
+  padding: 10px 10px 0 0;
+  font-size: 28px;
   text-align: right;
   color: transparent;
   text-shadow: 0 0 0 #fff;
@@ -223,6 +223,7 @@ noscript h1 {
   border-radius: 8px !important;
   padding: 10px 25px;
   width: 100%;
+  max-width: 600px;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
 .ey-chat .user-input-container {

@@ -1711,7 +1711,7 @@ window.menu = null;
                     status.innerHTML = '&nbsp;';
                     switch (ee.target.type) {
                       case 'email':
-                        if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(input.value)) {
+                        if (/^[\w+]+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(input.value)) {
                           ee.target.classList.remove('icon-send');
                           ee.target.classList.add('icon-success');
                           var ae = this;
@@ -1742,7 +1742,7 @@ window.menu = null;
                             ae.handleEvent(input.value, 'user_input', ee.target.id);
                           }, 250);
                         } else {
-                          status.innerHTML = 'Invalid Phone Number';
+                          status.innerHTML = 'Invalid US Phone Number';
                         }
                         break;
                       case 'name':
