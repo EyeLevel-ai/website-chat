@@ -1090,8 +1090,23 @@ window.menu = null;
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
-                }, this.escapeString = function(txt) {
-                    return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt
+                }, this.escapeAndDecorateString = function(txt) {
+                  var regex = new RegExp(/(https?:\/\/)?[\w\-~]+(\.[\w\-~]+)+(\/[\w\-~@:%]*)*(#[\w\-]*)?(\?[^\s]*)?/gi);
+                  var match = ''; var splitText = ''; var startIndex = 0;
+                  while ((match = regex.exec(txt)) != null) {
+                    var rawTxt = txt.substr(startIndex, (match.index - startIndex));
+                    rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;
+                    splitText += rawTxt;
+                    var cleanedLink = txt.substr(match.index, (match[0].length));
+                    splitText += '<a href="' + cleanedLink + '" target="_blank">' + cleanedLink + '</a>';
+                    startIndex = match.index + (match[0].length);
+                  }
+                  if (startIndex < txt.length) {
+                    var rawTxt = txt.substr(startIndex);
+                    rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;                    
+                    splitText += rawTxt;
+                  }
+                  return splitText;
                 }, this.loadConsent = function() {
                   var gd = getConsent();
                   if (window.consentLoaded || gd === 'true') {
@@ -1193,11 +1208,11 @@ window.menu = null;
                           inBtn.click();
                           t.domHelper.setInputValue("");
                         } else {
-                          t.domHelper.addUserRequestNode({text: t.escapeString(n)}, t);
+                          t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
                           window.isChatting = true;
                           if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
-                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
-                            saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" });
+                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n) }), typing: false, sender: "user" };
+                            saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n) }), typing: false, sender: "user" });
                           }
                           delete window.eySocket.turnType;
                           delete window.eySocket.turnID;
@@ -1253,7 +1268,7 @@ window.menu = null;
                     return (n.length ? n : [ { speech: e.DEFAULT_NO_ANSWER } ]);
                 }, this.chat = {
                     text: function(data) {
-                        return t.escapeString(data);
+                        return t.escapeAndDecorateString(data);
                     }, image: function(data) {
                         var img = t.domHelper.workplace.createElement('img');
                         img.src = data;
@@ -1590,6 +1605,8 @@ window.menu = null;
                         if (data.set_attributes) {
                           if (data.set_attributes.event) {
                             window.parent.postMessage('set-event:'+data.set_attributes.event, '*');
+                          } else if (data.set_attributes.submit) {
+                            window.parent.postMessage('set-event:'+data.set_attributes.submit, '*');
                           }
                           return resolve();
                         }

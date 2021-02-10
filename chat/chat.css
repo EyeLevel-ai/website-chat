@@ -172,6 +172,7 @@ noscript h1 {
   font-size: 1.125rem;
   z-index: 2;
   position: relative;
+  word-break: break-word;
 }
 .ey-chat .user-request.server-response-error,
 .ey-chat .server-response.server-response-error {

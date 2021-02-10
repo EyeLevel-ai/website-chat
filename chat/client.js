@@ -80,6 +80,7 @@ try {
         channelID: window.channelID,
         path: window.location.pathname,
         agentID: window.agentID,
+        sessUUID: window.sessUUID,
         guid: window.guid,
         origin: window.origin,
         position: pos && pos,
@@ -297,13 +298,10 @@ try {
         var data = JSON.parse(msg.payload);
         if (data.quick_replies) {
           for (var i in data.quick_replies) {
-            if (data.quick_replies[i].content_type && (data.quick_replies[i].content_type === 'user_email' || data.quick_replies[i].content_type === 'user_phone_number')) {
+            if (data.quick_replies[i].content_type && (data.quick_replies[i].content_type === 'user_email' || data.quick_replies[i].content_type === 'user_phone_number' || data.quick_replies[i].content_type === 'user_name' || data.quick_replies[i].content_type === 'custom')) {
               return true;
             }
           }
-        }
-        if (data.text === 'Name') {
-          return true;
         }
         return false;
       },
@@ -602,7 +600,7 @@ try {
       if (eyc.env) {
         eyc.loadEnv();
       }
-      eyc.socket = new WebSocket(wssURL+'?agentID='+window.agentID+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid);
+      eyc.socket = new WebSocket(wssURL+'?agentID='+window.agentID+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid+'&sessUUID='+window.sessUUID);
       eyc.socket.connectTime = Date.now();
       eyc.socket.queuedMessages = [];
       if (isRestart) {

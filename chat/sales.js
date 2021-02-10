@@ -189,6 +189,7 @@ try {
       window.agentID = getQueryVar("agentID", false);
       window.origin = getQueryVar("origin", false);
       window.guid = getQueryVar("guid", false);
+      window.sessUUID = getQueryVar("sessUUID", false);
       var en = getQueryVar("eyenv", false);
       if (en) {
         window.eyEnv = en;

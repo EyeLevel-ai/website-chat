@@ -159,11 +159,17 @@ try {
       var es2 = document.createElement("script");
       es2.src = cssURL + '/' + window.eyusername + '/behavior.js';
       document.body.appendChild(es2);
+      var es3 = document.createElement("script");
+      es3.src = cssURL + '/' + window.eyusername + '/config.js';
+      document.body.appendChild(es3);
     }
     if (window.eyflowname) {
       var es2 = document.createElement("script");
       es2.src = cssURL + '/' + window.eyflowname + '/behavior.js';
       document.body.appendChild(es2);
+      var es3 = document.createElement("script");
+      es3.src = cssURL + '/' + window.eyflowname + '/config.js';
+      document.body.appendChild(es3);
     }
   }
 
