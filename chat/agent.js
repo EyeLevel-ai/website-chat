@@ -1090,6 +1090,8 @@ window.menu = null;
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
                     return q.scrollTop = q.scrollHeight, this
+                }, this.escapeString = function(txt) {
+                  return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
                 }, this.escapeAndDecorateString = function(txt) {
                   var regex = new RegExp(/(https?:\/\/)?[\w\-~]+(\.[\w\-~]+)+(\/[\w\-~@:%]*)*(#[\w\-]*)?(\?[^\s]*)?/gi);
                   var match = ''; var splitText = ''; var startIndex = 0;
@@ -1211,7 +1213,7 @@ window.menu = null;
                           t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
                           window.isChatting = true;
                           if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
-                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n) }), typing: false, sender: "user" };
+                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
                             saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n) }), typing: false, sender: "user" });
                           }
                           delete window.eySocket.turnType;
