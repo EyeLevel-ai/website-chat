@@ -130,6 +130,66 @@ try {
     return false;
   }
 
+  checkExtras = function(config, isExtra) {
+    if (isExtra) {
+      return true;
+    }
+    if (config.extras) {
+      for (var i in config.extras) {
+        var check = validatePath(config.extras[i], config, true);
+        if (!check) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  validatePath = function(path, config, isExtra) {
+    var isExact = path.indexOf('*') > -1 ? false : true;
+    var isNot = path[0] && path[0] === '^' ? true : false;
+    path = isNot ? path.replace('^', '') : path;
+    var testPath = window.location.pathname + (window.location.search || '');
+
+    if (isExact) {
+      if ((isNot && testPath !== path) || (!isNot && testPath === path)) {
+        if (checkExtras(config, isExtra)) {
+          return config.config;
+        }
+      }
+      if (config.config && config.config.isIframe) {
+        if (document.referrer && document.referrer.indexOf('/') > -1) {
+          var qq = document.referrer.substring(document.referrer.indexOf('/'));
+          qq = qq.substring(1);
+          qq = qq.split('?')[0];
+          if ((isNot && qq !== path) || (!isNot && qq === path)) {
+            if (checkExtras(config, isExtra)) {
+              return config.config;
+            }
+          }
+        }
+      }
+    } else {
+      if ((isNot && testPath.indexOf(path.replace('*','')) < 0) || (!isNot && testPath.indexOf(path.replace('*','')) > -1)) {
+        if (checkExtras(config, isExtra)) {
+          return config.config;
+        }
+      }
+      if (config.config && config.config.isIframe) {
+        if (document.referrer && document.referrer.indexOf('/') > -1) {
+          var qq = document.referrer.substring(document.referrer.indexOf('/'));
+          qq = qq.substring(1);
+          qq = qq.split('?')[0];
+          if ((isNot && qq.indexOf(path.replace('*','')) < 0) || (!isNot && qq.indexOf(path.replace('*','')) > -1)) {
+            if (checkExtras(config, isExtra)) {
+              return config.config;
+            }
+          }
+        }
+      }
+    }
+  }
+
   window.ConsentCheck = function(consent) {
     window.Consent = true;
     window.ConsentContent = consent;
@@ -337,50 +397,26 @@ try {
     }
   }
 
+
+
   window.loadBehavior = function(config) {
     var chatBehavior;
-    var domB;
-    var pathB;
     var isInverted = false;
-    if (config && config.invert) {
+    if ((config && config.invert) || window.eyinvert) {
       invertChat();
       isInverted = true;
     }
+
+    var host = window.location.hostname;
+    host = host.indexOf('www.') === 0 ? host.replace('www.', '') : host;
     for (var k in config) {
-      if (window.location.hostname === k) {
+      if (host === k) {
         chatBehavior = config[k].config;
         for (var j in config[k].path) {
-          if (j.indexOf('*') > -1) {
-            if (window.location.pathname.indexOf(j.replace('*','')) > -1) {
-              chatBehavior = config[k].path[j].config;
-              break;
-            }
-            if (config[k].path[j].config && config[k].path[j].config.isIframe) {
-              if (document.referrer && document.referrer.indexOf('/') > -1) {
-                var qq = document.referrer.substring(document.referrer.indexOf('/'));
-                qq = qq.substring(1);
-                if (qq.indexOf(j.replace('*','')) > -1) {
-                  chatBehavior = config[k].path[j].config;
-                  break;
-                }
-              }
-            }
-          } else {
-            if (window.location.pathname === j) {
-              chatBehavior = config[k].path[j].config;
-              break;
-            }
-            if (config[k].path[j].config && config[k].path[j].config.isIframe) {
-              if (document.referrer && document.referrer.indexOf('/') > -1) {
-                var qq = document.referrer.substring(document.referrer.indexOf('/'));
-                qq = qq.substring(1);
-                qq = qq.split('?')[0];
-                if (qq === j) {
-                  chatBehavior = config[k].path[j].config;
-                  break;
-                }
-              }
-            }
+          var bj = validatePath(j, config[k].path[j]);
+          if (bj) {
+            chatBehavior = bj;
+            break;
           }
         }
         break;
@@ -389,39 +425,10 @@ try {
     if (!chatBehavior && config['*']) {
       chatBehavior = config['*'].config;
       for (var j in config['*'].path) {
-        if (j.indexOf('*') > -1) {
-          if (window.location.pathname.indexOf(j.replace('*','')) > -1) {
-            chatBehavior = config['*'].path[j].config;
-            break;
-          }
-          if (config['*'].path[j].config && config['*'].path[j].config.isIframe) {
-            if (document.referrer && document.referrer.indexOf('/') > -1) {
-              var qq = document.referrer.substring(document.referrer.indexOf('/'));
-              qq = qq.substring(1);
-              qq = qq.split('?')[0];
-              if (qq.indexOf(j.replace('*','')) > -1) {
-                chatBehavior = config['*'].path[j].config;
-                break;
-              }
-            }
-          }
-        } else {
-          if (window.location.pathname === j) {
-            chatBehavior = config['*'].path[j].config;
-            break;
-          }
-          if (config['*'].path[j].config && config['*'].path[j].config.isIframe) {
-            if (document.referrer && document.referrer.indexOf('/') > -1) {
-              var qq = document.referrer.substring(document.referrer.indexOf('/'));
-              qq = qq.substring(1);
-              qq = qq.split('?')[0];
-
-              if (qq === j) {
-                chatBehavior = config['*'].path[j].config;
-                break;
-              }
-            }
-          }
+        var bj = validatePath(j, config['*'].path[j]);
+        if (bj) {
+          chatBehavior = bj;
+          break;
         }
       }
     }
@@ -677,6 +684,17 @@ try {
         }
       }
       window.eyreset = reset;
+
+      var invert = params.invert;
+      var ins = getQueryVar("eyinvert", params.isIframe);
+      if (ins) {
+        if (ins === 'true') {
+          invert = true;
+        } else {
+          invert = false;
+        }
+      }
+      window.eyinvert = invert;
 
       var channel = params.channel;
       var ch = getQueryVar("eychannel", params.isIframe);
