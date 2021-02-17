@@ -7,6 +7,7 @@ try {
   var localChatURL = '/chat';
   var cssURL = 'https://css.eyelevel.ai';
   var localCssURL = '/css';
+  window.activeAlert = null;
   window.remoteURL = remoteURL;
   window.chatURL = chatURL;
   window.cssURL = cssURL;
@@ -187,6 +188,54 @@ try {
           }
         }
       }
+    }
+  }
+
+  window.loadAlert = function(chatBehavior, config, override) {
+    if (window.alerts && window.alerts === 'manual' && !override) {
+      return;
+    }
+
+    if (window.activeAlert && !override) {
+      if (window.activeAlert.type) {
+        if (window.activeAlert.type === 'fn') {
+          return;
+        }
+      }
+    }
+    window.activeAlert = chatBehavior;
+    window.activeAlert.type = config.eyType;
+    if (chatBehavior && !window.isOpen) {
+      if (window.isReturn && chatBehavior.returnText) {
+        setTimeout(function() {
+          if (!window.isOpen) {
+            if (config.eyType === window.activeAlert.type
+              && chatBehavior.alertTime === window.activeAlert.alertTime
+              && chatBehavior.returnText === window.activeAlert.returnText
+            ) {
+              window.initAlertFrame(chatBehavior.returnText, chatBehavior, config.eyType, config.eyConfig);
+              window.initBadgeFrame(1);
+            }
+          }
+        }, chatBehavior.returnTime || 5000);
+      } else if (chatBehavior.alertText) {
+        var alertTime = chatBehavior.alertTime || 5000;
+        if (alertTime > 0) {
+          setTimeout(function() {
+            if (!window.isOpen && chatBehavior.alertText) {
+              if (config.eyType === window.activeAlert.type
+                && chatBehavior.alertTime === window.activeAlert.alertTime
+                && chatBehavior.alertText === window.activeAlert.alertText
+              ) {
+                window.initAlertFrame(chatBehavior.alertText, chatBehavior, config.eyType, config.eyConfig);
+                window.initBadgeFrame(1);
+              }
+            }
+          }, alertTime);
+        }
+      }
+    } else if (window.hideChat) {
+      window.removeChat();
     }
   }
 
@@ -397,8 +446,6 @@ try {
     }
   }
 
-
-
   window.loadBehavior = function(config) {
     var chatBehavior;
     var isInverted = false;
@@ -454,31 +501,13 @@ try {
       }
     }
 
-    window.addEventListener('load', function() {
-      if (chatBehavior && !window.isOpen) {
-        if (window.isReturn && chatBehavior.returnText) {
-          setTimeout(function() {
-            if (!window.isOpen) {
-              window.initAlertFrame(chatBehavior.returnText, chatBehavior, config.eyType, config.eyConfig);
-              if (window.eyvideo)
-              window.initBadgeFrame(1);
-            }
-          }, chatBehavior.returnTime || 5000);
-        } else if (chatBehavior.alertText) {
-          var alertTime = chatBehavior.alertTime || 5000;
-          if (alertTime > 0) {
-            setTimeout(function() {
-              if (!window.isOpen && chatBehavior.alertText) {
-                window.initAlertFrame(chatBehavior.alertText, chatBehavior, config.eyType, config.eyConfig);
-                window.initBadgeFrame(1);
-              }
-            }, alertTime);
-          }
-        }
-      } else if (window.hideChat) {
-        window.removeChat();
-      }
-    }, false);
+    if (document && document.readyState && document.readyState !== 'loading') {
+      window.loadAlert(chatBehavior, config, false);
+    } else {
+      window.addEventListener('load', function() {
+        window.loadAlert(chatBehavior, config, false);
+      }, false);
+    }
 
     return chatBehavior;
   }
@@ -763,6 +792,28 @@ try {
       }
       window.eynoclose = noClose;
 
+      var bubble = params.bubble;
+      var bb = getQueryVar("eybubble", params.isIframe);
+      if (bb) {
+        if (bb === 'true') {
+          bubble = true;
+        } else {
+          bubble = false;
+        }
+      }
+      if (bubble) {
+        window.eybubble = bubble;
+      }
+
+      var alerts = params.alerts;
+      var al = getQueryVar("eyalerts", params.isIframe);
+      if (al) {
+        alerts = al;
+      }
+      if (alerts) {
+        window.alerts = alerts;
+      }
+
       var eyEnv = params.env;
       var en = getQueryVar("eyenv", params.isIframe);
       if (en) {
@@ -801,13 +852,18 @@ try {
 
       loadHistory();
 
-      if (window.eyorigin === 'linkedin') {
+      if (document && document.readyState && document.readyState !== 'loading') {
         window.initChatStyle(window.eyorigin);
+        if (window.eyorigin !== 'linkedin' && window.eybubble !== false) {
+          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+        }
         window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
       } else {
         window.addEventListener("load", function() {
           window.initChatStyle(window.eyorigin);
-          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+          if (window.eyorigin !== 'linkedin' && window.eybubble !== false) {
+            window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+          }
           window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
         }, true);
       }
