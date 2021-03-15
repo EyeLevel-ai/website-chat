@@ -204,7 +204,9 @@ try {
       }
     }
     window.activeAlert = chatBehavior;
-    window.activeAlert.type = config.eyType;
+    if (window.activeAlert) {
+      window.activeAlert.type = config.eyType;
+    }
     if (chatBehavior && !window.isOpen) {
       if (window.isReturn && chatBehavior.returnText) {
         setTimeout(function() {
