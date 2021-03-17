@@ -1802,10 +1802,10 @@ window.menu = null;
                     if (splitNum.length === 2) {
                       aa.href = decodeURIComponent(splitNum[1].split('&')[0]);
                     } else {
-                      aa.href = ee.target.id;
+                      aa.href = 'tel:' + ee.target.id;
                     }
                     aa.click();
-                    this.handleEvent('tel:'+ee.target.id);
+                    this.handleEvent(aa.href);
                     this.scrollToBottom();
                   } else if (ee.target.classList.contains('web-url')) {
                     var aa = document.createElement('a');
