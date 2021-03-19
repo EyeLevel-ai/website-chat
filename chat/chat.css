@@ -173,6 +173,7 @@ noscript h1 {
   z-index: 2;
   position: relative;
   word-break: break-word;
+  max-width: 800px;
 }
 .ey-chat .user-request.server-response-error,
 .ey-chat .server-response.server-response-error {
@@ -336,6 +337,7 @@ noscript h1 {
 .ey-chat .chat-multimedia {
   padding: 0;
   overflow: hidden;
+  max-width: 600px;
 }
 .ey-chat .server-response.chat-buttons {
   background: transparent;

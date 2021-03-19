@@ -1427,7 +1427,10 @@ window.menu = null;
                         } else {
                           try {
                             var jsonPay = JSON.parse(objData.payload);
-                            if (jsonPay && jsonPay.title && jsonPay.action && jsonPay.position) {
+                            if (jsonPay && jsonPay.position && (
+                              (jsonPay.title && jsonPay.action)
+                              || jsonPay.type === 'postback'
+                            )) {
                               button.setAttribute('data-flow-uuid', jsonPay.position.flowUUID);
                               button.setAttribute('data-turn-id', jsonPay.position.turnID);
                             }
