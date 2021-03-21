@@ -390,7 +390,7 @@ noscript h1 {
 }
 .ey-chat .card-container {
   border-radius: 0.5em;
-  box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
   width: calc(100vw - 124px);
   max-width: 420px;
   background-color: #ffffff;

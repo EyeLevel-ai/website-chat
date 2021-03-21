@@ -179,6 +179,36 @@ retrieveInteractions = function() {
   }
 }
 
+var distX, distY, elapsedTime, startTime, startX, startY, swipeDir;
+var timeThresh = 300;
+var primaryThresh = 50;
+var secondaryThresh = 50;
+swipeStart = function(e) {
+  var touchobj = e.changedTouches[0];
+  swipeDir = 'none';
+  distX = 0;
+  distY = 0;
+  startX = touchobj.pageX;
+  startY = touchobj.pageY;
+  startTime = new Date().getTime();
+};
+
+swipeEnd = function(e) {
+  var touchobj = e.changedTouches[0];
+  distX = touchobj.pageX - startX;
+  distY = touchobj.pageY - startY;
+  elapsedTime = new Date().getTime() - startTime;
+  if (elapsedTime <= timeThresh) {
+    if (Math.abs(distX) >= primaryThresh && Math.abs(distY) <= secondaryThresh){
+      swipeDir = (distX < 0) ? 'left' : 'right';
+    } else if (Math.abs(distY) >= primaryThresh && Math.abs(distX) <= secondaryThresh) {
+      swipeDir = (distY < 0) ? 'up' : 'down';
+    }
+  }
+
+  return swipeDir;
+};
+
 window.user = window.getUser();
 window.isChatting = false;
 window.menu = null;
@@ -1302,6 +1332,7 @@ window.menu = null;
                       }
                       var cardWrap = t.domHelper.workplace.createElement('div');
                       cardWrap.classList.add('card-wrapper');
+                      cardWrap.id = 'card-wrap-' + now;
                       var cardInner = t.domHelper.workplace.createElement('div');
                       cardInner.classList.add('card-inner');
                       cardInner.id = 'card-slider-' + now;
@@ -1368,6 +1399,7 @@ window.menu = null;
                       if (indicators.length > 1) {
                         var map = t.domHelper.workplace.createElement('div');
                         map.classList.add('card-indicators');
+                        map.id = 'card-indicators-' + now;
                         for (var idx in indicators) {
                           map.appendChild(indicators[idx]);
                         }
@@ -1410,6 +1442,56 @@ window.menu = null;
                           } catch(e){}
                         }, supportsPassive() ? {passive : false} : false);
                         sc[0].appendChild(map);
+                        cardWrap.addEventListener('touchstart', swipeStart, supportsPassive() ? {passive : false} : false);
+                        cardWrap.addEventListener('touchend', function(e) {
+                          var dir = swipeEnd(e);
+                          if (dir !== 'left' && dir !== 'right') {
+                            return;
+                          }
+                          var elem = e.target;
+                          var pCnt = 0;
+                          while (!elem.classList.contains('card-main') && pCnt < 10) {
+                            pCnt += 1;
+                            if (elem.id && elem.id.indexOf('card-wrap-') > -1) {
+                              break;
+                            }
+                            elem = elem.parentNode;
+                          }
+                          if (elem.id && elem.id.indexOf('card-wrap-') > -1) {
+                            var nowId = elem.id.replace('card-wrap-', '');
+                            var inds = document.getElementById('card-indicators-' + nowId);
+                            var activeInds;
+                            var cIdx;
+                            if (inds.childNodes) {
+                              for (var idx in inds.childNodes) {
+                                cIdx = idx;
+                                activeInds = inds.childNodes[idx];
+                                if (activeInds.classList.contains('active')) {
+                                  break;
+                                }
+                              }
+                              if (activeInds) {
+                                if (dir === 'left') {
+                                  var next = parseInt(cIdx)+1;
+                                  if (next < inds.childNodes.length) {
+                                    var nextBtn = document.getElementById('indicator-' + next + '-' + nowId);
+                                    if (nextBtn) {
+                                      nextBtn.click();
+                                    }
+                                  }
+                                } else if (dir === 'right') {
+                                  var next = parseInt(cIdx)-1;
+                                  if (next >= 0) {
+                                    var nextBtn = document.getElementById('indicator-' + next + '-' + nowId);
+                                    if (nextBtn) {
+                                      nextBtn.click();
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }, supportsPassive() ? {passive : false} : false);
                       }
                     }, button: function(data) {
                         var button = t.domHelper.workplace.createElement('button');
