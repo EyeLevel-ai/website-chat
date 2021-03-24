@@ -482,6 +482,13 @@ noscript h1 {
   bottom: 66px;
   width: 100%;
 }
+.ey-chat .ey_result::-webkit-scrollbar-thumb {
+	border-radius: 5px;
+	background-color: #cccccc;
+}
+.ey-chat .ey_result::-webkit-scrollbar {
+	width: 6px;
+}
 .ey-chat .ey_result.consent-screen {
   bottom: 0px !important;
 }
