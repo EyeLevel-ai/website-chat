@@ -1310,11 +1310,22 @@ window.menu = null;
                         }, !1);
                         return img;
                     }, video: function(data) {
-                      if (data.indexOf('https://youtu.be/') === 0) {
+                      if (data.indexOf('youtu.be/') > -1 || data.indexOf('youtube.com/watch?v=') > -1) {
                         var cnt = t.domHelper.workplace.createElement('div');
                         cnt.classList.add('youtube-container');
-                        cnt.innerHTML = '<iframe class="youtube-video" src="https://www.youtube.com/embed/' + data.replace('https://youtu.be/', '') + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-                        return cnt;
+                        var ytPre = '';
+                        if (data.indexOf('youtu.be/') > -1) {
+                          ytPre = data.replace('https://youtu.be/', '');
+                        } else {
+                          var ytArr = data.split('youtube.com/watch?v=');
+                          if (ytArr.length > 1) {
+                            ytPre = ytArr[1];
+                          }
+                        }
+                        if (ytPre) {
+                          cnt.innerHTML = '<iframe class="youtube-video" src="https://www.youtube.com/embed/' + ytPre + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+                          return cnt;
+                        }
                       }
                       return;
                     }, card: function(t, ttt, data, isConsent) {
