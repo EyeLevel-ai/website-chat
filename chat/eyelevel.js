@@ -1,5 +1,5 @@
 try {
-  var chatV = '2.25';
+  var chatV = '2.26';
   var agentV = '2.27';
   var cssV = '1.31';
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
@@ -493,7 +493,7 @@ try {
       if (chatBehavior.hidden) {
         window.isOpen = true;
         window.hideChat = true;
-      } else if (!fn && chatBehavior.flowname && chatBehavior.flowname !== window.eyflowname) {
+      } else if (!fn && chatBehavior.flowname && chatBehavior.flowname !== window.eyflowname && window.eyfnset !== true) {
         window.eyflowname = chatBehavior.flowname;
         var bb = document.getElementById('eyBubble');
         if (bb) {
@@ -710,6 +710,9 @@ try {
       window.eyusername = username;
 
       var flowname = params.flowname;
+      if (flowname !== undefined && flowname) {
+        window.eyfnset = true;
+      }
       var fn = getQueryVar("fn", params.isIframe);
       if (fn) {
         flowname = fn;

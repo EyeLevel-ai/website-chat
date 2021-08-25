@@ -1167,11 +1167,23 @@ window.menu = null;
                     }
                     aa.appendChild(na);
                     t.scrollToBottom();
+                    setTimeout(function() {
+                      if (na && na.getElementsByClassName) {
+                        const res = na.getElementsByClassName('server-response');
+                        if (res && res.length && res.length === 1) {
+                          if (res[0].innerHTML === '...') {
+                            t.removeEmpty(na);
+                          }
+                        }
+                      }
+                    }, 15000);
                     return na;
                 }, this.removeEmpty = function(nn) {
                     nn.classList.add('remove-item');
                     setTimeout(function() {
-                      nn.parentNode.removeChild(nn);
+                      if (nn && nn.parentNode) {
+                        nn.parentNode.removeChild(nn);
+                      }
                     }, 200);
                 }, this.setText = function(ee, nn) {
                     var sc = nn.getElementsByClassName('server-response');
@@ -1248,6 +1260,7 @@ window.menu = null;
                           }
                           delete window.eySocket.turnType;
                           delete window.eySocket.turnID;
+                          window.eySocket.typingElement = t.empty();
                           window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
                           t.domHelper.setInputValue("");
                           t.domHelper.handleStopSend();
@@ -1513,6 +1526,7 @@ window.menu = null;
                         } else if (objData.type === 'web_url') {
                           button.classList.add('web-url');
                           button.value = objData.url;
+                          objData.payload = objData.url;
                         } else if (objData.type === 'consent') {
                           button.classList.add('consent-button');
                           button.value = objData.value;
@@ -1529,6 +1543,10 @@ window.menu = null;
                             }
                             objData.payload = objData.title;
                           } catch (e) {}
+                        }
+                        var dupeButton = t.domHelper.workplace.getElementById(objData.payload);
+                        if (dupeButton) {
+                          dupeButton.parentNode.removeChild(dupeButton);
                         }
                         button.setAttribute('id', objData.payload);
                         button.innerHTML = objData.title;

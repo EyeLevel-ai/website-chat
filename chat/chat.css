@@ -37,6 +37,9 @@ noscript h1 {
   width: 100%;
   background-color: #5d5d5d;
   z-index: 10;
+  -webkit-box-shadow: 0 8px 6px -6px #999;
+  -moz-box-shadow: 0 8px 6px -6px #999;
+  box-shadow: 0 8px 6px -6px #999;
 }
 .ey-close-btn {
   height: 60px;
