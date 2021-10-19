@@ -973,6 +973,11 @@ window.menu = null;
                             } else {
                               window.eySocket.queuedMessages.push(wsRes);
                             }
+                          } else if (wsRes.action === 'empty') {
+                            if (window.eySocket.typingElement) {
+                              t.removeEmpty(window.eySocket.typingElement);
+                              delete window.eySocket.typingElement;
+                            }
                           } else if (wsRes.action === 'reconnect-empty') {
                             if (window.eySocket.typingElement) {
                               t.removeEmpty(window.eySocket.typingElement);
@@ -1123,7 +1128,7 @@ window.menu = null;
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
                 }, this.escapeAndDecorateString = function(txt) {
-                  var regex = new RegExp(/(https?:\/\/)?[\w\-~]+(\.[\w\-~]+)+(\/[\w\-~@:%]*)*(#[\w\-]*)?(\?[^\s]*)?/gi);
+                  var regex = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z0-9]{2,6}\b([-a-z0-9()@:%_\+.~#?&//=]*)/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
                   while ((match = regex.exec(txt)) != null) {
                     var rawTxt = txt.substr(startIndex, (match.index - startIndex));
@@ -1239,6 +1244,12 @@ window.menu = null;
                             t.domHelper.setInputValue("");
                             t.domHelper.handleStopSend();
                             window.parent.postMessage('clear all', "*");
+                          }, 500);
+                        } else if (lower === 'send empty') {
+                          setTimeout(function() {
+                            window.eySocket.send(JSON.stringify(t.buildPayLoad("", "")));
+                            t.domHelper.setInputValue("");
+                            t.domHelper.handleStopSend();
                           }, 500);
                         } else if (window.eySocket.turnType
                           && window.eySocket.turnID

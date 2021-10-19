@@ -211,7 +211,7 @@ try {
     if (chatBehavior && !window.isOpen) {
       if (window.isReturn && chatBehavior.returnText) {
         setTimeout(function() {
-          if (!window.isOpen) {
+          if (!window.isOpen && window.activeAlert) {
             if (config.eyType === window.activeAlert.type
               && chatBehavior.alertTime === window.activeAlert.alertTime
               && chatBehavior.returnText === window.activeAlert.returnText
@@ -225,7 +225,7 @@ try {
         var alertTime = chatBehavior.alertTime || 5000;
         if (alertTime > 0) {
           setTimeout(function() {
-            if (!window.isOpen && chatBehavior.alertText) {
+            if (!window.isOpen && chatBehavior.alertText && window.activeAlert) {
               if (config.eyType === window.activeAlert.type
                 && chatBehavior.alertTime === window.activeAlert.alertTime
                 && chatBehavior.alertText === window.activeAlert.alertText
@@ -447,6 +447,7 @@ try {
         width = newWidth;
       }, supportsPassive() ? {passive : false} : false);
     }
+    window.postMessage("chat-loaded", "*");
   }
 
   window.loadBehavior = function(config) {
@@ -899,16 +900,16 @@ try {
               gtag('event', window.location.hostname, jsonObj);
             }
           } else if (e.data === "close") {
-          toggleChat();
+            toggleChat();
           } else if (e.data === "close-alert") {
-          closeAlert();
+            closeAlert();
           } else if (e.data === "open-alert") {
-          toggleChat();
+            toggleChat();
           } else if (e.data === "clear all") {
-          window.location.href = window.location.pathname + window.location.search + window.location.hash;
+            window.location.href = window.location.pathname + window.location.search + window.location.hash;
           } else if (e.data === "bubble-loaded") {
-          var eyb = document.getElementById("eyBubble");
-          eyb.style.display = "block";
+            var eyb = document.getElementById("eyBubble");
+            eyb.style.display = "block";
           }
         }
       }, true);
