@@ -2031,6 +2031,7 @@ window.menu = null;
             }, {
                 key: "buildPayLoad",
                 value: function(e, ty, dt, pos) {
+                    var err = new Error();
                     var ben = {
                         type: ty || 'text',
                         data: e,
@@ -2040,7 +2041,8 @@ window.menu = null;
                         guid: window.eyid && window.eyid,
                         origin: window.origin || 'web',
                         position: pos && pos,
-                        ref: window.location.href
+                        ref: window.location.href,
+                        stack: err.stack
                     };
                     if (typeof window.flowname !== 'undefined') {
                       ben.flowname = window.flowname;
