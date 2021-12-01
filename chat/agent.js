@@ -1,6 +1,7 @@
 try {
   var wssURL = 'wss://ws.eyelevel.ai';
-  var devURL = 'wss://dws.eyelevel.ai'
+  var devURL = 'wss://dws.eyelevel.ai';
+  var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
 
 function randomString(length) {
   var text = "";
@@ -1234,7 +1235,7 @@ window.menu = null;
                       console.warn('unexpected response', nn);
                     }
                 }, this.handleInput = function(n) {
-                    if ("" !== n.replace(/\s/g, "") && !window.isChatting) {
+                    if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
                         var lower = n.toLowerCase();
                         if (lower === 'clear all' || lower === 'reset chat') {
                           clearAll();
@@ -1267,12 +1268,12 @@ window.menu = null;
                           window.isChatting = true;
                           if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
                             window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
-                            saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n) }), typing: false, sender: "user" });
+                            saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
                           }
                           delete window.eySocket.turnType;
                           delete window.eySocket.turnID;
                           window.eySocket.typingElement = t.empty();
-                          window.eySocket.send(JSON.stringify(t.buildPayLoad(t.domHelper.getInputValue())));
+                          window.eySocket.send(JSON.stringify(t.buildPayLoad(n)));
                           t.domHelper.setInputValue("");
                           t.domHelper.handleStopSend();
                         }
@@ -1853,14 +1854,22 @@ window.menu = null;
                     var input = document.getElementById(ee.target.id + '-input');
                     var status = document.getElementById(ee.target.id + '-status');
                     status.innerHTML = '&nbsp;';
+                    var inputVal = input.value;
+                    if (!inputVal) {
+                      return;
+                    }
+                    inputVal = inputVal.replace(whiteSpace, "");
+                    if (!inputVal) {
+                      return;
+                    }
                     switch (ee.target.type) {
                       case 'email':
-                        if (/^[\w+]+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(input.value)) {
+                        if (/^[\w+]+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(inputVal)) {
                           ee.target.classList.remove('icon-send');
                           ee.target.classList.add('icon-success');
                           var ae = this;
                           setTimeout(function() {
-                            ae.handleEvent(input.value, 'user_input', ee.target.id);
+                            ae.handleEvent(inputVal, 'user_input', ee.target.id);
                           }, 250);
                         } else {
                           status.innerHTML = 'Invalid Email';
@@ -1869,9 +1878,9 @@ window.menu = null;
                       case 'tel':
                         var testNum;
                         if (phoneNumberParser) {
-                          testNum = phoneNumberParser(input.value, 'US');
+                          testNum = phoneNumberParser(inputVal, 'US');
                         } else {
-                          testNum = input.value.replace(/\D+/gm, '');
+                          testNum = inputVal.replace(/\D+/gm, '');
                           if (testNum && testNum > 6) {
                             testNum = true;
                           } else {
@@ -1883,31 +1892,31 @@ window.menu = null;
                           ee.target.classList.add('icon-success');
                           var ae = this;
                           setTimeout(function() {
-                            ae.handleEvent(input.value, 'user_input', ee.target.id);
+                            ae.handleEvent(inputVal, 'user_input', ee.target.id);
                           }, 250);
                         } else {
                           status.innerHTML = 'Invalid US Phone Number';
                         }
                         break;
                       case 'name':
-                        if (/^[a-zA-Z ]+$/.test(input.value) && input.value.length > 2) {
+                        if (/^[a-zA-Z ]+$/.test(inputVal) && inputVal.length > 2) {
                           ee.target.classList.remove('icon-send');
                           ee.target.classList.add('icon-success');
                           var ae = this;
                           setTimeout(function() {
-                            ae.handleEvent(input.value, 'user_input', ee.target.id);
+                            ae.handleEvent(inputVal, 'user_input', ee.target.id);
                           }, 250);
                         } else {
                           status.innerHTML = 'Invalid Name';
                         }
                         break;
                       case 'custom':
-                          if (input.value.length > 2) {
+                          if (inputVal.length > 2) {
                             ee.target.classList.remove('icon-send');
                             ee.target.classList.add('icon-success');
                             var ae = this;
                             setTimeout(function() {
-                              ae.handleEvent(input.value, 'user_input', ee.target.id);
+                              ae.handleEvent(inputVal, 'user_input', ee.target.id);
                             }, 250);
                           } else {
                             status.innerHTML = 'Invalid Input';
@@ -2004,7 +2013,7 @@ window.menu = null;
                         if (txt.indexOf('web}') < 0) {
                           t.domHelper.addUserRequestNode({text: txt}, t);
                           window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
-                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" });
+                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt, rawText: evt, type: "handleEvent", dt: dt }), typing: false, sender: "user" });
                         } else {
                           shouldSend = false;
                         }
@@ -2031,10 +2040,26 @@ window.menu = null;
             }, {
                 key: "buildPayLoad",
                 value: function(e, ty, dt, pos) {
+                    var inputVal = e;
+                    if (!inputVal && !ty) {
+                      return;
+                    }
+                    inputVal = inputVal.replace(whiteSpace, "");
+                    if (!inputVal && !ty) {
+                      return;
+                    }
                     var err = new Error();
+                    var inter = retrieveInteractions();
+                    if (inter) {
+                      inter = JSON.stringify(inter);
+                    }
+                    var sess = getSession();
+                    if (sess) {
+                      sess = JSON.stringify(sess);
+                    }
                     var ben = {
                         type: ty || 'text',
-                        data: e,
+                        data: inputVal,
                         username: window.username,
                         path: window.location.pathname,
                         uid: window.user.userId,
@@ -2042,7 +2067,9 @@ window.menu = null;
                         origin: window.origin || 'web',
                         position: pos && pos,
                         ref: window.location.href,
-                        stack: err.stack
+                        stack: err.stack,
+                        interactions: inter,
+                        session: sess
                     };
                     if (typeof window.flowname !== 'undefined') {
                       ben.flowname = window.flowname;
