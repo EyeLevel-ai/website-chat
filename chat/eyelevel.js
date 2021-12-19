@@ -12,7 +12,7 @@ try {
   window.chatURL = chatURL;
   window.cssURL = cssURL;
   window.cacheBust = '';
-  var shouldTrack = window.location.host.indexOf('localhost') > -1 ? false : true;
+  window.shouldTrack = false;
 
   function getQueryVar(vn, isIframe) {
     var qq = window.location.search.substring(1);
@@ -99,29 +99,69 @@ try {
   }
   var width = getWidth();
 
+  function trackEvent(name, options) {
+    if (window.shouldTrack) {
+      var attrs = {
+          name: name,
+          hostname: window.location.hostname,
+          uid: window.eyuserid,
+          username: window.eyusername,
+          flowname: window.eyflowname,
+          origin: window.eyorigin,
+          shouldOpen: window.eyshouldopen,
+          version: chatV
+      }
+
+      if (options) {
+        for (var k in options) {
+          attrs[k] = options[k];
+        }
+      }
+    }
+  }
+
+  function notifyConsent(consent) {
+    window.Consent = consent;
+
+    var is = document.getElementById("eyFrame");
+    if (is) {
+      is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
+      is.postMessage("Consent||" + JSON.stringify(consent), "*");
+    }
+  }
+
+  function checkIPConsent() {
+    geoip2.country(function(d) {
+      notifyConsent((d && d.continent && d.continent.code && d.continent.code === 'EU') ? true : false);
+    }, function() {
+      notifyConsent(true);
+    });
+  }
+
   function loadConsent(consent) {
     if (consent.type && consent.type === 'gdpr') {
       var es1 = document.createElement("script");
       es1.src = '//geoip-js.com/js/apis/geoip2/v2.1/geoip2.js';
       es1.type = 'text/javascript';
-      es1.onload = function() {
-        geoip2.country(function(d) {
-          window.Consent = (d && d.continent && d.continent.code && d.continent.code === 'EU') ? true : false;
-          var is = document.getElementById("eyFrame");
-          if (is) {
-            is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
-            is.postMessage("Consent||" + JSON.stringify(consent), "*");
+      if (es1.addEventListener) {
+        es1.addEventListener("load", checkIPConsent, false);
+      } else if (es1.attachEvent) {
+        es1.attachEvent( "onload", checkIPConsent);
+      } else if (es1.onload) {
+        es1.onload = checkIPConsent;
+      } else if (es1.onreadystatechange) {
+        es1.onreadystatechange = function () {
+          if (es1.readyState === 'loaded' || es1.readyState === 'complete') {
+            checkIPConsent();
           }
-        });
-      };
+        }
+      } else {
+        notifyConsent(true);
+      }
+      setTimeout(checkIPConsent, 3000);
       document.body.appendChild(es1);
     } else {
-      window.Consent = true;
-      var is = document.getElementById("eyFrame");
-      if (is) {
-        is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
-        is.postMessage("Consent||" + JSON.stringify(consent), "*");
-      }
+      notifyConsent(true);
     }
   }
 
@@ -255,15 +295,6 @@ try {
   }
 
   window.initEYScripts = function() {
-    var googleScript = document.createElement('script');
-    googleScript.src = "https://www.googletagmanager.com/gtag/js?id=" + window.gaid;
-    googleScript.async = true;
-    var firstScript = document.getElementsByTagName('script')[0];
-    firstScript.parentNode.insertBefore(googleScript, firstScript);
-    var googlePixel = document.createElement('script');
-    googlePixel.text = "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '" + window.gaid + "');"
-    googlePixel.async = true;
-    firstScript.parentNode.insertBefore(googlePixel, firstScript);
     var es1 = document.createElement("script");
     es1.src = remoteURL + '/iframeResizer.min.js';
     document.body.appendChild(es1);
@@ -495,7 +526,18 @@ try {
         window.isOpen = true;
         window.hideChat = true;
       } else if (!fn && chatBehavior.flowname && chatBehavior.flowname !== window.eyflowname && window.eyfnset !== true) {
+        if (chatBehavior.reset) {
+          window.eyreset = true;
+        }
         window.eyflowname = chatBehavior.flowname;
+        var bb = document.getElementById('eyBubble');
+        if (bb) {
+          window.removeChat();
+          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
+        }
+      } else if (chatBehavior.reset &&!window.eyreset) {
+        window.eyreset = true;
         var bb = document.getElementById('eyBubble');
         if (bb) {
           window.removeChat();
@@ -644,9 +686,9 @@ try {
       cw.classList.remove("ey-section-visible");
       document.body.classList.remove("ey-prevent-scroll");
       cw.classList.add("ey-section-invisible");
-      if (shouldTrack) {
-        gtag('event', window.location.hostname, { event_category: 'chat_close', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
-      }
+
+      trackEvent('chat_close');
+
       setTimeout(function() {
         window.postMessage("chat-closed", "*");
         var is = document.getElementById("eyFrame");
@@ -671,9 +713,9 @@ try {
       cw.classList.remove("ey-section-invisible");
       cw.classList.add("ey-section-visible");
       document.body.classList.add("ey-prevent-scroll");
-      if (shouldTrack) {
-        gtag('event', window.location.hostname, { event_category: 'chat_open', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
-      }
+
+      trackEvent('chat_open');
+
       setTimeout(function() {
         window.postMessage("chat-opened", "*");
         var is = document.getElementById("eyFrame");
@@ -693,6 +735,14 @@ try {
 
   var eyelevel = {
     init: function(params) {
+      eyelevel.load(params);
+    },
+    load: function(params) {
+      if (window.hasLoaded) {
+        return;
+      }
+
+      window.hasLoaded = true;
       var clearCache = params.clearcache;
       var cc = getQueryVar("clearcache", params.isIframe);
       if (cc) {
@@ -841,27 +891,17 @@ try {
 
       if (document && document.body) {
         window.initEYScripts();
-        shouldTrack = (window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('speatly') > -1 || typeof gtag === 'undefined') ? false : true;
-        if (shouldTrack) {
-          gtag('event', window.location.hostname, { event_category: 'chat_load', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen, version: chatV });
-        }
+        trackEvent('chat_load');
         if (!window.WebSocket || !window.addEventListener) {
-          if (shouldTrack) {
-            gtag('event', window.location.hostname, { event_category: 'chat_hidden', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
-          }
+          trackEvent('chat_hidden');
           return;
         }
       } else {
         document.addEventListener('DOMContentLoaded', function () {
           window.initEYScripts();
-          shouldTrack = (window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('speatly') > -1 || typeof gtag === 'undefined') ? false : true;
-          if (shouldTrack) {
-            gtag('event', window.location.hostname, { event_category: 'chat_load', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
-          }
+          trackEvent('chat_load');
           if (!window.WebSocket || !window.addEventListener) {
-            if (shouldTrack) {
-              gtag('event', window.location.hostname, { event_category: 'chat_hidden', uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
-            }
+            trackEvent('chat_hidden');
             return;
           }
         });
@@ -890,15 +930,7 @@ try {
           if (typeof e.data.indexOf === 'function' && e.data.indexOf("track:") === 0) {
             var jsonStr = e.data.replace("track:", "");
             var jsonObj = JSON.parse(jsonStr);
-            if (shouldTrack) {
-              jsonObj.event_category = 'chat_interaction';
-              jsonObj.uid = window.eyuserid;
-              jsonObj.username = window.eyusername;
-              jsonObj.flowname = window.eyflowname;
-              jsonObj.origin = window.eyorigin;
-              jsonObj.shouldOpen = window.eyshouldopen;
-              gtag('event', window.location.hostname, jsonObj);
-            }
+            trackEvent('chat_interaction', jsonObj);
           } else if (e.data === "close") {
             toggleChat();
           } else if (e.data === "close-alert") {
@@ -929,7 +961,5 @@ try {
 })();
 } catch(e) {
   console.error(e);
-  if (typeof gtag !== 'undefined') {
-    gtag('event', window.location.hostname, { event_category: 'chat_ey_error', event_label: (e && e.stack) ? e.stack : e, uid: window.eyuserid, username: window.eyusername, flowname: window.eyflowname, origin: window.eyorigin, shouldOpen: window.eyshouldopen });
-  }
+  trackEvent('chat_error', { stack: (e && e.stack) ? e.stack : e });
 }

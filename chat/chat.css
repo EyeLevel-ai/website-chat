@@ -69,9 +69,8 @@ noscript h1 {
   object-fit: cover;
 }
 .ey-chat-name {
-  padding-left: 20px;
-  text-align: left;
   width: 100%;
+  text-align: center;
 }
 .ey-chat-name::before {
   font-size: 1.125rem;

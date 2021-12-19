@@ -1727,7 +1727,12 @@ window.menu = null;
                         } else {
                             ttt = t.empty(isConsent);
                         }
-                        var data = JSON.parse(msg.payload);
+                        var data = {};
+                        if (msg && msg.payload) {
+                          data = JSON.parse(msg.payload);
+                        } else {
+                          return resolve();
+                        }
                         var html = '';
                         var needsReset = false;
                         if (data.set_attributes) {
@@ -2032,6 +2037,12 @@ window.menu = null;
                       delete window.eySocket.turnType;
                       delete window.eySocket.turnID;
                     }
+                    if (!dt && evt && typeof evt === 'string') {
+                      var ele = document.getElementById(evt);
+                      if (ele && ele.outerHTML) {
+                        dt = ele.outerHTML;
+                      }
+                    }
                     window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt, pos)));
                   }
                   window.isChatting = false;
@@ -2078,7 +2089,11 @@ window.menu = null;
                         ben.value.passthrough.confirmationValue = this.confirmationValue;
                     }
                     if (dt) {
-                        ben.value.passthrough.request = dt;
+                        if (ben.value) {
+                          ben.value.passthrough.request = dt;
+                        } else {
+                          ben.value = { passthrough: dt };
+                        }
                     }
                     return ben;
                 }
