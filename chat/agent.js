@@ -1973,7 +1973,8 @@ window.menu = null;
                     if (flowUUID && turnID && !isNaN(turnID)) {
                       pos = { flowUUID: flowUUID, turnID: turnID };
                     }
-                    this.handleEvent(ee.target.id, null, null, pos);
+                    var dt = ee.target.outerHTML || null;
+                    this.handleEvent(ee.target.id, null, dt, pos);
                   }
                 }
             }, {
@@ -2018,7 +2019,7 @@ window.menu = null;
                         if (txt.indexOf('web}') < 0) {
                           t.domHelper.addUserRequestNode({text: txt}, t);
                           window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
-                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt, rawText: evt, type: "handleEvent", dt: dt }), typing: false, sender: "user" });
+                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt, rawText: evt, type: "handleEvent", buttonType: type, dt: dt, pos: pos }), typing: false, sender: "user" });
                         } else {
                           shouldSend = false;
                         }
@@ -2036,12 +2037,6 @@ window.menu = null;
                     } else {
                       delete window.eySocket.turnType;
                       delete window.eySocket.turnID;
-                    }
-                    if (!dt && evt && typeof evt === 'string') {
-                      var ele = document.getElementById(evt);
-                      if (ele && ele.outerHTML) {
-                        dt = ele.outerHTML;
-                      }
                     }
                     window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt, pos)));
                   }
