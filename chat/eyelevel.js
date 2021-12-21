@@ -2,6 +2,7 @@ try {
   var chatV = '2.26';
   var agentV = '2.27';
   var cssV = '1.31';
+  var resetSessionTime = 2 * 60 * 60 * 1000; // 2 hours
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
   var localChatURL = '/chat';
@@ -51,12 +52,56 @@ try {
     }
   }
 
+  function shouldResetChat() {
+    var now = Date.now();
+    var ah = window.localStorage.getItem('eyelevel.conversation.session');
+    if (!ah) {
+      return true;
+    }
+
+    try {
+      var sess = JSON.parse(ah);
+      if (!sess || !sess.lastInteraction) {
+        return true;
+      }
+      if (sess.lastInteraction + resetSessionTime < now) {
+        return true;
+      }
+    } catch (e) {
+      return true;
+    }
+
+    return false;
+  }
+
   function getAlertStatus() {
     var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
     if (ah) {
       return JSON.parse(ah);
     }
     return;
+  }
+
+  function updateAlertClosed() {
+    var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
+    if (!ah && window.eyAlert) {
+      ah = {};
+    } else {
+      ah = JSON.parse(ah);
+    }
+    window.eyAlert.closed = Date.now();
+    ah[window.eyAlert.type+":"+window.eyAlert.config] = window.eyAlert;
+    window.localStorage.setItem('eyelevel.conversation.alerts', JSON.stringify(ah));
+  }
+
+  function updateLastSeen(eyType, eyConfig) {
+    var ls = window.localStorage.getItem('eyelevel.conversation.alerts.lastSeen');
+    ls = JSON.parse(ls);
+    if (!ls) {
+      ls = {};
+    }
+    ls[eyType + ":" + eyConfig] = Date.now();
+    window.localStorage.setItem('eyelevel.conversation.alerts.lastSeen', JSON.stringify(ls));
   }
 
   function supportsPassive() {
@@ -364,14 +409,7 @@ try {
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
     if (eyType && eyConfig) {
-      var now = Date.now();
-      var ls = window.localStorage.getItem('eyelevel.conversation.alerts.lastSeen');
-      ls = JSON.parse(ls);
-      if (!ls) {
-        ls = {};
-      }
-      ls[eyType + ":" + eyConfig] = now;
-      window.localStorage.setItem('eyelevel.conversation.alerts.lastSeen', JSON.stringify(ls));
+      updateLastSeen(eyType, eyConfig);
     }
   }
 
@@ -527,7 +565,9 @@ try {
         window.hideChat = true;
       } else if (!fn && chatBehavior.flowname && chatBehavior.flowname !== window.eyflowname && window.eyfnset !== true) {
         if (chatBehavior.reset) {
-          window.eyreset = true;
+          if (shouldResetChat()) {
+            window.eyreset = true;
+          }
         }
         window.eyflowname = chatBehavior.flowname;
         var bb = document.getElementById('eyBubble');
@@ -537,12 +577,14 @@ try {
           window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
         }
       } else if (chatBehavior.reset &&!window.eyreset) {
-        window.eyreset = true;
-        var bb = document.getElementById('eyBubble');
-        if (bb) {
-          window.removeChat();
-          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
-          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
+        if (shouldResetChat()) {
+          window.eyreset = true;
+          var bb = document.getElementById('eyBubble');
+          if (bb) {
+            window.removeChat();
+            window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+            window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
+          }
         }
       }
     }
@@ -662,15 +704,7 @@ try {
     if (cad) {
       cad.style.display = "none";
     }
-    var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
-    if (!ah && window.eyAlert) {
-      ah = {};
-    } else {
-      ah = JSON.parse(ah);
-    }
-    window.eyAlert.closed = Date.now();
-    ah[window.eyAlert.type+":"+window.eyAlert.config] = window.eyAlert;
-    window.localStorage.setItem('eyelevel.conversation.alerts', JSON.stringify(ah));
+    updateAlertClosed();
   }
 
   function toggleChat(e) {
@@ -779,7 +813,12 @@ try {
           reset = false;
         }
       }
-      window.eyreset = reset;
+      window.eyreset = false;
+      if (reset) {
+        if (shouldResetChat()) {
+          window.eyreset = true;
+        }
+      }
 
       var invert = params.invert;
       var ins = getQueryVar("eyinvert", params.isIframe);
