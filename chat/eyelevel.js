@@ -52,19 +52,34 @@ try {
     }
   }
 
+  function sortInteractions( a, b ) {
+    if ( a.time < b.time ){
+      return -1;
+    }
+    if ( a.time > b.time ){
+      return 1;
+    }
+    return 0;
+  }
+
   function shouldResetChat() {
     var now = Date.now();
-    var ah = window.localStorage.getItem('eyelevel.conversation.session');
+    var ah = window.localStorage.getItem('eyelevel.conversation.history');
     if (!ah) {
       return true;
     }
 
     try {
-      var sess = JSON.parse(ah);
-      if (!sess || !sess.lastInteraction) {
+      var hist = JSON.parse(ah);
+      if (!hist || !hist.length || hist.length < 1) {
         return true;
       }
-      if (sess.lastInteraction + resetSessionTime < now) {
+      hist.sort(sortInteractions);
+      var lastInteraction = hist[hist.length - 1];
+      if (!lastInteraction || !lastInteraction.time) {
+        return true;
+      }
+      if (lastInteraction.time + resetSessionTime < now) {
         return true;
       }
     } catch (e) {

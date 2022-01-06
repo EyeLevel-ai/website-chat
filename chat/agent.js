@@ -103,6 +103,7 @@ window.getUser = function() {
 }
 
 saveInteraction = function(interaction) {
+  interaction.time = Date.now();
   if (interaction && interaction.sender && interaction.sender === 'user') {
     interaction.host = window.location.host;
     interaction.pathname = window.location.pathname;
@@ -151,7 +152,6 @@ getConsent = function() {
 
 saveSession = function(sess) {
   if (sess.Pos.flowUUID && sess.Pos.turnID && sess.Pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(sess.Pos.turnID) !== 0) {
-    sess.lastInteraction = Date.now();
     window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify(sess));
     if (sess.GUID && sess.GUID.refUserId && sess.GUID.aid && parseInt(sess.GUID.aid) > 0) {
       window.localStorage.setItem('eyelevel.user.aid', parseInt(sess.GUID.aid));
