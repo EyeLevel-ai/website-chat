@@ -591,7 +591,7 @@ try {
           window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
           window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
         }
-      } else if (chatBehavior.reset &&!window.eyreset) {
+      } else if (chatBehavior.reset && !window.eyreset) {
         if (shouldResetChat()) {
           window.eyreset = true;
           var bb = document.getElementById('eyBubble');
