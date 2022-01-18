@@ -32,6 +32,13 @@ try {
     }
   }
 
+  clearAll = function() {
+    window.localStorage.removeItem('eyelevel.conversation.history');
+    window.localStorage.removeItem('eyelevel.conversation.session');
+    window.localStorage.removeItem('eyelevel.conversation.consent');
+    window.localStorage.removeItem('eyelevel.conversation.alerts');
+  }
+
   function loadEnv(eyEnv) {
     switch(eyEnv) {
       case 'local':
@@ -302,6 +309,9 @@ try {
         if (window.activeAlert.type === 'fn') {
           return;
         }
+      }
+      if (chatBehavior.overrideAlerts === false) {
+        return;
       }
     }
     window.activeAlert = chatBehavior;
@@ -800,6 +810,8 @@ try {
       if (clearCache) {
         var now = Date.now();
         window.cacheBust = '?clear=' + now;
+        params.reset = true;
+        clearAll();
       }
 
       var username = params.username;
