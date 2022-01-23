@@ -1,6 +1,6 @@
 try {
   var chatV = '2.26';
-  var agentV = '2.27';
+  var agentV = '2.28';
   var cssV = '1.31';
   var resetSessionTime = 2 * 60 * 60 * 1000; // 2 hours
   var remoteURL = 'https://cdn.eyelevel.ai/chat';

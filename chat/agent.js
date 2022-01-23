@@ -12,6 +12,35 @@ function randomString(length) {
   return text;
 }
 
+function isiOS() {
+  if (!navigator || !navigator.platform) {
+    return false;
+  }
+
+  if (
+    [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+  ) {
+    return true;
+  }
+
+  if (!navigator.userAgent || !document) {
+    return false;
+  }
+
+  if (navigator.userAgent.includes("Mac") && "ontouchend" in document) {
+    return true;
+  }
+
+  return false;
+}
+
 function supportsPassive() {
   var cold = false,
   hike = function() {};
@@ -1948,11 +1977,19 @@ window.menu = null;
                     this.handleEvent(aa.href);
                     this.scrollToBottom();
                   } else if (ee.target.classList.contains('web-url')) {
+                    var curl = ee.target.value;
+                    if (isiOS()) {
+                      if (curl.indexOf('.pdf#page=') > -1) {
+                        curl = curl.replace('.pdf#page=', '.pdf#page');
+                      } else if (curl.indexOf('.pdf%23page%3D') > -1) {
+                        curl = curl.replace('.pdf%23page%3D', '.pdf%23page');
+                      }
+                    }
                     var aa = document.createElement('a');
-                    aa.href = ee.target.value;
+                    aa.href = curl;
                     aa.target = '_blank';
                     aa.click();
-                    this.handleEvent('web}'+ee.target.value);
+                    this.handleEvent('web}'+curl);
                     this.scrollToBottom();
                   } else if (ee.target.classList.contains('consent-button')) {
                     if (ee.target.value === 'true') {
