@@ -152,13 +152,26 @@ noscript h1 {
   left: 0;
   right: 0;
 }
-.ey-chat .remove-item {
+.ey-remove-item {
   opacity: 0;
   -moz-transform: scaleY(0);
   -webkit-transform: scaleY(0);
   -o-transform: scaleY(0);
   -ms-transform: scaleY(0);
   transform: scaleY(0);
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+}
+.ey-add-item {
+  opacity: 1 !important;
+  -moz-transform: scaleY(1) !important;
+  -webkit-transform: scaleY(1) !important;
+  -o-transform: scaleY(1) !important;
+  -ms-transform: scaleY(1) !important;
+  transform: scaleY(1) !important;
   transition: all 0.2s ease-in-out;
   -webkit-transition: all 0.2s ease-in-out;
   -moz-transition: all 0.2s ease-in-out;
@@ -192,6 +205,7 @@ noscript h1 {
 }
 .ey-chat .server-response-container {
   display: flex;
+  position: relative;
   align-items: flex-end;
   transition: all 0.2s ease-in-out;
   -webkit-transition: all 0.2s ease-in-out;
@@ -321,6 +335,14 @@ noscript h1 {
   border-radius: 16px 16px 16px 0;
   background: #ffffff;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
+}
+.server-response .ai-source {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 16px 16px 16px 0;
 }
 .ey-chat .status-update {
   background: transparent !important;
@@ -588,6 +610,53 @@ noscript h1 {
   padding: 10px;
   box-shadow: none;
   margin: 4px 0;
+}
+.ai-feedback-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-right: 15px;
+  opacity: 0;
+  -moz-transform: scaleY(0);
+  -webkit-transform: scaleY(0);
+  -o-transform: scaleY(0);
+  -ms-transform: scaleY(0);
+  transform: scaleY(0);
+}
+.ai-feedback-prompt {
+  margin-right: 6px;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+.ai-feedback-positive {
+  padding: 10px 0 10px 10px;
+  height: 20px;
+  width: 20px;
+  background: url(https://cdn.eyelevel.ai/chat/thumb-up.png) no-repeat center center;
+  background-size: 20px 20px;
+}
+.ai-feedback-negative {
+  padding: 10px 10px 10px 0;
+  height: 20px;
+  width: 20px;
+  background: url(https://cdn.eyelevel.ai/chat/thumb-down.png) no-repeat center center;
+  background-size: 20px 20px;
+}
+.ai-source-gpt3 {
+  background-color: red;
+  opacity: 0.05;
+}
+.ai-source-low {
+  background-color: red;
+  opacity: 0.05;
+}
+.ai-source-high {
+  background-color: #2fffb2;
+  opacity: 0.05;
+}
+.ai-source-medium {
+  background-color: #ffb100;
+  opacity: 0.05;
 }
 .menu {
   overflow: hidden;
