@@ -1126,6 +1126,7 @@ console.log(turnUUID, response);
                           } else {
                             wsRes.sender = "server";
                             window.eySocket.lastInteraction = wsRes;
+                            saveInteraction(wsRes);
                             if (!window.eySocket.queuedMessages.length) {
                               window.eySocket.queuedMessages.push(wsRes);
                               t.processQueue()
@@ -1145,7 +1146,6 @@ console.log(turnUUID, response);
                             } else {
                               window.eySocket.queuedMessages.push(wsRes);
                             }
-                            saveInteraction(wsRes);
                           }
                         }
                       } else {
@@ -1367,6 +1367,7 @@ console.log(turnUUID, response);
                         if (res && res.length && res.length === 1) {
                           if (res[0].innerHTML === '...') {
                             t.removeItem(na);
+                            window.isChatting = false;
                           }
                         }
                       }

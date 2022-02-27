@@ -1,7 +1,7 @@
 try {
-  var chatV = '2.26';
-  var agentV = '2.28';
-  var cssV = '1.31';
+  var chatV = '3.0';
+  var agentV = '3.0';
+  var cssV = '2.0';
   var resetSessionTime = 2 * 60 * 60 * 1000; // 2 hours
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
@@ -514,7 +514,11 @@ try {
     if (origin === 'linkedin'
       || origin === 'pdf') {
       var mainCnt = document.getElementById('linkedinContainer');
-      mainCnt.appendChild(sn);
+      if (mainCnt) {
+        mainCnt.appendChild(sn);
+      } else {
+        document.body.appendChild(sn);
+      }
     } else {
       document.body.appendChild(sn);
     }
