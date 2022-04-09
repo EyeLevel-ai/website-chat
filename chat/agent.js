@@ -1426,8 +1426,8 @@ console.log(turnUUID, response);
                     }
                 }, this.handleInput = function(n) {
                     if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
-                        var lower = n.toLowerCase();
-                        if (lower === 'clear all' || lower === 'reset chat') {
+                        var lower = n.toLowerCase().trim();
+                        if (lower === 'clear all' || lower === 'reset chat' || lower === 'clear chat') {
                           clearAll();
                           t.domHelper.addUserRequestNode({text: 'cleared'}, t);
                           setTimeout(function() {
@@ -1945,6 +1945,15 @@ console.log(turnUUID, response);
                             window.parent.postMessage('set-event:'+data.set_attributes.event, '*');
                           } else if (data.set_attributes.submit) {
                             window.parent.postMessage('set-event:'+data.set_attributes.submit, '*');
+                          } else if (data.set_attributes.jump) {
+                            if (data.set_attributes.jump) {
+                              try {
+                                var jump = JSON.parse(data.set_attributes.jump);
+                                if (jump.flowName) {
+                                  window.flowname = jump.flowName;
+                                }
+                              } catch (e) {}
+                            }
                           }
                           return resolve();
                         }
