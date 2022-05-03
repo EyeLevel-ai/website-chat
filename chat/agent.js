@@ -2282,11 +2282,6 @@ console.log(turnUUID, response);
                     if (!inputVal && !ty) {
                       return;
                     }
-                    var err = new Error();
-                    var inter = retrieveInteractions(false);
-                    if (inter) {
-                      inter = JSON.stringify(inter);
-                    }
                     var sess = getSession();
                     if (sess) {
                       sess = JSON.stringify(sess);
@@ -2301,8 +2296,6 @@ console.log(turnUUID, response);
                         origin: window.origin || 'web',
                         position: pos && pos,
                         ref: window.location.href,
-                        stack: err.stack,
-                        interactions: inter,
                         session: sess
                     };
                     if (typeof window.flowname !== 'undefined') {

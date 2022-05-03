@@ -558,6 +558,10 @@ try {
       isInverted = true;
     }
 
+    if (window.eyvideo) {
+      return;
+    }
+
     var host = window.location.hostname;
     host = host.indexOf('www.') === 0 ? host.replace('www.', '') : host;
     for (var k in config) {
@@ -584,8 +588,12 @@ try {
       }
     }
 
+    var shouldReset = false;
     if (chatBehavior) {
       var fn = getQueryVar("fn", chatBehavior.isIframe);
+      if (chatBehavior.video && !window.eyvideo) {
+        shouldReset = true;
+      }
       window.eyvideo = chatBehavior.video;
       if (chatBehavior.invert && !isInverted) {
         invertChat();
@@ -601,22 +609,21 @@ try {
           }
         }
         window.eyflowname = chatBehavior.flowname;
-        var bb = document.getElementById('eyBubble');
-        if (bb) {
-          window.removeChat();
-          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
-          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
-        }
+        shouldReset = true;
       } else if (chatBehavior.reset && !window.eyreset) {
         if (shouldResetChat()) {
           window.eyreset = true;
-          var bb = document.getElementById('eyBubble');
-          if (bb) {
-            window.removeChat();
-            window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
-            window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
-          }
+          shouldReset = true;
         }
+      }
+    }
+
+    if (shouldReset) {
+      var bb = document.getElementById('eyBubble');
+      if (bb) {
+        window.removeChat();
+        window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
       }
     }
 
