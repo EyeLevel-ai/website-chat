@@ -1918,6 +1918,17 @@ console.log(turnUUID, response);
                         }
                         return html;
                     }
+                }, this.doReset = function(nr, ttt) {
+                  if (nr) {
+                    return nr;
+                  }
+                  if (typeof ttt === 'undefined' || typeof ttt.classList !== 'object' || typeof ttt.classList.contains !== 'function') {
+                    return true;
+                  }
+                  if (ttt.classList.contains('ey-remove-item')) {
+                    return true;
+                  }
+                  return false;
                 }, this.createMessage = function(msg, obj, isConsent) {
                     return new Promise(function(resolve, reject) {
                         delete window.eySocket.turnType;
@@ -1972,14 +1983,14 @@ console.log(turnUUID, response);
                           }
                           if (data.attachment && data.attachment.payload) {
                             if (data.attachment.payload.text) {
-                              if (needsReset) {
+                              if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
                               t.setText(t.chat.text(data.attachment.payload.text), ttt);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
-                              if (needsReset) {
+                              if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
                               html = t.chat.video(data.attachment.payload.url);
@@ -1993,7 +2004,7 @@ console.log(turnUUID, response);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'image' && data.attachment.payload.url) {
-                              if (needsReset) {
+                              if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
                               html = t.chat.image(data.attachment.payload.url);
@@ -2001,7 +2012,7 @@ console.log(turnUUID, response);
                               needsReset = true;
                             }
                             if (data.attachment.payload.buttons) {
-                              if (needsReset) {
+                              if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
                               html = t.chat.buttons(data.attachment.payload.buttons);
@@ -2016,7 +2027,7 @@ console.log(turnUUID, response);
                             }
                           }
                           if (data.quick_replies) {
-                            if (needsReset) {
+                            if (t.doReset(needsReset, ttt)) {
                               ttt = t.empty(isConsent, msgSession, aiMetadata);
                             }
                             html = t.chat.quick_replies(msg, data.quick_replies);
