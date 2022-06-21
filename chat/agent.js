@@ -1933,11 +1933,13 @@ console.log(turnUUID, response);
                     return new Promise(function(resolve, reject) {
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
+
                         var ttt;
-                        if (obj) {
-                            ttt = obj;
+                        var needsReset = false;
+                        if (t.doReset(needsReset, obj)) {
+                          ttt = t.empty(isConsent, msg.metadata);
                         } else {
-                            ttt = t.empty(isConsent, msg.metadata);
+                          ttt = obj;
                         }
                         var data = {};
                         if (msg && msg.payload) {
@@ -1950,7 +1952,6 @@ console.log(turnUUID, response);
                         t.addAIMetadata(ttt, msgSession, aiMetadata);
 
                         var html = '';
-                        var needsReset = false;
                         if (data.set_attributes) {
                           if (data.set_attributes.event) {
                             window.parent.postMessage('set-event:'+data.set_attributes.event, '*');
