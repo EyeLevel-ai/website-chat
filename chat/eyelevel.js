@@ -37,6 +37,7 @@ try {
     window.localStorage.removeItem('eyelevel.conversation.session');
     window.localStorage.removeItem('eyelevel.conversation.consent');
     window.localStorage.removeItem('eyelevel.conversation.alerts');
+    window.localStorage.removeItem('eyelevel.conversation.opened');
   }
 
   function loadEnv(eyEnv) {
@@ -94,6 +95,36 @@ try {
     }
 
     return false;
+  }
+
+  function loadChatOpen() {
+    var ah = window.localStorage.getItem('eyelevel.conversation.opened');
+    if (ah) {
+      var opened = JSON.parse(ah);
+      if (opened && opened.last) {
+        var now = Date.now();
+        var shouldOpen = opened.last + resetSessionTime >= now;
+        updateOpenStatus(!shouldOpen);
+        return shouldOpen;
+      }
+    }
+    return false;
+  }
+
+  function updateOpenStatus(isClosing) {
+    if (isClosing) {
+      window.localStorage.removeItem('eyelevel.conversation.opened');
+      return;
+    }
+
+    var ah = window.localStorage.getItem('eyelevel.conversation.opened');
+    if (!ah) {
+      ah = {};
+    } else {
+      ah = JSON.parse(ah);
+    }
+    ah.last = Date.now();
+    window.localStorage.setItem('eyelevel.conversation.opened', JSON.stringify(ah));
   }
 
   function getAlertStatus() {
@@ -752,7 +783,10 @@ try {
     }
 
     var cb = document.getElementById("eyBubble");
-    if (cb.classList.contains("ey-app-open")) {
+    var isOpen = cb.classList.contains("ey-app-open");
+    updateOpenStatus(isOpen);
+
+    if (isOpen) {
       cb.classList.remove("ey-app-open");
       var cw = document.getElementById("eySection");
       cw.classList.remove("ey-section-visible");
@@ -899,6 +933,9 @@ try {
         shouldOpen = op === "open";
       }
       window.eyshouldopen = shouldOpen;
+      if (!window.eyshouldopen) {
+        window.eyshouldopen = loadChatOpen();
+      }
 
       var userId = window.getUser().userId;
       window.eyuserid = userId;

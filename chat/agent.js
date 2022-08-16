@@ -1087,25 +1087,28 @@ console.log(turnUUID, response);
                       if (wsRes) {
                         if (wsRes.action) {
                           if (wsRes.action === 'reconnect') {
-                            wsRes.sender = "server";
-                            if (!window.eySocket.queuedMessages.length) {
-                              window.eySocket.queuedMessages.push(wsRes);
-                              t.processQueue()
-                                .then(function() {
-                                  if (window.eySocket
-                                    && window.eySocket.lastInteraction
-                                    && window.eySocket.lastInteraction.metadata
-                                    && window.eySocket.lastInteraction.metadata.feedbackType) {
-                                    t.handleFeedback();
-                                  }
-                                  if (!window.isInit) {
-                                    if (window.attn) {
-                                      t.initAnimation();
+                            var ints = retrieveInteractions(true);
+                            if (!ints || !ints.length) {
+                              wsRes.sender = "server";
+                              if (!window.eySocket.queuedMessages.length) {
+                                window.eySocket.queuedMessages.push(wsRes);
+                                t.processQueue()
+                                  .then(function() {
+                                    if (window.eySocket
+                                      && window.eySocket.lastInteraction
+                                      && window.eySocket.lastInteraction.metadata
+                                      && window.eySocket.lastInteraction.metadata.feedbackType) {
+                                      t.handleFeedback();
                                     }
-                                  }
-                                });
-                            } else {
-                              window.eySocket.queuedMessages.push(wsRes);
+                                    if (!window.isInit) {
+                                      if (window.attn) {
+                                        t.initAnimation();
+                                      }
+                                    }
+                                  });
+                              } else {
+                                window.eySocket.queuedMessages.push(wsRes);
+                              }
                             }
                           } else if (wsRes.action === 'empty') {
                             if (window.eySocket.typingElement) {
@@ -1922,7 +1925,7 @@ console.log(turnUUID, response);
                   if (nr) {
                     return nr;
                   }
-                  if (typeof ttt === 'undefined' || typeof ttt.classList !== 'object' || typeof ttt.classList.contains !== 'function') {
+                  if (!ttt || typeof ttt === 'undefined' || typeof ttt.classList !== 'object' || typeof ttt.classList.contains !== 'function') {
                     return true;
                   }
                   if (ttt.classList.contains('ey-remove-item')) {
