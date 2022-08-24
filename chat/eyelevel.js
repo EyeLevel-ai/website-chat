@@ -38,6 +38,7 @@ try {
     window.localStorage.removeItem('eyelevel.conversation.consent');
     window.localStorage.removeItem('eyelevel.conversation.alerts');
     window.localStorage.removeItem('eyelevel.conversation.opened');
+    window.localStorage.removeItem('eyelevel.user.transfer');
   }
 
   function loadEnv(eyEnv) {

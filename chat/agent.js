@@ -123,13 +123,14 @@ if (!window.localStorage) {
 window.getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var aid = window.localStorage.getItem('eyelevel.user.aid');
+  var isTransfer = window.localStorage.getItem('eyelevel.user.transfer') ? true : false;
   var newUser = false;
   if (!userId) {
     newUser = true;
     userId = randomString(32);
     window.localStorage.setItem('eyelevel.user.userId', userId);
   }
-  return { userId: userId, aid: aid, GUID: aid + ":" + userId, newUser: newUser };
+  return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
 }
 
 saveInteraction = function(interaction) {
@@ -174,6 +175,8 @@ clearAll = function() {
   window.localStorage.removeItem('eyelevel.conversation.session');
   window.localStorage.removeItem('eyelevel.conversation.consent');
   window.localStorage.removeItem('eyelevel.conversation.alerts');
+  window.localStorage.removeItem('eyelevel.conversation.opened');
+  window.localStorage.removeItem('eyelevel.user.transfer');
 }
 
 saveConsent = function(consent) {
@@ -192,6 +195,16 @@ saveSession = function(sess) {
       window.localStorage.setItem('eyelevel.user.userId', sess.GUID.refUserId);
       window.user = window.getUser();
     }
+  }
+}
+
+setTransfer = function(val) {
+  if (val) {
+    window.localStorage.setItem('eyelevel.user.transfer', 'true');
+    window.user = window.getUser();
+  } else {
+    window.localStorage.removeItem('eyelevel.user.transfer');
+    window.user = window.getUser();
   }
 }
 
@@ -1109,12 +1122,27 @@ console.log(turnUUID, response);
                               } else {
                                 window.eySocket.queuedMessages.push(wsRes);
                               }
+                            } else if (window.eySocket.typingElement) {
+                              t.removeItem(window.eySocket.typingElement);
+                              delete window.eySocket.typingElement;
                             }
                           } else if (wsRes.action === 'empty') {
                             if (window.eySocket.typingElement) {
                               t.removeItem(window.eySocket.typingElement);
                               delete window.eySocket.typingElement;
                             }
+                          } else if (wsRes.action === 'transfer' || wsRes.action === 'reconnect-transfer') {
+                            if (window.eySocket.typingElement) {
+                              t.removeItem(window.eySocket.typingElement);
+                              delete window.eySocket.typingElement;
+                            }
+                            setTransfer(true);
+                          } else if (wsRes.action === 'transfer' || wsRes.action === 'reconnect-transfer-failed') {
+                            if (window.eySocket.typingElement) {
+                              t.removeItem(window.eySocket.typingElement);
+                              delete window.eySocket.typingElement;
+                            }
+                            setTransfer(false);
                           } else if (wsRes.action === 'reconnect-empty') {
                             if (window.eySocket.typingElement) {
                               t.removeItem(window.eySocket.typingElement);
@@ -2277,7 +2305,6 @@ console.log(turnUUID, response);
                       } else {
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
-                      
                       }
                       window.isChatting = true;
                       t.removeFeedbackWidget();
