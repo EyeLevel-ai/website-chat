@@ -37,7 +37,7 @@ try {
     window.localStorage.removeItem('eyelevel.conversation.session');
     window.localStorage.removeItem('eyelevel.conversation.consent');
     window.localStorage.removeItem('eyelevel.conversation.alerts');
-    window.localStorage.removeItem('eyelevel.conversation.opened');
+    window.localStorage.removeItem('eyelevel.conversation.open');
     window.localStorage.removeItem('eyelevel.user.transfer');
   }
 
@@ -114,12 +114,12 @@ try {
   }
 
   function loadChatOpen() {
-    var ah = window.localStorage.getItem('eyelevel.conversation.opened');
+    var ah = window.localStorage.getItem('eyelevel.conversation.open');
     if (ah) {
       var opened = JSON.parse(ah);
-      if (opened && opened.last) {
+      if (opened) {
         var now = Date.now();
-        var shouldOpen = opened.last + resetSessionTime >= now;
+        var shouldOpen = opened + resetSessionTime >= now;
         updateOpenStatus(!shouldOpen);
         return shouldOpen;
       }
@@ -148,7 +148,7 @@ try {
   }
 
   window.openStatus = function() {
-    var ah = window.localStorage.getItem('eyelevel.conversation.opened');
+    var ah = window.localStorage.getItem('eyelevel.conversation.open');
     if (ah) {
       return true;
     }
@@ -157,18 +157,11 @@ try {
 
   function updateOpenStatus(isClosing) {
     if (isClosing) {
-      window.localStorage.removeItem('eyelevel.conversation.opened');
+      window.localStorage.removeItem('eyelevel.conversation.open');
       return;
     }
 
-    var ah = window.localStorage.getItem('eyelevel.conversation.opened');
-    if (!ah) {
-      ah = {};
-    } else {
-      ah = JSON.parse(ah);
-    }
-    ah.last = Date.now();
-    window.localStorage.setItem('eyelevel.conversation.opened', JSON.stringify(ah));
+    window.localStorage.setItem('eyelevel.conversation.open', Date.now());
   }
 
   function getAlertStatus() {
@@ -183,7 +176,6 @@ try {
     if (window.eyAlert.type && window.eyAlert.type === 'message' && window.eyAlert.idx > -1) {
       var hist = loadHistory();
       if (hist.length > 0 && hist[window.eyAlert.idx]) {
-        console.log('here', window.eyAlert);
         hist[window.eyAlert.idx].dismissed = true;
         saveHistory(hist);
       }
@@ -558,6 +550,11 @@ try {
   }
 
   window.initAlertFrame = function(txt, chatBehavior, eyType, eyConfig) {
+    var user = getUser();
+    if (user && user.isTransfer) {
+      return;
+    }
+
     var ah = getAlertStatus();
     if (ah && eyType && eyConfig && !chatBehavior.alwaysShow) {
       var tAlert = ah[eyType + ":" + eyConfig];
@@ -889,6 +886,7 @@ try {
       cw.classList.remove("ey-section-invisible");
       cw.classList.add("ey-section-visible");
       document.body.classList.add("ey-prevent-scroll");
+      closeAlert();
 
       trackEvent('chat_open');
 

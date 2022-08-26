@@ -148,7 +148,7 @@ saveInteraction = function(interaction) {
     }
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   } else {
-    interaction.seen = isOpen();
+    interaction.seen = window.isOpen;
     if (interaction && interaction.payload) {
       var pay = JSON.parse(interaction.payload);
       if (pay && pay.set_attributes) {
@@ -178,7 +178,7 @@ clearAll = function() {
   window.localStorage.removeItem('eyelevel.conversation.session');
   window.localStorage.removeItem('eyelevel.conversation.consent');
   window.localStorage.removeItem('eyelevel.conversation.alerts');
-  window.localStorage.removeItem('eyelevel.conversation.opened');
+  window.localStorage.removeItem('eyelevel.conversation.open');
   window.localStorage.removeItem('eyelevel.user.transfer');
 }
 
@@ -190,13 +190,7 @@ getConsent = function() {
   return window.localStorage.getItem('eyelevel.conversation.consent');
 }
 
-isOpen = function() {
-  var ah = window.localStorage.getItem('eyelevel.conversation.opened');
-  if (ah) {
-    return true;
-  }
-  return false;
-}
+window.isOpen = false;
 
 saveSession = function(sess) {
   if (sess.Pos.flowUUID && sess.Pos.turnID && sess.Pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(sess.Pos.turnID) !== 0) {
@@ -268,7 +262,7 @@ setSeen = function() {
     for (var t = 0; t < ints.length; t++) {
       if (ints[t] && ints[t].sender && ints[t].sender === 'user') {
       } else if (!ints[t].seen) {
-        ints[t].seen = isOpen();
+        ints[t].seen = window.isOpen;
       }
     }
 
@@ -1187,7 +1181,7 @@ console.log(turnUUID, response);
                             window.eySocket.lastInteraction = wsRes;
                             saveInteraction(wsRes);
 
-                            if (!isOpen()) {
+                            if (!window.isOpen) {
                               window.parent.postMessage("alert-update", "*");
                             }
 
@@ -1247,6 +1241,7 @@ console.log(turnUUID, response);
                   if (n && n.type === "message") {
                     if (n.data) {
                       if (n.data === "open") {
+                        window.isOpen = true;
                         if (window.eyvideo) {
                           t.initVideo();
                         }
@@ -1261,6 +1256,7 @@ console.log(turnUUID, response);
                         window.ConsentContent = JSON.parse(n.data.replace('Consent||', ''));
                         t.loadConsent();
                       } else if (n.data.indexOf && n.data.indexOf("close") === 0) {
+                        window.isOpen = false;
                         if (window.videoElm) {
                           window.videoElm.parentNode.removeChild(window.videoElm);
                           window.videoElm = false;
