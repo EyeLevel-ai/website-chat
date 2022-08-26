@@ -124,12 +124,14 @@ window.getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var aid = window.localStorage.getItem('eyelevel.user.aid');
   var isTransfer = window.localStorage.getItem('eyelevel.user.transfer') ? true : false;
+
   var newUser = false;
   if (!userId) {
     newUser = true;
     userId = randomString(32);
     window.localStorage.setItem('eyelevel.user.userId', userId);
   }
+
   return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
 }
 
@@ -146,6 +148,7 @@ saveInteraction = function(interaction) {
     }
     window.parent.postMessage('track:'+JSON.stringify(interaction), "*");
   } else {
+    interaction.seen = isOpen();
     if (interaction && interaction.payload) {
       var pay = JSON.parse(interaction.payload);
       if (pay && pay.set_attributes) {
@@ -185,6 +188,14 @@ saveConsent = function(consent) {
 
 getConsent = function() {
   return window.localStorage.getItem('eyelevel.conversation.consent');
+}
+
+isOpen = function() {
+  var ah = window.localStorage.getItem('eyelevel.conversation.opened');
+  if (ah) {
+    return true;
+  }
+  return false;
 }
 
 saveSession = function(sess) {
@@ -240,7 +251,7 @@ function updateAIMessages(intr) {
 
 retrieveInteractions = function(doAI) {
   var h = window.localStorage.getItem('eyelevel.conversation.history');
-  if (h && typeof h !== 'undefined') {
+  if (h && typeof h !== 'undefined' && h !== 'undefined') {
     var history = JSON.parse(h);
     if (doAI) {
       for (var t = 0; t < history.length; t++) {
@@ -248,6 +259,21 @@ retrieveInteractions = function(doAI) {
       }
     }
     return history;
+  }
+}
+
+setSeen = function() {
+  var ints = retrieveInteractions(false);
+  if (ints) {
+    for (var t = 0; t < ints.length; t++) {
+      if (ints[t] && ints[t].sender && ints[t].sender === 'user') {
+      } else if (!ints[t].seen) {
+        ints[t].seen = isOpen();
+      }
+    }
+
+    window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(ints));
+    window.parent.postMessage("alert-update", "*");
   }
 }
 
@@ -624,7 +650,7 @@ window.menu = null;
                 value: function(n, ben) {
                     var t = this.workplace.createElement("div");
                     if (n.text) {
-                      return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n.text + '</div>', this.queryResult.appendChild(t), this
+                      return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n.text + '</div>', this.queryResult.appendChild(t), this;
                     } else if (n.input_value && n.id) {
                       var input = ben.domHelper.workplace.getElementById(n.id + '-input');
                       var cnt = ben.domHelper.workplace.getElementById(n.id);
@@ -1100,6 +1126,7 @@ console.log(turnUUID, response);
                       if (wsRes) {
                         if (wsRes.action) {
                           if (wsRes.action === 'reconnect') {
+                            setTransfer(false);
                             var ints = retrieveInteractions(true);
                             if (!ints || !ints.length) {
                               wsRes.sender = "server";
@@ -1153,11 +1180,17 @@ console.log(turnUUID, response);
                                 t.initAnimation();
                               }
                             }
+                            setTransfer(false);
                           } else if (wsRes.action === 'heartbeat') {
                           } else {
                             wsRes.sender = "server";
                             window.eySocket.lastInteraction = wsRes;
                             saveInteraction(wsRes);
+
+                            if (!isOpen()) {
+                              window.parent.postMessage("alert-update", "*");
+                            }
+
                             if (!window.eySocket.queuedMessages.length) {
                               window.eySocket.queuedMessages.push(wsRes);
                               t.processQueue()
@@ -1206,31 +1239,39 @@ console.log(turnUUID, response);
                     window.videoElm = false;
                   }
                   window.parent.postMessage("close", "*");
+                }, this.handleLoad = function() {
+                  if (!window.eySocket && window.user && window.user.isTransfer) {
+                    t.initializeWS();
+                  }
                 }, this.handleChatWindow = function(n) {
                   if (n && n.type === "message") {
-                    if (n.data && n.data === "open") {
-                      if (window.eyvideo) {
-                        t.initVideo();
+                    if (n.data) {
+                      if (n.data === "open") {
+                        if (window.eyvideo) {
+                          t.initVideo();
+                        }
+                        if (!window.eySocket) {
+                          t.initializeWS();
+                        }
+                        setSeen();
+                        t.scrollToBottom();
+                        window.parent.postMessage("alert-update", "*");
+                      } else if (n.data.indexOf && n.data.indexOf("Consent||") === 0) {
+                        window.Consent = true;
+                        window.ConsentContent = JSON.parse(n.data.replace('Consent||', ''));
+                        t.loadConsent();
+                      } else if (n.data.indexOf && n.data.indexOf("close") === 0) {
+                        if (window.videoElm) {
+                          window.videoElm.parentNode.removeChild(window.videoElm);
+                          window.videoElm = false;
+                        }
+                      } else if (n.data.indexOf && n.data.indexOf("hide close") === 0) {
+                        var w = t.domHelper.getCloseWindow();
+                        w.style.display = 'none';
+                      } else if (n.data.indexOf && n.data.indexOf("show close") === 0) {
+                        var w = t.domHelper.getCloseWindow();
+                        w.style.display = 'block';
                       }
-                      if (!window.eySocket) {
-                        t.initializeWS();
-                      }
-                      t.scrollToBottom();
-                    } else if (n.data && n.data.indexOf && n.data.indexOf("Consent||") === 0) {
-                      window.Consent = true;
-                      window.ConsentContent = JSON.parse(n.data.replace('Consent||', ''));
-                      t.loadConsent();
-                    } else if (n.data && n.data.indexOf && n.data.indexOf("close") === 0) {
-                      if (window.videoElm) {
-                        window.videoElm.parentNode.removeChild(window.videoElm);
-                        window.videoElm = false;
-                      }
-                    } else if (n.data && n.data.indexOf && n.data.indexOf("hide close") === 0) {
-                      var w = t.domHelper.getCloseWindow();
-                      w.style.display = 'none';
-                    } else if (n.data && n.data.indexOf && n.data.indexOf("show close") === 0) {
-                      var w = t.domHelper.getCloseWindow();
-                      w.style.display = 'block';
                     }
                   } else if (window.shouldOpen) {
                     if (!window.eySocket) {
@@ -1284,14 +1325,14 @@ console.log(turnUUID, response);
                   var pay = JSON.parse(int1.payload);
                   int1.typing = false;
                   if (int1.sender === 'user') {
-                   t.domHelper.addUserRequestNode(pay, t);
-                   t.scrollToBottom();
-                   t.loadInteractions(idx + 1, inter);
+                    t.domHelper.addUserRequestNode(pay, t);
+                    t.scrollToBottom();
+                    t.loadInteractions(idx + 1, inter);
                   } else {
-                   t.createMessage(int1)
-                     .then(function(ra0) {
-                       return t.loadInteractions(idx + 1, inter);
-                     });
+                    t.createMessage(int1)
+                      .then(function(ra0) {
+                        return t.loadInteractions(idx + 1, inter);
+                      });
                   }
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
@@ -1433,121 +1474,122 @@ console.log(turnUUID, response);
                       console.warn('unexpected response', nn);
                     }
                 }, this.setButtons = function(ee, nn) {
-                    var sc = nn.getElementsByClassName('server-response');
-                    if (sc && sc.length && sc.length === 1) {
-                      while (sc[0].firstChild) {
-                        sc[0].removeChild(sc[0].firstChild);
-                      }
+                  var sc = nn.getElementsByClassName('server-response');
+                  if (sc && sc.length && sc.length === 1) {
+                    while (sc[0].firstChild) {
+                      sc[0].removeChild(sc[0].firstChild);
+                    }
 
-                      var isInput = false;
-                      for (var i in ee) {
-                        if (i == 0 && ee.length === 1 && ee[i].classList.contains('user-input-container')) {
-                          isInput = true;
-                        }
-                        sc[0].appendChild(ee[i]);
+                    var isInput = false;
+                    for (var i in ee) {
+                      if (i == 0 && ee.length === 1 && ee[i].classList.contains('user-input-container')) {
+                        isInput = true;
                       }
-                      if (isInput) {
-                        sc[0].classList.add('user-input-wrapper');
-                      } else {
-                        sc[0].classList.add('chat-buttons');
-                      }
-                      return nn, this
+                      sc[0].appendChild(ee[i]);
+                    }
+                    if (isInput) {
+                      sc[0].classList.add('user-input-wrapper');
                     } else {
-                      console.warn('unexpected response', nn);
+                      sc[0].classList.add('chat-buttons');
                     }
+                    return nn, this
+                  } else {
+                    console.warn('unexpected response', nn);
+                  }
                 }, this.handleInput = function(n) {
-                    if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
-                        var lower = n.toLowerCase().trim();
-                        if (lower === 'clear all' || lower === 'reset chat' || lower === 'clear chat') {
-                          clearAll();
-                          t.domHelper.addUserRequestNode({text: 'cleared'}, t);
-                          setTimeout(function() {
-                            window.isChatting = true;
-                            t.removeFeedbackWidget();
-                            window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
-                            t.domHelper.setInputValue("");
-                            t.domHelper.handleStopSend();
-                            window.parent.postMessage('clear all', "*");
-                          }, 500);
-                        } else if (lower === 'send empty') {
-                          setTimeout(function() {
-                            window.isChatting = true;
-                            t.removeFeedbackWidget();
-                            window.eySocket.send(JSON.stringify(t.buildPayLoad("", "")));
-                            t.domHelper.setInputValue("");
-                            t.domHelper.handleStopSend();
-                          }, 500);
-                        } else if (window.eySocket.turnType
-                          && window.eySocket.turnID
-                          && (window.eySocket.turnType === 'email'
-                          || window.eySocket.turnType === 'tel'
-                          || window.eySocket.turnType === 'name'
-                          || window.eySocket.turnType === 'custom')) {
-                          var inBtn = document.getElementById(window.eySocket.turnID);
-                          var input = document.getElementById(window.eySocket.turnID + '-input');
-                          input.value = n;
-                          inBtn.click();
-                          t.domHelper.setInputValue("");
-                        } else {
-                          t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
-                          if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
-                            window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
-                            saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
-                          }
-                          delete window.eySocket.turnType;
-                          delete window.eySocket.turnID;
-                          window.eySocket.typingElement = t.empty();
-                          window.isChatting = true;
-                          t.removeFeedbackWidget();
-                          window.eySocket.send(JSON.stringify(t.buildPayLoad(n)));
-                          t.domHelper.setInputValue("");
-                          t.domHelper.handleStopSend();
-                        }
-                        t.scrollToBottom();
+                  if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
+                    var lower = n.toLowerCase().trim();
+                    if (lower === 'clear all' || lower === 'reset chat' || lower === 'clear chat') {
+                      clearAll();
+                      t.domHelper.addUserRequestNode({text: 'cleared'}, t);
+                      setTimeout(function() {
+                        window.isChatting = true;
+                        t.removeFeedbackWidget();
+                        window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
+                        t.domHelper.setInputValue("");
+                        t.domHelper.handleStopSend();
+                        window.parent.postMessage('clear all', "*");
+                      }, 500);
+                    } else if (lower === 'send empty') {
+                      setTimeout(function() {
+                        window.isChatting = true;
+                        t.removeFeedbackWidget();
+                        window.eySocket.send(JSON.stringify(t.buildPayLoad("", "")));
+                        t.domHelper.setInputValue("");
+                        t.domHelper.handleStopSend();
+                      }, 500);
+                    } else if (window.eySocket.turnType
+                      && window.eySocket.turnID
+                      && (window.eySocket.turnType === 'email'
+                      || window.eySocket.turnType === 'tel'
+                      || window.eySocket.turnType === 'name'
+                      || window.eySocket.turnType === 'custom')) {
+                      var inBtn = document.getElementById(window.eySocket.turnID);
+                      var input = document.getElementById(window.eySocket.turnID + '-input');
+                      input.value = n;
+                      inBtn.click();
+                      t.domHelper.setInputValue("");
+                    } else {
+                      t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
+                      if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
+                        window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
+                        saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
+                      }
+                      delete window.eySocket.turnType;
+                      delete window.eySocket.turnID;
+                      console.log('here');
+                      window.eySocket.typingElement = t.empty();
+                      window.isChatting = true;
+                      t.removeFeedbackWidget();
+                      window.eySocket.send(JSON.stringify(t.buildPayLoad(n)));
+                      t.domHelper.setInputValue("");
+                      t.domHelper.handleStopSend();
                     }
+                    t.scrollToBottom();
+                  }
                 }, this.sessionId = this.guid(), this.stage = 'welcome', this.nextStage = 'welcome', this.confirmationValue = null, this.menu = null, this.handleMenuButtonClick = function(ben) {
                     if (!t.domHelper.getMainMenu().style.height) {
-                        ben.stopPropagation();
-                        t.domHelper.getChatForm().classList.add('menu-open');
-                        t.domHelper.getMainMenu().style.height = t.domHelper.getMenuHeight() + 'px';
+                      ben.stopPropagation();
+                      t.domHelper.getChatForm().classList.add('menu-open');
+                      t.domHelper.getMainMenu().style.height = t.domHelper.getMenuHeight() + 'px';
                     }
                 }, this.handleBodyClick = function(ben) {
                     if (t.domHelper.getMainMenu().style.height) {
-                        ben.stopPropagation();
-                        t.domHelper.getChatForm().classList.remove('menu-open');
-                        t.domHelper.getMainMenu().removeAttribute('style');
+                      ben.stopPropagation();
+                      t.domHelper.getChatForm().classList.remove('menu-open');
+                      t.domHelper.getMainMenu().removeAttribute('style');
                     }
                 }, this.loadMenu = function(menu) {
-                    t.domHelper.getMenuButton().style.display = 'block';
-                    var futureSteps = false;
-                    var mm = t.domHelper.getMenuList();
-                    while (mm.firstChild) {
-                      mm.removeChild(mm.firstChild);
-                    }
-                    for (var i in menu) {
-                        if (menu[i].title) {
-                            var li = t.domHelper.workplace.createElement('li');
-                            if (futureSteps) {
-                                li.classList.add('inactive-link');
-                            }
-                            if (i === t.stage) {
-                                li.classList.add('current-link');
-                            }
-                            li.onclick = t.handleMenuItemClick.bind(t);
-                            li.setAttribute('id', i);
-                            li.innerHTML = menu[i].title;
-                            mm.appendChild(li);
-                        }
-                        if (i === t.stage) {
-                            futureSteps = true;
-                        }
-                    }
-                    t.domHelper.setMenuHeight();
-                    t.menu = menu;
+                  t.domHelper.getMenuButton().style.display = 'block';
+                  var futureSteps = false;
+                  var mm = t.domHelper.getMenuList();
+                  while (mm.firstChild) {
+                    mm.removeChild(mm.firstChild);
+                  }
+                  for (var i in menu) {
+                      if (menu[i].title) {
+                          var li = t.domHelper.workplace.createElement('li');
+                          if (futureSteps) {
+                              li.classList.add('inactive-link');
+                          }
+                          if (i === t.stage) {
+                              li.classList.add('current-link');
+                          }
+                          li.onclick = t.handleMenuItemClick.bind(t);
+                          li.setAttribute('id', i);
+                          li.innerHTML = menu[i].title;
+                          mm.appendChild(li);
+                      }
+                      if (i === t.stage) {
+                          futureSteps = true;
+                      }
+                  }
+                  t.domHelper.setMenuHeight();
+                  t.menu = menu;
                 }, this.makeCopy = function(rr) {
-                    return JSON.parse(JSON.stringify(rr));
+                  return JSON.parse(JSON.stringify(rr));
                 }, this.getSpeech = function(n) {
-                    return (n.length ? n : [ { speech: e.DEFAULT_NO_ANSWER } ]);
+                  return (n.length ? n : [ { speech: e.DEFAULT_NO_ANSWER } ]);
                 }, this.chat = {
                     text: function(data) {
                         return t.escapeAndDecorateString(data);
@@ -1972,6 +2014,7 @@ console.log(turnUUID, response);
                         } else {
                           ttt = obj;
                         }
+
                         var data = {};
                         if (msg && msg.payload) {
                           data = JSON.parse(msg.payload);
@@ -2092,7 +2135,8 @@ console.log(turnUUID, response);
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
                     this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
-                    this.loadVideo()
+                    this.loadVideo(),
+                    this.handleLoad()
                 }
             }, {
                 key: "handleMenuItemClick",
@@ -3269,7 +3313,7 @@ console.log(turnUUID, response);
         o = t(22);
     t(35);
     var i = new o.a;
-    new r.a(i).bindEventHandlers()
+    new r.a(i).bindEventHandlers();
 }]);
 
 } catch(e) {

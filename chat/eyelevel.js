@@ -98,6 +98,21 @@ try {
     return false;
   }
 
+  function getUser() {
+    var userId = window.localStorage.getItem('eyelevel.user.userId');
+    var aid = window.localStorage.getItem('eyelevel.user.aid');
+    var isTransfer = window.localStorage.getItem('eyelevel.user.transfer') ? true : false;
+
+    var newUser = false;
+    if (!userId) {
+      newUser = true;
+      userId = randomString(32);
+      window.localStorage.setItem('eyelevel.user.userId', userId);
+    }
+
+    return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
+  }
+
   function loadChatOpen() {
     var ah = window.localStorage.getItem('eyelevel.conversation.opened');
     if (ah) {
@@ -108,6 +123,34 @@ try {
         updateOpenStatus(!shouldOpen);
         return shouldOpen;
       }
+    }
+    return false;
+  }
+
+  function loadHistory() {
+    var h = window.localStorage.getItem('eyelevel.conversation.history');
+    window.isReturn = false;
+    if (h && typeof h !== 'undefined' && h !== 'undefined') {
+      var history = JSON.parse(h);
+      for (var i in history) {
+        if (history[i].sender && history[i].sender !== 'server') {
+          window.isReturn = true;
+          break;
+        }
+      }
+      return history.sort(sortInteractions);
+    }
+    return [];
+  }
+
+  function saveHistory(hist) {
+    window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(hist));
+  }
+
+  window.openStatus = function() {
+    var ah = window.localStorage.getItem('eyelevel.conversation.opened');
+    if (ah) {
+      return true;
     }
     return false;
   }
@@ -137,15 +180,26 @@ try {
   }
 
   function updateAlertClosed() {
-    var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
-    if (!ah && window.eyAlert) {
-      ah = {};
+    if (window.eyAlert.type && window.eyAlert.type === 'message' && window.eyAlert.idx > -1) {
+      var hist = loadHistory();
+      if (hist.length > 0 && hist[window.eyAlert.idx]) {
+        console.log('here', window.eyAlert);
+        hist[window.eyAlert.idx].dismissed = true;
+        saveHistory(hist);
+      }
     } else {
-      ah = JSON.parse(ah);
+      var ah = window.localStorage.getItem('eyelevel.conversation.alerts');
+      if (!ah && window.eyAlert) {
+        ah = {};
+      } else {
+        ah = JSON.parse(ah);
+      }
+      if (window.eyAlert) {
+        window.eyAlert.closed = Date.now();
+        ah[window.eyAlert.type+":"+window.eyAlert.config] = window.eyAlert;
+      }
+      window.localStorage.setItem('eyelevel.conversation.alerts', JSON.stringify(ah));
     }
-    window.eyAlert.closed = Date.now();
-    ah[window.eyAlert.type+":"+window.eyAlert.config] = window.eyAlert;
-    window.localStorage.setItem('eyelevel.conversation.alerts', JSON.stringify(ah));
   }
 
   function updateLastSeen(eyType, eyConfig) {
@@ -359,7 +413,7 @@ try {
               && chatBehavior.returnText === window.activeAlert.returnText
             ) {
               window.initAlertFrame(chatBehavior.returnText, chatBehavior, config.eyType, config.eyConfig);
-              window.initBadgeFrame(1);
+              window.setBadge(1);
             }
           }
         }, chatBehavior.returnTime || 5000);
@@ -373,7 +427,7 @@ try {
                 && chatBehavior.alertText === window.activeAlert.alertText
               ) {
                 window.initAlertFrame(chatBehavior.alertText, chatBehavior, config.eyType, config.eyConfig);
-                window.initBadgeFrame(1);
+                window.setBadge(1);
               }
             }
           }, alertTime);
@@ -418,13 +472,57 @@ try {
     }
   }
 
-  window.initBadgeFrame = function(n) {
+  window.updateAlerts = function() {
+    if (window.openStatus()) {
+      window.setBadge(0);
+      return;
+    }
+
+    var user = getUser();
+
+    if (user && user.isTransfer) {
+      var alerts = 0;
+      var hist = loadHistory();
+
+      var idx = -1;
+      if (hist.length > 0) {
+        var t = hist.length-1;
+        for (var t = hist.length-1; t > -1; t--) {
+          if (hist[t] && hist[t].sender && hist[t].sender === 'user') {
+            break;
+          } else if (!hist[t].seen) {
+            if (idx < 0) {
+              idx = t;
+            }
+            alerts++;
+          }
+        }
+
+        if (idx > -1) {
+          var msg = hist[idx];
+          if (!msg.dismissed) {
+            if (msg && msg.payload) {
+              data = JSON.parse(msg.payload);
+              if (data && data.text && !data.dismissed) {
+                window.eyAlert = { type: 'message', text: data.text, idx: idx };
+                window.setAlert(data.text);
+              }
+            }
+          }
+        }
+
+        window.setBadge(alerts);
+      }
+    }
+  }
+
+  window.setBadge = function(n) {
     var ck = document.getElementById("eyBadgeCnt");
     if (ck) {
       ck.parentNode.removeChild(ck);
     }
 
-    if (isVideo(window.eyvideo)) {
+    if (isVideo(window.eyvideo) || n === 0) {
       return;
     }
 
@@ -440,20 +538,12 @@ try {
     ei.document.close();
   }
 
-  window.initAlertFrame = function(txt, chatBehavior, eyType, eyConfig) {
-    var ah = getAlertStatus();
-    if (ah && eyType && eyConfig && !chatBehavior.alwaysShow) {
-      var tAlert = ah[eyType + ":" + eyConfig];
-      var now = Date.now();
-      if (tAlert && tAlert.closed && (now - parseInt(tAlert.closed)) < 24 * 60 * 60 * 1000) {
-        return;
-      }
-    }
-    window.eyAlert = { type: eyType, config: eyConfig, text: txt };
+  window.setAlert = function(txt) {
     var ck = document.getElementById("eyAlertCnt");
     if (ck) {
       ck.parentNode.removeChild(ck);
     }
+
     var af = document.createElement("section");
     af.classList.add("ey-alert-cnt");
     af.id = "eyAlertCnt";
@@ -465,6 +555,21 @@ try {
     ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
+  }
+
+  window.initAlertFrame = function(txt, chatBehavior, eyType, eyConfig) {
+    var ah = getAlertStatus();
+    if (ah && eyType && eyConfig && !chatBehavior.alwaysShow) {
+      var tAlert = ah[eyType + ":" + eyConfig];
+      var now = Date.now();
+      if (tAlert && tAlert.closed && (now - parseInt(tAlert.closed)) < 24 * 60 * 60 * 1000) {
+        return;
+      }
+    }
+    window.eyAlert = { type: eyType, config: eyConfig, text: txt };
+
+    window.setAlert(txt);
+
     if (eyType && eyConfig) {
       updateLastSeen(eyType, eyConfig);
     }
@@ -731,40 +836,8 @@ try {
     })());
   }
 
-  function loadHistory() {
-    var h = window.localStorage.getItem('eyelevel.conversation.history');
-    window.isReturn = false;
-    if (h && typeof h !== 'undefined') {
-      var history = JSON.parse(h);
-      for (var i in history) {
-        if (history[i].sender && history[i].sender !== 'server') {
-          window.isReturn = true;
-          break;
-        }
-      }
-    }
-  }
-
 (function() {
   var cooldown = false;
-
-  window.getUser = function() {
-    var userId = window.localStorage.getItem('eyelevel.user.userId');
-    var newUser = false;
-    if (!userId) {
-      newUser = true;
-      userId = randomString(32);
-      window.localStorage.setItem('eyelevel.user.userId', userId);
-    }
-    return { userId: userId, newUser: newUser };
-  }
-
-  function clearBadge() {
-    var cad = document.getElementById('eyBadgeCnt');
-    if (cad) {
-      cad.style.display = "none";
-    }
-  }
 
   function closeAlert() {
     if (!window.eyAlert) {
@@ -810,10 +883,6 @@ try {
         }
       }, 200);
     } else {
-      setTimeout(function() {
-        closeAlert();
-        clearBadge();
-      }, 250);
       window.isOpen = true;
       cb.classList.add("ey-app-open");
       var cw = document.getElementById("eySection");
@@ -938,7 +1007,8 @@ try {
         window.eyshouldopen = loadChatOpen();
       }
 
-      var userId = window.getUser().userId;
+      var user = getUser();
+      var userId = user.userId;
       window.eyuserid = userId;
 
       window.gaid = params.gaid || "UA-173447538-1";
@@ -1063,6 +1133,10 @@ try {
           } else if (e.data === "bubble-loaded") {
             var eyb = document.getElementById("eyBubble");
             eyb.style.display = "block";
+          } else if (e.data === 'alert-update') {
+            window.updateAlerts();
+          } else if (e.data === 'chat-loaded') {
+            window.updateAlerts();
           }
         }
       }, true);
