@@ -1533,7 +1533,6 @@ console.log(turnUUID, response);
                       }
                       delete window.eySocket.turnType;
                       delete window.eySocket.turnID;
-                      console.log('here');
                       window.eySocket.typingElement = t.empty();
                       window.isChatting = true;
                       t.removeFeedbackWidget();
