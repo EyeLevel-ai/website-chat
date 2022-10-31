@@ -409,16 +409,17 @@ try {
             }
           }
         }, chatBehavior.returnTime || 5000);
-      } else if (chatBehavior.alertText) {
+      } else if (chatBehavior.alertText || chatBehavior.alertTime) {
         var alertTime = chatBehavior.alertTime || 5000;
         if (alertTime > 0) {
           setTimeout(function() {
-            if (!window.isOpen && chatBehavior.alertText && window.activeAlert) {
+            if (!window.isOpen && window.activeAlert) {
               if (config.eyType === window.activeAlert.type
                 && chatBehavior.alertTime === window.activeAlert.alertTime
-                && chatBehavior.alertText === window.activeAlert.alertText
               ) {
-                window.initAlertFrame(chatBehavior.alertText, chatBehavior, config.eyType, config.eyConfig);
+                if (chatBehavior.alertText && chatBehavior.alertText === window.activeAlert.alertText) {
+                  window.initAlertFrame(chatBehavior.alertText, chatBehavior, config.eyType, config.eyConfig);
+                }
                 window.setBadge(1);
               }
             }
@@ -960,6 +961,19 @@ try {
         if (shouldResetChat()) {
           window.eyreset = true;
         }
+      }
+
+      var forceReset = params.forceReset;
+      var rs = getQueryVar("eyforcereset", params.isIframe);
+      if (rs) {
+        if (rs === 'true') {
+          forceReset = true;
+        } else {
+          forceReset = false;
+        }
+      }
+      if (forceReset) {
+        window.eyreset = true;
       }
 
       var invert = params.invert;
