@@ -173,13 +173,17 @@ saveInteraction = function(interaction) {
   }
 }
 
-clearAll = function() {
-  window.localStorage.removeItem('eyelevel.conversation.history');
-  window.localStorage.removeItem('eyelevel.conversation.session');
-  window.localStorage.removeItem('eyelevel.conversation.consent');
-  window.localStorage.removeItem('eyelevel.conversation.alerts');
-  window.localStorage.removeItem('eyelevel.conversation.open');
-  window.localStorage.removeItem('eyelevel.user.transfer');
+clearAll = function(isTransfer) {
+  if (isTransfer) {
+    window.localStorage.removeItem('eyelevel.user.transfer');
+  } else {
+    window.localStorage.removeItem('eyelevel.user.transfer');
+    window.localStorage.removeItem('eyelevel.conversation.history');
+    window.localStorage.removeItem('eyelevel.conversation.session');
+    window.localStorage.removeItem('eyelevel.conversation.consent');
+    window.localStorage.removeItem('eyelevel.conversation.alerts');
+    window.localStorage.removeItem('eyelevel.conversation.open');
+  }
 }
 
 saveConsent = function(consent) {
@@ -1495,16 +1499,22 @@ console.log(turnUUID, response);
                 }, this.handleInput = function(n) {
                   if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
                     var lower = n.toLowerCase().trim();
-                    if (lower === 'clear all' || lower === 'reset chat' || lower === 'clear chat') {
-                      clearAll();
-                      t.domHelper.addUserRequestNode({text: 'cleared'}, t);
+                    if (lower === 'clear all' || lower === 'reset chat' || lower === 'clear chat' || lower === 'ask another question') {
+                      var ty = "clear all";
+                      if (lower === 'ask another question') {
+                        ty = "clear transfer";
+                        clearAll(true);
+                      } else {
+                        clearAll();
+                        t.domHelper.addUserRequestNode({text: 'cleared'}, t);
+                      }
                       setTimeout(function() {
                         window.isChatting = true;
                         t.removeFeedbackWidget();
-                        window.eySocket.send(JSON.stringify(t.buildPayLoad("", "clear all")));
+                        window.eySocket.send(JSON.stringify(t.buildPayLoad("", ty)));
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
-                        window.parent.postMessage('clear all', "*");
+                        window.parent.postMessage(ty, "*");
                       }, 500);
                     } else if (lower === 'send empty') {
                       setTimeout(function() {

@@ -449,18 +449,18 @@ try {
     document.body.appendChild(es1);
     if (window.eyusername) {
       var es2 = document.createElement("script");
-      es2.src = cssURL + '/' + window.eyusername + '/behavior.js' + window.cacheBust;
+      es2.src = cssURL + '/' + window.eyusername + '/config.js' + window.cacheBust;
       document.body.appendChild(es2);
       var es3 = document.createElement("script");
-      es3.src = cssURL + '/' + window.eyusername + '/config.js' + window.cacheBust;
+      es3.src = cssURL + '/' + window.eyusername + '/behavior.js' + window.cacheBust;
       document.body.appendChild(es3);
     }
     if (window.eyflowname) {
       var es2 = document.createElement("script");
-      es2.src = cssURL + '/' + window.eyflowname + '/behavior.js' + window.cacheBust;
+      es2.src = cssURL + '/' + window.eyflowname + '/config.js' + window.cacheBust;
       document.body.appendChild(es2);
       var es3 = document.createElement("script");
-      es3.src = cssURL + '/' + window.eyflowname + '/config.js' + window.cacheBust;
+      es3.src = cssURL + '/' + window.eyflowname + '/behavior.js' + window.cacheBust;
       document.body.appendChild(es3);
     }
   }
@@ -548,6 +548,13 @@ try {
     ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
+    window.alertSound();
+  }
+
+  window.alertSound = function() {
+    try {
+      document.getElementById('eyAlertSound').play().catch(function(e){});
+    } catch(e){}
   }
 
   window.initAlertFrame = function(txt, chatBehavior, eyType, eyConfig) {
@@ -600,6 +607,13 @@ try {
     if(window.hideChat) {
       return;
     }
+
+    var ad = document.createElement('audio');
+    ad.id = 'eyAlertSound';
+    ad.src = 'https://cdn.eyelevel.ai/chat/alert.mp3';
+    ad.preload = 'auto';
+    document.body.appendChild(ad);
+
     var eb = document.createElement("section");
     eb.id = "eyBubble";
     eb.classList.add("ey-app");
