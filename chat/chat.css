@@ -52,6 +52,7 @@ noscript h1 {
   text-align: right;
   color: transparent;
   text-shadow: 0 0 0 #fff;
+  z-index: 10000;
 }
 .ey-chat-logo-container {
   position: relative;
@@ -243,6 +244,9 @@ noscript h1 {
   width: 100%;
   max-width: 600px;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
+}
+.ey-chat .user-input-hidden {
+  display: none;
 }
 .ey-chat .user-input-container {
   padding-top: 4px;

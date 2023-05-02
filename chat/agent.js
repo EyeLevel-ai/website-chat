@@ -1340,7 +1340,7 @@ console.log(turnUUID, response);
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
                 }, this.escapeAndDecorateString = function(txt) {
-                  var regex = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z0-9]{2,6}\b([-a-z0-9()@:%_\+.~#?&//=]*)/g);
+                  var regex = new RegExp(/\w([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z0-9]{2,6}\b([-a-z0-9()@:%_\+.~#?&//=]*))/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
                   while ((match = regex.exec(txt)) != null) {
                     var rawTxt = txt.substr(startIndex, (match.index - startIndex));
@@ -1481,9 +1481,15 @@ console.log(turnUUID, response);
                     }
 
                     var isInput = false;
+                    var isHidden = false;
                     for (var i in ee) {
-                      if (i == 0 && ee.length === 1 && ee[i].classList.contains('user-input-container')) {
-                        isInput = true;
+                      if (i == 0 && ee.length === 1) {
+                        if (ee[i].classList.contains('user-input-container')) {
+                          isInput = true;
+                        }
+                        if (ee[i].classList.contains('user-input-hidden')) {
+                          isHidden = true;
+                        }
                       }
                       sc[0].appendChild(ee[i]);
                     }
@@ -1491,6 +1497,12 @@ console.log(turnUUID, response);
                       sc[0].classList.add('user-input-wrapper');
                     } else {
                       sc[0].classList.add('chat-buttons');
+                    }
+                    if (isHidden) {
+                      sc[0].classList.add('user-input-hidden');
+                      if (sc[0].parentElement) {
+                        sc[0].parentElement.classList.add('user-input-hidden');
+                      }
                     }
                     return nn, this
                   } else {
@@ -1529,7 +1541,8 @@ console.log(turnUUID, response);
                       && (window.eySocket.turnType === 'email'
                       || window.eySocket.turnType === 'tel'
                       || window.eySocket.turnType === 'name'
-                      || window.eySocket.turnType === 'custom')) {
+                      || window.eySocket.turnType === 'custom'
+                      || window.eySocket.turnType === 'hidden')) {
                       var inBtn = document.getElementById(window.eySocket.turnID);
                       var input = document.getElementById(window.eySocket.turnID + '-input');
                       input.value = n;
@@ -1597,7 +1610,10 @@ console.log(turnUUID, response);
                   return (n.length ? n : [ { speech: e.DEFAULT_NO_ANSWER } ]);
                 }, this.chat = {
                     text: function(data) {
-                        return t.escapeAndDecorateString(data);
+                        var html = t.escapeAndDecorateString(data);
+                        html = html.replaceAll("\\n", "<br />");
+                        html = html.replaceAll("\n", "<br />");
+                        return html;
                     }, image: function(data) {
                         var img = t.domHelper.workplace.createElement('img');
                         img.src = data;
@@ -1858,7 +1874,11 @@ console.log(turnUUID, response);
                         if (payload.quick_replies[i].content_type
                           && (payload.quick_replies[i].content_type === 'user_email'
                           || payload.quick_replies[i].content_type === 'user_phone_number'
-                          || payload.quick_replies[i].content_type === 'custom')) {
+                          || payload.quick_replies[i].content_type === 'custom'
+                          || payload.quick_replies[i].content_type === 'hidden')) {
+                          if (payload.text.indexOf('Name') > -1) {
+                            payload.quick_replies[i].content_type = 'user_name';
+                          }
                           data = payload.quick_replies[i];
                           break;
                         }
@@ -1934,15 +1954,26 @@ console.log(turnUUID, response);
                           cnt.appendChild(holder);
                           break;
                         case 'custom':
-                            window.eySocket.turnID = idPrefix;
-                            window.eySocket.turnType = 'custom';
-                            inBtn.type = 'custom';
-                            input.type = 'text';
-                            input.name = 'custom';
-                            holder.appendChild(inBtn);
-                            cnt.appendChild(label);
-                            cnt.appendChild(holder);
-                            break;
+                          window.eySocket.turnID = idPrefix;
+                          window.eySocket.turnType = 'custom';
+                          inBtn.type = 'custom';
+                          input.type = 'text';
+                          input.name = 'custom';
+                          holder.appendChild(inBtn);
+                          cnt.appendChild(label);
+                          cnt.appendChild(holder);
+                          break;
+                        case 'hidden':
+                          window.eySocket.turnID = idPrefix;
+                          window.eySocket.turnType = 'hidden';
+                          inBtn.type = 'hidden';
+                          input.type = 'text';
+                          input.name = 'hidden';
+                          cnt.classList.add('user-input-hidden');
+                          holder.appendChild(inBtn);
+                          cnt.appendChild(label);
+                          cnt.appendChild(holder);
+                          break;
                         default:
                           return;
                       }
@@ -1975,7 +2006,9 @@ console.log(turnUUID, response);
                           if (data.quick_replies[i].content_type
                             && (data.quick_replies[i].content_type === 'user_email'
                             || data.quick_replies[i].content_type === 'user_phone_number'
-                            || data.quick_replies[i].content_type === 'custom')) {
+                            || data.quick_replies[i].content_type === 'user_name'
+                            || data.quick_replies[i].content_type === 'custom'
+                            || data.quick_replies[i].content_type === 'hidden')) {
                             return true;
                           }
                         }
@@ -2210,7 +2243,8 @@ console.log(turnUUID, response);
                         }
                         break;
                       case 'name':
-                        if (/^[a-zA-Z ]+$/.test(inputVal) && inputVal.length > 2) {
+                        var inArr = inputVal.split(' ');
+                        if (/^[a-zA-Z ]+$/.test(inputVal) && inputVal.length > 2 && inArr.length < 5) {
                           ee.target.classList.remove('icon-send');
                           ee.target.classList.add('icon-success');
                           var ae = this;
@@ -2221,6 +2255,7 @@ console.log(turnUUID, response);
                           status.innerHTML = 'Invalid Name';
                         }
                         break;
+                      case 'hidden':
                       case 'custom':
                           if (inputVal.length > 2) {
                             ee.target.classList.remove('icon-send');
@@ -2263,7 +2298,6 @@ console.log(turnUUID, response);
                     }
                     var aa = document.createElement('a');
                     aa.href = curl;
-                    console.log(window.origin, curl);
                     aa.target = '_blank';
                     aa.click();
                     this.handleEvent('web}'+curl);
@@ -2325,12 +2359,18 @@ console.log(turnUUID, response);
                         && (window.eySocket.turnType === 'email'
                         || window.eySocket.turnType === 'tel'
                         || window.eySocket.turnType === 'name'
-                        || window.eySocket.turnType === 'custom')) {
+                        || window.eySocket.turnType === 'custom'
+                        || window.eySocket.turnType === 'hidden')) {
                         shouldSend = false;
                         var inBtn = document.getElementById(window.eySocket.turnId);
                         var input = document.getElementById(window.eySocket.turnId + '-input');
                         input.value = n;
                         inBtn.click();
+                        if (window.eySocket.turnType === 'hidden') {
+                          t.domHelper.addUserRequestNode({text: txt}, t);
+                          window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
+                          saveInteraction({ action: "message", payload: JSON.stringify({ text: txt, rawText: evt, type: "handleEvent", buttonType: type, dt: dt, pos: pos }), typing: false, sender: "user" });
+                        }
                       } else {
                         if (txt.indexOf('tel:') < 0) {
                           if (txt.indexOf('web}') < 0) {
@@ -2347,6 +2387,10 @@ console.log(turnUUID, response);
                     } else if (type === 'user_input') {
                       saveInteraction({ action: "input_value", payload: JSON.stringify({ input_value: txt, id: dt }), typing: false, sender: "user" });
                       dt = null;
+                      if (window.eySocket.turnType === 'hidden') {
+                        t.domHelper.addUserRequestNode({text: txt}, t);
+                        window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: txt }), typing: false, sender: "user" };
+                      }
                     }
                     if (shouldSend) {
                       window.eySocket.typingElement = t.empty();

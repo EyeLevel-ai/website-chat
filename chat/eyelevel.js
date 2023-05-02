@@ -242,7 +242,6 @@ try {
       document.documentElement.clientWidth
     );
   }
-  var width = getWidth();
 
   function trackEvent(name, options) {
     if (window.shouldTrack) {
@@ -454,6 +453,11 @@ try {
       var es3 = document.createElement("script");
       es3.src = cssURL + '/' + window.eyusername + '/behavior.js' + window.cacheBust;
       document.body.appendChild(es3);
+      var es4 = document.createElement("link");
+      es4.href = cssURL + '/' + window.eyflowname + '/config.css' + window.cacheBust;
+      es4.type = 'text/css';
+      es4.rel = 'stylesheet';
+      document.body.appendChild(es4);
     }
     if (window.eyflowname) {
       var es2 = document.createElement("script");
@@ -462,6 +466,11 @@ try {
       var es3 = document.createElement("script");
       es3.src = cssURL + '/' + window.eyflowname + '/behavior.js' + window.cacheBust;
       document.body.appendChild(es3);
+      var es4 = document.createElement("link");
+      es4.href = cssURL + '/' + window.eyflowname + '/config.css' + window.cacheBust;
+      es4.type = 'text/css';
+      es4.rel = 'stylesheet';
+      document.body.appendChild(es4);
     }
   }
 
@@ -552,9 +561,14 @@ try {
   }
 
   window.alertSound = function() {
-    try {
-      document.getElementById('eyAlertSound').play().catch(function(e){});
-    } catch(e){}
+    setTimeout(function() {
+      try {
+        var chk1 = document.getElementById("eyAlert");
+        if (chk1 && chk1.offsetHeight) {
+          document.getElementById('eyAlertSound').play().catch(function(e){});
+        }
+      } catch(e){}
+    }, 500);
   }
 
   window.initAlertFrame = function(txt, chatBehavior, eyType, eyConfig) {
@@ -608,11 +622,13 @@ try {
       return;
     }
 
-    var ad = document.createElement('audio');
-    ad.id = 'eyAlertSound';
-    ad.src = 'https://cdn.eyelevel.ai/chat/alert.mp3';
-    ad.preload = 'auto';
-    document.body.appendChild(ad);
+    if (window.eyAlertSound) {
+      var ad = document.createElement('audio');
+      ad.id = 'eyAlertSound';
+      ad.src = 'https://cdn.eyelevel.ai/chat/alert.mp3';
+      ad.preload = 'auto';
+      document.body.appendChild(ad);
+    }
 
     var eb = document.createElement("section");
     eb.id = "eyBubble";
@@ -640,9 +656,15 @@ try {
     ebn.addEventListener("touchstart", toggleChat, supportsPassive() ? {passive : false} : false);
   }
 
+  var width;
   window.initChatFrame = function(username, flowname, shouldOpen, origin, attn) {
     if(window.hideChat) {
       return;
+    }
+
+    width = getWidth();
+    if (window.eynoclose) {
+      width = 900;
     }
 
     var sn = document.createElement("section");
@@ -1093,6 +1115,13 @@ try {
       if (alerts) {
         window.alerts = alerts;
       }
+
+      var alertSound = params.alertSound;
+      var enAlertSound = getQueryVar("alertSound", params.isIframe);
+      if (enAlertSound) {
+        alertSound = enAlertSound;
+      }
+      window.eyAlertSound = alertSound;
 
       var eyEnv = params.env;
       var en = getQueryVar("eyenv", params.isIframe);
