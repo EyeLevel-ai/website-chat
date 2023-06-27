@@ -1813,8 +1813,9 @@ try {
                   }
                 }, 200);
               }),
+              // I WILL CHECK this.setText in ALL CASES (invoke 3 times)
               (this.setText = function (ee, nn, urls) {
-                debugger; // --
+                // --  debugger; 
                 var sc = nn.getElementsByClassName('server-response');
                 if (sc && sc.length && sc.length === 1) {
                   // Create url component
@@ -1824,15 +1825,18 @@ try {
                   component.appendChild(document.createElement('br'));
 
                   if (urls.length > 0) {
-                    var header = document.createElement('h3');
-                    header.style = 'color: #4f4f4f;';
-                    header.innerText = 'Sources';
-                    component.appendChild(header);
+                    // SHOULD FIX LAYOUT
+                    // var header = document.createElement('h3');
+                    //  // classes move into file css;
+                    // header.style = 'color: #4f4f4f;';
+                    // header.innerText = 'Sources';
+                    // component.appendChild(header);
                     for (var url = 0; url < urls.length; url++) {
                       var a = document.createElement('a');
                       a.href = urls[url];
 
                       a.text = urls[url].substring(0, 20) + '..';
+                       // classes move into file css;
                       a.style =
                         'border: 1px solid red; padding: 5px; margin-right: 5px; border-radius: 5px; font-size: 10px; flex-basis: auto; gap: 10px';
                       component.appendChild(a);
@@ -2587,7 +2591,6 @@ try {
                   var msgSession = msg.session;
 
                   var urls = [];
-                  // var urlsComponent
                   if (aiMetadata) {
                     if (aiMetadata.searchResults && aiMetadata.searchResults.length) {
                       for (var i = 0; i < aiMetadata.searchResults.length; i++) {
@@ -2599,7 +2602,7 @@ try {
                       }
                     }
                   }
-                  /// my ticket start here
+                
                   console.log(urls);
                   debugger;
                   t.addAIMetadata(ttt, msgSession, aiMetadata);
@@ -2641,7 +2644,7 @@ try {
                         if (t.doReset(needsReset, ttt)) {
                           ttt = t.empty(isConsent, msgSession, aiMetadata);
                         }
-                        debugger;
+                        // debugger;
                         t.setText(t.chat.text(data.attachment.payload.text), ttt);
                         needsReset = true;
                       }
