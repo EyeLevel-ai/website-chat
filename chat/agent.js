@@ -1992,7 +1992,11 @@ console.log(turnUUID, response);
                         if (objData.title && objData.url) {
                           return t.chat.button({ title: objData.title, type: "web_url", payload: objData.url, url: objData.url });
                         }
+                      } else if (objData.content_type === 'phone') {
+                      if (objData.title && objData.url) {
+                        return t.chat.button({ title: objData.title, type: "phone_number", payload: objData.url, url: objData.url });
                       }
+                    }
                       var button = t.domHelper.workplace.createElement('button');
                       button.classList.add('chat-button');
                       button.setAttribute('id', objData.payload);
@@ -2022,7 +2026,8 @@ console.log(turnUUID, response);
                         for (var i in data) {
                           if (data[i].content_type) {
                             if (data[i].content_type === 'text' ||
-                              data[i].content_type === 'web_url') {
+                              data[i].content_type === 'web_url' ||
+                              data[i].content_type === 'phone') {
                               html.push(t.chat.quick_reply(data[i]));
                             }
                           }

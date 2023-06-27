@@ -454,10 +454,15 @@ try {
       es3.src = cssURL + '/' + window.eyusername + '/behavior.js' + window.cacheBust;
       document.body.appendChild(es3);
       var es4 = document.createElement("link");
-      es4.href = cssURL + '/' + window.eyflowname + '/config.css' + window.cacheBust;
+      es4.href = cssURL + '/' + window.eyusername + '/bubble.css' + window.cacheBust;
       es4.type = 'text/css';
       es4.rel = 'stylesheet';
       document.body.appendChild(es4);
+      var es5 = document.createElement("link");
+      es5.href = cssURL + '/' + window.eyusername + '/config.css' + window.cacheBust;
+      es5.type = 'text/css';
+      es5.rel = 'stylesheet';
+      document.body.appendChild(es5);
     }
     if (window.eyflowname) {
       var es2 = document.createElement("script");
@@ -467,10 +472,15 @@ try {
       es3.src = cssURL + '/' + window.eyflowname + '/behavior.js' + window.cacheBust;
       document.body.appendChild(es3);
       var es4 = document.createElement("link");
-      es4.href = cssURL + '/' + window.eyflowname + '/config.css' + window.cacheBust;
+      es4.href = cssURL + '/' + window.eyflowname + '/bubble.css' + window.cacheBust;
       es4.type = 'text/css';
       es4.rel = 'stylesheet';
       document.body.appendChild(es4);
+      var es5 = document.createElement("link");
+      es5.href = cssURL + '/' + window.eyflowname + '/config.css' + window.cacheBust;
+      es5.type = 'text/css';
+      es5.rel = 'stylesheet';
+      document.body.appendChild(es5);
     }
   }
 
