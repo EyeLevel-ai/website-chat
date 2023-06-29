@@ -1813,38 +1813,44 @@ try {
                   }
                 }, 200);
               }),
-              // I WILL CHECK this.setText in ALL CASES (invoke 3 times)
               (this.setText = function (ee, nn, urls) {
-                // --  debugger; 
+                debugger;
                 var sc = nn.getElementsByClassName('server-response');
                 if (sc && sc.length && sc.length === 1) {
-                  // Create url component
-                  var component = document.createElement('div');
-                  // classes move into file css;
-                  component.style = 'display: flex;  flex-wrap: wrap; row-gap: 5px;';
-                  component.appendChild(document.createElement('br'));
+                  var sourceContainer = document.createElement('div');
+                  sourceContainer.className = 'source-container';
 
-                  if (urls.length > 0) {
-                    // SHOULD FIX LAYOUT
-                    // var header = document.createElement('h3');
-                    //  // classes move into file css;
-                    // header.style = 'color: #4f4f4f;';
-                    // header.innerText = 'Sources';
-                    // component.appendChild(header);
+                  if (urls && urls.length > 0) {
+                    var header = document.createElement('h3');
+                    header.className = 'url-sources';
+                    header.innerText = 'Sources';
+                    sourceContainer.appendChild(header);
+
+                    var urlWrapper = document.createElement('div');
+                    urlWrapper.className = 'url-wrapper';
+
+                    // urls structure = [{url: string, text: string}]
                     for (var url = 0; url < urls.length; url++) {
-                      var a = document.createElement('a');
-                      a.href = urls[url];
+                      var urlContainer = document.createElement('div');
+                      urlContainer.className = 'url-container';
 
-                      a.text = urls[url].substring(0, 20) + '..';
-                       // classes move into file css;
-                      a.style =
-                        'border: 1px solid red; padding: 5px; margin-right: 5px; border-radius: 5px; font-size: 10px; flex-basis: auto; gap: 10px';
-                      component.appendChild(a);
+                      var div = document.createElement('div');
+                      div.innerText = url + 1;
+
+                      var a = document.createElement('a');
+                      a.href = urls[url].url;
+                      a.text = urls[url].url.substring(0, 18) + '..';
+
+                      urlContainer.appendChild(div);
+                      urlContainer.appendChild(a);
+                      urlWrapper.appendChild(urlContainer);
                     }
+
+                    sourceContainer.appendChild(urlWrapper);
                   }
 
                   sc[0].innerHTML = ee;
-                  sc[0].appendChild(component);
+                  sc[0].appendChild(sourceContainer);
                   t.colorAISource(nn, sc[0]);
                   return nn, this;
                 } else {
@@ -2591,20 +2597,29 @@ try {
                   var msgSession = msg.session;
 
                   var urls = [];
+
                   if (aiMetadata) {
                     if (aiMetadata.searchResults && aiMetadata.searchResults.length) {
                       for (var i = 0; i < aiMetadata.searchResults.length; i++) {
+                        var searchResultsTempText = '';
+                        if (aiMetadata.searchResults[i].text) {
+                          searchResultsTempText = aiMetadata.searchResults[i].text;
+                        }
+
                         if (aiMetadata.searchResults[i].metadata) {
                           if (aiMetadata.searchResults[i].metadata.url) {
-                            urls.push(aiMetadata.searchResults[i].metadata.url);
+                            urls.push({
+                              url: aiMetadata.searchResults[i].metadata.url,
+                              text: searchResultsTempText,
+                            });
                           }
                         }
+
+                        searchResultsTempText = '';
                       }
                     }
                   }
-                
-                  console.log(urls);
-                  debugger;
+                  // debugger;
                   t.addAIMetadata(ttt, msgSession, aiMetadata);
 
                   var html = '';
