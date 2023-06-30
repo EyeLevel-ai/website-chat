@@ -1215,6 +1215,8 @@ try {
                 if (!window.eySocket.heartbeat) {
                   t.heartbeat();
                 }
+                // createModal is correct please ?
+                t.createModal();
               }),
               (this.onFirstClick = function () {
                 if (window.attnElm) {
@@ -1813,8 +1815,44 @@ try {
                   }
                 }, 200);
               }),
+              (this.openModal = function (text, link) {
+                var modalText = document.getElementById('modalText');
+                var d = document.createElement('div');
+                var p = document.createElement('p');
+                var a = document.createElement('a');
+
+                p.innerText = text;
+                a.href = link;
+                a.text = link;
+                a.target = '_blank';
+                d.className = 'url-in-modal';
+
+                d.appendChild(a);
+                modalText.appendChild(d);
+                modalText.appendChild(p);
+                document.getElementById('modal').style.display = 'block';
+              }),
+              (this.createModal = function () {
+                var modal = document.createElement('div');
+                modal.innerHTML = `
+                <div id="modal" class="modal">
+                  <div class="modal-content">
+                    <span id="closeModal" class="close">&times;</span>
+                    <br />
+                    <br />
+                    <div id="modalText"></div>
+                  </div>
+                </div>`;
+                var eyChat = document.getElementById('eyChat');
+                eyChat.appendChild(modal);
+
+                document.getElementById('closeModal').addEventListener('click', function () {
+                  document.getElementById('modal').style.display = 'none';
+                  var modalText = document.getElementById('modalText');
+                  modalText.innerHTML = '';
+                });
+              }),
               (this.setText = function (ee, nn, urls) {
-                debugger;
                 var sc = nn.getElementsByClassName('server-response');
                 if (sc && sc.length && sc.length === 1) {
                   var sourceContainer = document.createElement('div');
@@ -1840,6 +1878,13 @@ try {
                       var a = document.createElement('a');
                       a.href = urls[url].url;
                       a.text = urls[url].url.substring(0, 18) + '..';
+
+                      (function (url) {
+                        a.addEventListener('click', function (e) {
+                          e.preventDefault();
+                          t.openModal(urls[url].text, urls[url].url);
+                        });
+                      })(url);
 
                       urlContainer.appendChild(div);
                       urlContainer.appendChild(a);
@@ -2619,7 +2664,7 @@ try {
                       }
                     }
                   }
-                  // debugger;
+
                   t.addAIMetadata(ttt, msgSession, aiMetadata);
 
                   var html = '';
