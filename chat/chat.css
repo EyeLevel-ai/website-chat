@@ -353,6 +353,7 @@ noscript h1 {
 .ey-chat .server-response {
   color: #4f4f4f;
   float: left;
+  flex: 1;
   margin-top: 15px;
   margin-right: 15px;
   margin-left: 15px;
@@ -481,10 +482,10 @@ noscript h1 {
 
 .close {
   color: #aaa;
-  float: right;
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
+  margin-left: 10px;
 }
 
 .close:hover,
@@ -495,6 +496,60 @@ noscript h1 {
 }
 
 /* MODAL WINDOW ELEMENT */
+
+/* Source link component */
+
+.source-side-container {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid #d8d8d8;
+  padding: 1px 0px 1px 3px;
+  margin: 2px;
+}
+
+.number {
+  height: 18px;
+  width: 50px;
+  border-radius: 50%;
+  background-color: #2fffb2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.link {
+  flex-grow: 4;
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 5px;
+  font-size: 10px;
+  word-break: break-word;
+}
+
+.icon {
+  width: 70px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+}
+
+.source-side-close-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.source-side-close-btn {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+}
 
 /* END OF MY STYLES */
 

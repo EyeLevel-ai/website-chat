@@ -3,7 +3,9 @@ try {
   var devURL = 'wss://dws.eyelevel.ai';
   var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
   var aiMessages = {};
-
+  var isOpenSourceLink = 'close';
+  var sourceLinkRepresentationType = window.eySourceLinkRepresentationType; // modal | sideContainer
+  debugger;
   function randomString(length) {
     var text = '';
     var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -1815,30 +1817,92 @@ try {
                   }
                 }, 200);
               }),
-              (this.openModal = function (text, link) {
+              (this.openInSideContainerSourceLink = function (text, link, uuid, num) {
+                if (isOpenSourceLink === 'close') {
+                  isOpenSourceLink = 'open';
+                  var iframeEySectionWidth = window.parent.document.getElementById('eySection');
+                  iframeEySectionWidth.style.minWidth = '750px';
+
+                  var aiResponse = document.querySelector("[data-turn-uuid='" + uuid + "']");
+                  var sideBar = document.createElement('div');
+                  sideBar.className = 'server-response';
+                  sideBar.id = 'sideBar';
+
+                  var sourceSideContainer = document.createElement('div');
+                  sourceSideContainer.className = 'source-side-container';
+
+                  var linkNumber = document.createElement('div');
+                  linkNumber.className = 'number';
+                  linkNumber.innerHTML = num + 1;
+
+                  var a = document.createElement('a');
+                  a.className = 'link';
+                  a.innerHTML = link;
+                  a.href = link;
+                  a.target = '_blank';
+
+                  var icon = document.createElement('span');
+                  icon.innerText = 'icon';
+                  icon.className = 'icon';
+
+                  var closeContaiter = document.createElement('div');
+                  closeContaiter.className = 'source-side-close-container';
+
+                  var closeBnt = document.createElement('span');
+                  closeBnt.className = 'source-side-close-btn';
+                  closeBnt.innerHTML = '&times;';
+                  closeBnt.id = 'closeSideBar';
+
+                  var sideBarText = document.createElement('div');
+                  sideBarText.id = 'sideBarText';
+                  sideBarText.innerText = text;
+
+                  sourceSideContainer.appendChild(linkNumber);
+                  sourceSideContainer.appendChild(a);
+                  sourceSideContainer.appendChild(icon);
+
+                  closeContaiter.appendChild(sourceSideContainer);
+                  closeContaiter.appendChild(closeBnt);
+                  sideBar.appendChild(closeContaiter);
+                  sideBar.appendChild(sideBarText);
+
+                  aiResponse.appendChild(sideBar);
+
+                  document.getElementById('closeSideBar').addEventListener('click', function () {
+                    document.getElementById('sideBar').remove();
+                    iframeEySectionWidth.style.minWidth = 'auto';
+                    isOpenSourceLink = 'close';
+                  });
+                }
+              }),
+              (this.openModal = function (text, link, num) {
+                var sourceSideContainer = document.getElementById('source-side-container');
                 var modalText = document.getElementById('modalText');
-                var d = document.createElement('div');
-                var p = document.createElement('p');
+                modalText.innerText = text;
+
+                var linkNumber = document.createElement('div');
+                linkNumber.className = 'number';
+                linkNumber.innerHTML = num + 1;
+
                 var a = document.createElement('a');
-
-                p.innerText = text;
+                a.className = 'link';
+                a.innerHTML = link;
                 a.href = link;
-                a.text = link;
                 a.target = '_blank';
-                d.className = 'url-in-modal';
 
-                d.appendChild(a);
-                modalText.appendChild(d);
-                modalText.appendChild(p);
+                sourceSideContainer.appendChild(linkNumber);
+                sourceSideContainer.appendChild(a);
                 document.getElementById('modal').style.display = 'block';
               }),
               (this.createModal = function () {
                 var modal = document.createElement('div');
                 modal.innerHTML = `
                 <div id="modal" class="modal">
-                  <div class="modal-content">
-                    <span id="closeModal" class="close">&times;</span>
-                    <br />
+                  <div id="modalContent" class="modal-content">
+                    <div class="source-side-close-container" id="source-side-close-container">
+                      <div id="source-side-container" class="source-side-container"></div>
+                      <span id="closeModal" class="close">&times;</span>
+                    </div>
                     <br />
                     <div id="modalText"></div>
                   </div>
@@ -1848,11 +1912,13 @@ try {
 
                 document.getElementById('closeModal').addEventListener('click', function () {
                   document.getElementById('modal').style.display = 'none';
+                  var sourceSideContaine = document.getElementById('source-side-container');
                   var modalText = document.getElementById('modalText');
                   modalText.innerHTML = '';
+                  sourceSideContaine.innerHTML = '';
                 });
               }),
-              (this.setText = function (ee, nn, urls) {
+              (this.setText = function (ee, nn, urls, uuid) {
                 var sc = nn.getElementsByClassName('server-response');
                 if (sc && sc.length && sc.length === 1) {
                   var sourceContainer = document.createElement('div');
@@ -1867,7 +1933,6 @@ try {
                     var urlWrapper = document.createElement('div');
                     urlWrapper.className = 'url-wrapper';
 
-                    // urls structure = [{url: string, text: string}]
                     for (var url = 0; url < urls.length; url++) {
                       var urlContainer = document.createElement('div');
                       urlContainer.className = 'url-container';
@@ -1882,7 +1947,15 @@ try {
                       (function (url) {
                         a.addEventListener('click', function (e) {
                           e.preventDefault();
-                          t.openModal(urls[url].text, urls[url].url);
+
+                          sourceLinkRepresentationType === 'modal'
+                            ? t.openModal(urls[url].text, urls[url].url, url)
+                            : t.openInSideContainerSourceLink(
+                                urls[url].text,
+                                urls[url].url,
+                                uuid,
+                                url,
+                              );
                         });
                       })(url);
 
@@ -2664,7 +2737,7 @@ try {
                       }
                     }
                   }
-
+                  // debugger;
                   t.addAIMetadata(ttt, msgSession, aiMetadata);
 
                   var html = '';
@@ -2691,12 +2764,14 @@ try {
                     if (html) {
                       t.setButtons([html], ttt);
                     } else {
+                      // -> check this case
                       t.setText('Unsupported user input type', ttt);
                     }
                   } else {
                     if (data.text) {
                       html = t.chat.text(data.text);
-                      t.setText(html, ttt, urls);
+                      // debugger; // -> check this case
+                      t.setText(html, ttt, urls, msgSession.Trace.turnUUID);
                       needsReset = true;
                     }
                     if (data.attachment && data.attachment.payload) {
@@ -2704,8 +2779,13 @@ try {
                         if (t.doReset(needsReset, ttt)) {
                           ttt = t.empty(isConsent, msgSession, aiMetadata);
                         }
-                        // debugger;
-                        t.setText(t.chat.text(data.attachment.payload.text), ttt);
+                        // debugger; // -> check this case
+                        t.setText(
+                          t.chat.text(data.attachment.payload.text),
+                          ttt,
+                          urls,
+                          msgSession.Trace.turnUUID,
+                        );
                         needsReset = true;
                       }
                       if (
