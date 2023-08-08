@@ -577,7 +577,7 @@ noscript h1 {
   width: 54px;
   height: 54px;
   right: 0;
-  bottom: 0;
+  bottom: 4px;
   cursor: pointer;
   text-align: center;
   /* line-height: 30px; */
@@ -604,6 +604,12 @@ noscript h1 {
   font-weight: normal;
   font-size: 1.0rem;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
+}
+.icon-menu rect {
+  stroke: #2076f2;
+}
+.icon-menu path {
+  fill: #2076f2;
 }
 .ey-chat .chat-button:focus {
   outline: none;

@@ -248,6 +248,7 @@ try {
       var attrs = {
           name: name,
           hostname: window.location.hostname,
+          menu: window.eymenu,
           uid: window.eyuserid,
           username: window.eyusername,
           flowname: window.eyflowname,
@@ -667,7 +668,7 @@ try {
   }
 
   var width;
-  window.initChatFrame = function(username, flowname, shouldOpen, origin, attn) {
+  window.initChatFrame = function(username, flowname, shouldOpen, origin, attn, menu) {
     if(window.hideChat) {
       return;
     }
@@ -706,7 +707,7 @@ try {
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div><div class="ey_input-send icon-menu' + (window.eymenu ? ' active' : '') + '" id="ey-menu"><svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="15" width="34" height="24" rx="4" stroke="black" stroke-width="2"/><path d="M18.4277 28.2168H19.8457C19.8184 28.834 19.6934 29.3594 19.4707 29.793C19.248 30.2227 18.9277 30.5508 18.5098 30.7773C18.0957 31.0039 17.5898 31.1172 16.9922 31.1172C16.5391 31.1172 16.1328 31.0352 15.7734 30.8711C15.418 30.707 15.1152 30.4707 14.8652 30.1621C14.6152 29.8496 14.4238 29.4688 14.291 29.0195C14.1621 28.5703 14.0977 28.0605 14.0977 27.4902V25.9785C14.0977 25.4082 14.1641 24.8984 14.2969 24.4492C14.4336 24 14.6289 23.6191 14.8828 23.3066C15.1367 22.9941 15.4453 22.7578 15.8086 22.5977C16.1758 22.4336 16.5898 22.3516 17.0508 22.3516C17.6406 22.3516 18.1367 22.4648 18.5391 22.6914C18.9414 22.918 19.252 23.25 19.4707 23.6875C19.6895 24.125 19.8164 24.6582 19.8516 25.2871H18.4336C18.4141 24.8613 18.3555 24.5215 18.2578 24.2676C18.1641 24.0098 18.0195 23.8242 17.8242 23.7109C17.6328 23.5977 17.375 23.541 17.0508 23.541C16.7812 23.541 16.5488 23.5918 16.3535 23.6934C16.1621 23.7949 16.0039 23.9473 15.8789 24.1504C15.7578 24.3496 15.666 24.6016 15.6035 24.9062C15.5449 25.207 15.5156 25.5605 15.5156 25.9668V27.4902C15.5156 27.8809 15.541 28.2266 15.5918 28.5273C15.6426 28.8281 15.7246 29.084 15.8379 29.2949C15.9512 29.502 16.1016 29.6602 16.2891 29.7695C16.4766 29.875 16.7109 29.9277 16.9922 29.9277C17.3281 29.9277 17.5957 29.875 17.7949 29.7695C17.998 29.6641 18.1484 29.4863 18.2461 29.2363C18.3438 28.9863 18.4043 28.6465 18.4277 28.2168ZM25.7812 26.0195V27.2148H22.1895V26.0195H25.7812ZM22.5234 22.4688V31H21.0996V22.4688H22.5234ZM26.8945 22.4688V31H25.4766V22.4688H26.8945ZM31.5527 23.6406L29.4902 31H28.002L30.709 22.4688H31.6348L31.5527 23.6406ZM33.1992 31L31.1309 23.6406L31.0312 22.4688H31.9746L34.6934 31H33.1992ZM33.2344 27.8301V29.0254H29.2617V27.8301H33.2344ZM38.0273 22.4688V31H36.6094V22.4688H38.0273ZM40.2012 22.4688V23.6641H34.459V22.4688H40.2012Z" fill="black"/></svg></div></div></form></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
 
     if (!window.eynoclose) {
@@ -804,7 +805,7 @@ try {
       if (bb) {
         window.removeChat();
         window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
-        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
+        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu);
       }
     }
 
@@ -1042,6 +1043,15 @@ try {
         window.eychannel = channel;
       }
 
+      var menu = params.menu;
+      var ch = getQueryVar("eymenu", params.isIframe);
+      if (ch) {
+        menu = ch;
+      }
+      if (menu) {
+        window.eymenu = menu;
+      }
+
       var origin = params.origin;
       var og = getQueryVar("eyorigin", params.isIframe);
       if (og) {
@@ -1168,7 +1178,7 @@ try {
           && window.eybubble !== false) {
           window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
         }
-        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
+        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu);
       } else {
         window.addEventListener("load", function() {
           window.initChatStyle(window.eyorigin);
@@ -1177,7 +1187,7 @@ try {
             && window.eybubble !== false) {
             window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
           }
-          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn);
+          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu);
         }, true);
       }
 

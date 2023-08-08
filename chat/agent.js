@@ -539,7 +539,7 @@ window.menu = null;
         a = t.n(i),
         u = function() {
             function e() {
-                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
+                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.qMenuBtn = this.workplace.getElementById(e.QUERY_MENU_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
             }
             return a()(e, [{
                 key: "startWelcome",
@@ -565,6 +565,11 @@ window.menu = null;
                     ben.handleEvent('reconnect', 'reconnect', null, sess && sess.Pos);
                     return
                   }, 0);
+                }
+            }, {
+                key: "getMenuInput",
+                value: function() {
+                    return this.qMenuBtn
                 }
             }, {
                 key: "getSendInput",
@@ -669,11 +674,19 @@ window.menu = null;
             }, {
                 key: "handleStartSend",
                 value: function() {
+                    if (this.sendBtn.classList.contains(e.CLASS_SEND_ACTIVE)) {
+                      return this.sendBtn.className, this
+                    }
+                    var n = new RegExp("(?:^|\\s)" + e.CLASS_SEND_ACTIVE + "(?!\\S)", "gi");
+                    this.qMenuBtn.className = this.qMenuBtn.className.replace(n, "")
                     return this.sendBtn.className += " " + e.CLASS_SEND_ACTIVE, this
                 }
             }, {
                 key: "handleStopSend",
                 value: function() {
+                    if (!this.qMenuBtn.classList.contains(e.CLASS_SEND_ACTIVE)) {
+                      this.qMenuBtn.className += " " + e.CLASS_SEND_ACTIVE;
+                    }
                     var n = new RegExp("(?:^|\\s)" + e.CLASS_SEND_ACTIVE + "(?!\\S)", "gi");
                     return this.sendBtn.className = this.sendBtn.className.replace(n, ""), this
                 }
@@ -689,7 +702,7 @@ window.menu = null;
                 }
             }]), e
         }();
-    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
+    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.QUERY_MENU_ID = "ey-menu", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
 }, function(e, n, t) {
     var r = t(8),
         o = t(0)("toStringTag"),
@@ -1227,6 +1240,8 @@ console.log(turnUUID, response);
                   } else {
                     t.handleInput(t.domHelper.getInputValue());
                   }
+                }, this.handleMenuClick = function(n) {
+                  n.preventDefault(), n.stopPropagation(), window.eymenu && window.eymenu.pos ?  t.handleEvent('chat', 'chat', null, window.eymenu.pos) : ''
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleCloseWindow = function(n) {
@@ -2175,6 +2190,7 @@ console.log(turnUUID, response);
                     this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getMenuInput().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
                     this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
@@ -2213,7 +2229,7 @@ console.log(turnUUID, response);
                     }
                     switch (ee.target.type) {
                       case 'email':
-                        if (/^[\w+]+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(inputVal)) {
+                        if (/^[\w+]+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,10})+$/.test(inputVal)) {
                           ee.target.classList.remove('icon-send');
                           ee.target.classList.add('icon-success');
                           var ae = this;
@@ -2358,7 +2374,7 @@ console.log(turnUUID, response);
                     var t = this;
                     var txt = evt || t.domHelper.getInputValue();
                     var shouldSend = true;
-                    if (txt !== 'startWelcome' && txt !== 'restartWelcome' && txt !== 'reconnect' && type !== 'user_input') {
+                    if (txt !== 'startWelcome' && txt !== 'restartWelcome' && txt !== 'reconnect' && type !== 'user_input' && type !== 'chat') {
                       if (window.eySocket.turnType
                         && window.eySocket.turnID
                         && (window.eySocket.turnType === 'email'
