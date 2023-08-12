@@ -543,6 +543,8 @@ noscript h1 {
   vertical-align: bottom; padding-bottom: 15px;
 }
 .ey-chat .ey_input {
+  align-items: center;
+  display: flex;
   position: fixed;
   bottom: 0;
   height: 66px;
@@ -553,7 +555,9 @@ noscript h1 {
 .ey-chat #agentDemoForm {
   display: block;
   margin-left: 24px;
-  margin-right: 55px;
+  margin-right: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 .ey-chat input {
   width: 100%;
@@ -572,18 +576,49 @@ noscript h1 {
 }
 .ey-chat .ey_input-send {
   display: none;
-  position: absolute;
+  flex-grow: 0;
+  flex-shrink: 0;
   font-size: 1.75rem;
   width: 54px;
   height: 54px;
-  right: 0;
-  bottom: 4px;
   cursor: pointer;
   text-align: center;
   /* line-height: 30px; */
   line-height: 54px;
   background: #ffffff;
   color: #ffffff;
+}
+.ey_input-menu {
+  display: none;
+  flex-grow: 0;
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  width: 20%;
+  max-width: 100px;
+  height: 100%;
+  cursor: pointer;
+  text-align: left;
+  /* line-height: 30px; */
+  line-height: 1.25rem;
+  padding: 0 12px;
+  background: #ffffff;
+  color: #ffffff;
+}
+.ey-chat .ey_input-menu .ey_input-menu-text {
+  display: none;
+  width: fit-content;
+}
+.ey-chat .ey_input-menu.active .ey_input-menu-text {
+  display: flex;
+}
+.ey-chat .ey_input-menu.active {
+  background-color: #2076f2;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .ey-chat .ey_input-send.active {
   color: #2076f2;
@@ -605,11 +640,9 @@ noscript h1 {
   font-size: 1.0rem;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
-.icon-menu rect {
-  stroke: #2076f2;
-}
-.icon-menu path {
-  fill: #2076f2;
+.ey-menu {
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 .ey-chat .chat-button:focus {
   outline: none;
@@ -690,12 +723,16 @@ noscript h1 {
   height: 30px;
 }
 .menu-input {
+  align-items: center;
+  display: flex;
   overflow: hidden;
+  position: relative;
 }
 .menu-input input {
   color: #4f4f4f;
   font-size: 1.0rem;
   background: #ffffff;
+  padding: 0;
 }
 .main-menu {
   width: 230px;

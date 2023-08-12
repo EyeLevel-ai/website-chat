@@ -211,6 +211,13 @@ setTransfer = function(val) {
   if (val) {
     window.localStorage.setItem('eyelevel.user.transfer', 'true');
     window.user = window.getUser();
+    if (window.eymenu) {
+      var mn = document.getElementById('ey-menu');
+      if (mn) {
+        var n = new RegExp("(?:^|\\s)active(?!\\S)", "gi");
+        mn.className = mn.className.replace(n, "");
+      }
+    }
   } else {
     window.localStorage.removeItem('eyelevel.user.transfer');
     window.user = window.getUser();
@@ -677,16 +684,11 @@ window.menu = null;
                     if (this.sendBtn.classList.contains(e.CLASS_SEND_ACTIVE)) {
                       return this.sendBtn.className, this
                     }
-                    var n = new RegExp("(?:^|\\s)" + e.CLASS_SEND_ACTIVE + "(?!\\S)", "gi");
-                    this.qMenuBtn.className = this.qMenuBtn.className.replace(n, "")
                     return this.sendBtn.className += " " + e.CLASS_SEND_ACTIVE, this
                 }
             }, {
                 key: "handleStopSend",
                 value: function() {
-                    if (!this.qMenuBtn.classList.contains(e.CLASS_SEND_ACTIVE)) {
-                      this.qMenuBtn.className += " " + e.CLASS_SEND_ACTIVE;
-                    }
                     var n = new RegExp("(?:^|\\s)" + e.CLASS_SEND_ACTIVE + "(?!\\S)", "gi");
                     return this.sendBtn.className = this.sendBtn.className.replace(n, ""), this
                 }
@@ -2185,12 +2187,14 @@ console.log(turnUUID, response);
             return a()(e, [{
                 key: "bindEventHandlers",
                 value: function() {
+                    if (this.domHelper.getMenuInput()) {
+                      this.domHelper.getMenuInput().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
+                    }
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, supportsPassive() ? {passive : false} : false),
                     window.addEventListener("message", this.handleChatWindow, !1),
                     this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
-                    this.domHelper.getMenuInput().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
                     this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
