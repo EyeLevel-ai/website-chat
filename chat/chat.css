@@ -50,7 +50,7 @@ noscript h1 {
   padding: 10px 10px 0 0;
   font-size: 28px;
   text-align: right;
-  color: transparent;
+  color: #fff;
   text-shadow: 0 0 0 #fff;
   z-index: 10000;
 }
@@ -596,6 +596,7 @@ noscript h1 {
   font-weight: 400;
   font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
   width: 20%;
+  margin-left: 6px;
   max-width: 100px;
   height: 100%;
   cursor: pointer;

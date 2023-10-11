@@ -1357,7 +1357,7 @@ console.log(turnUUID, response);
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
                 }, this.escapeAndDecorateString = function(txt) {
-                  var regex = new RegExp(/\w([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z0-9]{2,6}\b([-a-z0-9()@:%_\+.~#?&//=]*))/g);
+                  var regex = new RegExp(/(?:(https?|ftp):\/\/)?\w([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z0-9]{2,6}\b([-a-z0-9()@:%_\+.~#?&//=]*))/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
                   while ((match = regex.exec(txt)) != null) {
                     var rawTxt = txt.substr(startIndex, (match.index - startIndex));

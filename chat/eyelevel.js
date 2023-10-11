@@ -565,7 +565,7 @@ try {
     var ei = document.getElementById("eyAlert");
     ei = ei.contentWindow || ( ei.contentDocument.document || ei.contentDocument);
     ei.document.open();
-    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
+    ei.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + window.chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (window.eyusername ? '<link href="' + window.cssURL + '/' + window.eyusername + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (window.eyflowname ? '<link href="' + window.cssURL + '/' + window.eyflowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<script src="' + window.remoteURL + '/iframeResizer.contentWindow.min.js"></script></head><body class="alert-body" style="background: transparent;"><div class="ey-chat" style="background: transparent;"><div class="alert-nav" id="alertClose"><div class="alert-close">&#10006;</div></div><div class="ey-alert" id="alertOpen"><div class="alert-item"><div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response alert-text">' + txt.replaceAll("\n", "<br />").replaceAll("\\n", "<br />") + '</div></div></div></div><script>function closeAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("close-alert", "*");}function openAlert(e){e.stopPropagation();e.preventDefault();window.parent.postMessage("open-alert", "*");}var ca=document.getElementById("alertClose");ca.addEventListener("click", closeAlert, false);ca.addEventListener("touchstart", closeAlert, false);var co=document.getElementById("alertOpen");co.addEventListener("click", openAlert, false);co.addEventListener("touchstart", openAlert, false);</script></body></html>');
     ei.document.close();
     iFrameResize({ checkOrigin: false }, '#eyAlert');
     window.alertSound();
@@ -707,7 +707,7 @@ try {
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form><div class="ey_input-menu ey-menu' + (typeof window.eymenu === 'object' ? ' active' : '') + '" id="ey-menu"><span class="ey_input-menu-text">LIVE CHAT>></span></div></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div></div><div id="eyMobileChatClose" class="ey-close-btn" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form><div class="ey_input-menu ey-menu' + (typeof window.eymenu === 'object' ? ' active' : '') + '"><span class="ey_input-menu-text" id="ey-menu">LIVE CHAT</span></div></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
 
     if (!window.eynoclose) {
@@ -984,6 +984,15 @@ try {
       }
       window.eyusername = username;
 
+      var sn = params.resetTime;
+      var ssn = getQueryVar("resetTime", params.isIframe);
+      if (un) {
+        sn = ssn;
+      }
+      if (!isNaN(sn)) {
+        resetSessionTime = parseInt(sn);
+      }
+
       var flowname = params.flowname;
       if (flowname !== undefined && flowname) {
         window.eyfnset = true;
@@ -1172,15 +1181,7 @@ try {
       loadHistory();
 
       if (document && document.readyState && document.readyState !== 'loading') {
-        window.initChatStyle(window.eyorigin);
-        if (window.eyorigin !== 'linkedin'
-          && window.eyorigin !== 'pdf'
-          && window.eybubble !== false) {
-          window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
-        }
-        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu);
-      } else {
-        window.addEventListener("load", function() {
+        setTimeout(function() {
           window.initChatStyle(window.eyorigin);
           if (window.eyorigin !== 'linkedin'
             && window.eyorigin !== 'pdf'
@@ -1188,6 +1189,18 @@ try {
             window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
           }
           window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu);
+        }, 1000);
+      } else {
+        window.addEventListener("load", function() {
+          setTimeout(function() {
+            window.initChatStyle(window.eyorigin);
+            if (window.eyorigin !== 'linkedin'
+              && window.eyorigin !== 'pdf'
+              && window.eybubble !== false) {
+              window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
+            }
+            window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu);
+          }, 1000);
         }, true);
       }
 
