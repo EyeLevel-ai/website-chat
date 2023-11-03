@@ -348,6 +348,171 @@ noscript h1 {
   background: #ffffff;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
 }
+.source-container {
+  display: flex;
+  flex-direction: column;
+}
+.source-container .url-sources {
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 8px 0;
+}
+.source-container .url-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 5px;
+}
+.url-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  row-gap: 5px;
+  padding: 8px 0 0;
+}
+.url-container > a {
+  padding: 2px 5px;
+  margin-right: 5px;
+  border-radius: 5px;
+  font-size: 9px;
+  flex-basis: auto;
+  gap: 10px;
+}
+.url-container > div {
+  height: 12px;
+  width: 12px;
+  border: 1px solid #2076f2;
+  background: #fff;
+  color: #2076f2;
+  border-radius: 50% !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 9px !important;
+  font-weight: bold;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.url-in-modal {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid #d8d8d8;
+  padding: 1px 0px 1px 3px;
+  margin: 2px;
+}
+.url-in-modal > a {
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 5px;
+  font-size: 10px;
+  flex-basis: auto;
+  gap: 10px;
+}
+.url-in-modal > p {
+  padding: 20px;
+  margin: 10% auto;
+  clear: both;
+  font-size: 1.125rem;
+  z-index: 2;
+  position: relative;
+  word-break: break-word;
+  width: 80%;
+  max-width: 600px;
+  background-color: #ffffff;
+}
+.url-in-modal > div {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background-color: #2fffb2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+  padding: 20px;
+  margin: 10% auto;
+  clear: both;
+  font-size: 1.125rem;
+  z-index: 2;
+  position: relative;
+  word-break: break-word;
+  width: 80%;
+  max-width: 600px;
+  background-color: #ffffff;
+}
+.close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+}
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+.source-side-container {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid #d8d8d8;
+  padding: 1px 0px 1px 3px;
+  margin: 2px;
+}
+.number {
+  height: 18px;
+  width: 50px;
+  border-radius: 50%;
+  background-color: #2fffb2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+.link {
+  flex-grow: 4;
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 5px;
+  font-size: 10px;
+  word-break: break-word;
+}
+.icon {
+  width: 70px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+}
+.source-side-close-container {
+  display: flex;
+  flex-direction: row;
+}
+.source-side-close-btn {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+}
 .server-response .ai-source {
   position: absolute;
   top: 0;

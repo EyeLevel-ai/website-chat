@@ -3,44 +3,46 @@ try {
   var devURL = 'wss://dws.eyelevel.ai';
   var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
   var aiMessages = {};
+  var isOpenSourceLink = 'close';
+  var sourceLinkRepresentationType = window.sources; // modal | sideContainer | links
 
-function randomString(length) {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for(var i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  function randomString(length) {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for(var i = 0; i < length; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
   }
-  return text;
-}
 
-function isiOS() {
-  if (!navigator || !navigator.platform) {
+  function isiOS() {
+    if (!navigator || !navigator.platform) {
+      return false;
+    }
+
+    if (
+      [
+        'iPad Simulator',
+        'iPhone Simulator',
+        'iPod Simulator',
+        'iPad',
+        'iPhone',
+        'iPod'
+      ].includes(navigator.platform)
+    ) {
+      return true;
+    }
+
+    if (!navigator.userAgent || !document) {
+      return false;
+    }
+
+    if (navigator.userAgent.includes("Mac") && "ontouchend" in document) {
+      return true;
+    }
+
     return false;
   }
-
-  if (
-    [
-      'iPad Simulator',
-      'iPhone Simulator',
-      'iPod Simulator',
-      'iPad',
-      'iPhone',
-      'iPod'
-    ].includes(navigator.platform)
-  ) {
-    return true;
-  }
-
-  if (!navigator.userAgent || !document) {
-    return false;
-  }
-
-  if (navigator.userAgent.includes("Mac") && "ontouchend" in document) {
-    return true;
-  }
-
-  return false;
-}
 
 function supportsPassive() {
   var cold = false,
@@ -964,6 +966,8 @@ window.menu = null;
                   if (!window.eySocket.heartbeat) {
                     t.heartbeat();
                   }
+
+                  t.createModal();
                 }, this.onFirstClick = function() {
                   if (window.attnElm) {
                     for (var k = 0; k < window.attnElm.childNodes.length; k++) {
@@ -1479,10 +1483,155 @@ console.log(turnUUID, response);
                         nn.parentNode.removeChild(nn);
                       }
                     }, 200);
-                }, this.setText = function(ee, nn) {
+                }, this.openInSideContainerSourceLink = function (text, link, uuid, num) {
+                    if (isOpenSourceLink === 'close') {
+                      isOpenSourceLink = 'open';
+                      var iframeEySectionWidth = window.parent.document.getElementById('eySection');
+                      iframeEySectionWidth.style.minWidth = '750px';
+    
+                      var aiResponse = document.querySelector("[data-turn-uuid='" + uuid + "']");
+                      var sideBar = document.createElement('div');
+                      sideBar.className = 'server-response';
+                      sideBar.id = 'sideBar';
+    
+                      var sourceSideContainer = document.createElement('div');
+                      sourceSideContainer.className = 'source-side-container';
+    
+                      var linkNumber = document.createElement('div');
+                      linkNumber.className = 'number';
+                      linkNumber.innerHTML = num + 1;
+    
+                      var a = document.createElement('a');
+                      a.className = 'link';
+                      a.innerHTML = link;
+                      a.href = link;
+                      a.target = '_blank';
+    
+                      var icon = document.createElement('span');
+                      icon.innerText = 'icon';
+                      icon.className = 'icon';
+    
+                      var closeContaiter = document.createElement('div');
+                      closeContaiter.className = 'source-side-close-container';
+    
+                      var closeBnt = document.createElement('span');
+                      closeBnt.className = 'source-side-close-btn';
+                      closeBnt.innerHTML = '&times;';
+                      closeBnt.id = 'closeSideBar';
+    
+                      var sideBarText = document.createElement('div');
+                      sideBarText.id = 'sideBarText';
+                      sideBarText.innerText = text;
+    
+                      sourceSideContainer.appendChild(linkNumber);
+                      sourceSideContainer.appendChild(a);
+                      sourceSideContainer.appendChild(icon);
+    
+                      closeContaiter.appendChild(sourceSideContainer);
+                      closeContaiter.appendChild(closeBnt);
+                      sideBar.appendChild(closeContaiter);
+                      sideBar.appendChild(sideBarText);
+    
+                      aiResponse.appendChild(sideBar);
+    
+                      document.getElementById('closeSideBar').addEventListener('click', function () {
+                        document.getElementById('sideBar').remove();
+                        iframeEySectionWidth.style.minWidth = 'auto';
+                        isOpenSourceLink = 'close';
+                      });
+                    }
+                }, this.openModal = function (text, link, num) {
+                  var sourceSideContainer = document.getElementById('source-side-container');
+                  var modalText = document.getElementById('modalText');
+                  modalText.innerText = text;
+  
+                  var linkNumber = document.createElement('div');
+                  linkNumber.className = 'number';
+                  linkNumber.innerHTML = num + 1;
+  
+                  var a = document.createElement('a');
+                  a.className = 'link';
+                  a.innerHTML = link;
+                  a.href = link;
+                  a.target = '_blank';
+  
+                  sourceSideContainer.appendChild(linkNumber);
+                  sourceSideContainer.appendChild(a);
+                  document.getElementById('modal').style.display = 'block';
+                }, this.createModal = function () {
+                  var modal = document.createElement('div');
+                  modal.innerHTML = `
+                  <div id="modal" class="modal">
+                    <div id="modalContent" class="modal-content">
+                      <div class="source-side-close-container" id="source-side-close-container">
+                        <div id="source-side-container" class="source-side-container"></div>
+                        <span id="closeModal" class="close">&times;</span>
+                      </div>
+                      <br />
+                      <div id="modalText"></div>
+                    </div>
+                  </div>`;
+                  var eyChat = document.getElementById('eyChat');
+                  eyChat.appendChild(modal);
+  
+                  document.getElementById('closeModal').addEventListener('click', function () {
+                    document.getElementById('modal').style.display = 'none';
+                    var sourceSideContaine = document.getElementById('source-side-container');
+                    var modalText = document.getElementById('modalText');
+                    modalText.innerHTML = '';
+                    sourceSideContaine.innerHTML = '';
+                  });
+                }, this.setText = function(ee, nn, urls, uuid) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (sc && sc.length && sc.length === 1) {
+                      var sourceContainer = document.createElement('div');
+                      sourceContainer.className = 'source-container';
+
+                      if (sourceLinkRepresentationType && urls && urls.length > 0) {
+                        var urlWrapper = document.createElement('div');
+                        urlWrapper.className = 'url-wrapper';
+
+                        for (var url = 0; url < urls.length; url++) {
+                          var urlContainer = document.createElement('div');
+                          urlContainer.className = 'url-container';
+
+                          var div = document.createElement('div');
+                          div.innerText = url + 1;
+                          div.className = "chat-button"
+
+                          var a = document.createElement('a');
+                          a.href = urls[url].url;
+                          var ur = urls[url].url;
+                          if (ur.length > 50) {
+                            ur = ur.substring(0, 50) + '...';
+                          }
+                          a.text = ur;
+
+                          (function (url) {
+                            a.addEventListener('click', function (e) {
+                              e.preventDefault();
+
+                              sourceLinkRepresentationType === 'modal'
+                                ? t.openModal(urls[url].text, urls[url].url, url)
+                                : t.openInSideContainerSourceLink(
+                                    urls[url].text,
+                                    urls[url].url,
+                                    uuid,
+                                    url,
+                                  );
+                            });
+                          })(url);
+
+                          urlContainer.appendChild(div);
+                          urlContainer.appendChild(a);
+                          urlWrapper.appendChild(urlContainer);
+                        }
+
+                        sourceContainer.appendChild(urlWrapper);
+                      }
+
                       sc[0].innerHTML = ee;
+                      sc[0].appendChild(sourceContainer);
                       t.colorAISource(nn, sc[0]);
                       return nn, this
                     } else {
@@ -2093,6 +2242,35 @@ console.log(turnUUID, response);
                         }
                         var aiMetadata = msg.metadata;
                         var msgSession = msg.session;
+
+                        var urls = [];
+                        var turnUUID = "";
+                        if (msgSession && msgSession.Trace && msgSession.Trace.turnUUID) {
+                          turnUUID = msgSession.Trace.turnUUID;
+                        }
+
+                        if (aiMetadata) {
+                          if (aiMetadata.searchResults && aiMetadata.searchResults.length) {
+                            for (var i = 0; i < aiMetadata.searchResults.length; i++) {
+                              var searchResultsTempText = '';
+                              if (aiMetadata.searchResults[i].text) {
+                                searchResultsTempText = aiMetadata.searchResults[i].text;
+                              }
+      
+                              if (aiMetadata.searchResults[i].metadata) {
+                                if (aiMetadata.searchResults[i].metadata.url) {
+                                  urls.push({
+                                    url: aiMetadata.searchResults[i].metadata.url,
+                                    text: searchResultsTempText,
+                                  });
+                                }
+                              }
+      
+                              searchResultsTempText = '';
+                            }
+                          }
+                        }
+
                         t.addAIMetadata(ttt, msgSession, aiMetadata);
 
                         var html = '';
@@ -2123,7 +2301,7 @@ console.log(turnUUID, response);
                         } else {
                           if (data.text) {
                             html = t.chat.text(data.text);
-                            t.setText(html, ttt);
+                            t.setText(html, ttt, urls, turnUUID);
                             needsReset = true;
                           }
                           if (data.attachment && data.attachment.payload) {
@@ -2131,7 +2309,7 @@ console.log(turnUUID, response);
                               if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
-                              t.setText(t.chat.text(data.attachment.payload.text), ttt);
+                              t.setText(t.chat.text(data.attachment.payload.text), ttt, urls, turnUUID);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
