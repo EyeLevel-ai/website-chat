@@ -212,7 +212,12 @@ setTransfer = function(val) {
     window.localStorage.setItem('eyelevel.user.transfer', 'true');
     window.user = window.getUser();
     if (window.eymenu) {
-      var mn = document.getElementById('ey-menu');
+      var mn = document.getElementById('ey-menu-tr');
+      if (mn) {
+        var n = new RegExp("(?:^|\\s)active(?!\\S)", "gi");
+        mn.className = mn.className.replace(n, "");
+      }
+      mn = document.getElementById('ey-menu-br');
       if (mn) {
         var n = new RegExp("(?:^|\\s)active(?!\\S)", "gi");
         mn.className = mn.className.replace(n, "");
@@ -546,7 +551,7 @@ window.menu = null;
         a = t.n(i),
         u = function() {
             function e() {
-                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.qMenuBtn = this.workplace.getElementById(e.QUERY_MENU_ID), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
+                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.qMenuBtnTR = this.workplace.getElementById(e.QUERY_MENU_ID_TR), this.qMenuBtnBR = this.workplace.getElementById(e.QUERY_MENU_ID_BR), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
             }
             return a()(e, [{
                 key: "startWelcome",
@@ -574,9 +579,14 @@ window.menu = null;
                   }, 0);
                 }
             }, {
-                key: "getMenuInput",
+                key: "getMenuInputTR",
                 value: function() {
-                    return this.qMenuBtn
+                    return this.qMenuBtnTR
+                }
+            }, {
+                key: "getMenuInputBR",
+                value: function() {
+                    return this.qMenuBtnBR
                 }
             }, {
                 key: "getSendInput",
@@ -704,7 +714,7 @@ window.menu = null;
                 }
             }]), e
         }();
-    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.QUERY_MENU_ID = "ey-menu", u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
+    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.QUERY_MENU_ID_TR = "ey-menu-tr", u.QUERY_MENU_ID_BR = "ey-menu-br",u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
 }, function(e, n, t) {
     var r = t(8),
         o = t(0)("toStringTag"),
@@ -1357,7 +1367,7 @@ console.log(turnUUID, response);
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
                 }, this.escapeAndDecorateString = function(txt) {
-                  var regex = new RegExp(/(?:(https?|ftp):\/\/)?\w([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z0-9]{2,6}\b([-a-z0-9()@:%_\+.~#?&//=]*))/g);
+                  var regex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-z0-9-]{2,})+\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
                   while ((match = regex.exec(txt)) != null) {
                     var rawTxt = txt.substr(startIndex, (match.index - startIndex));
@@ -2187,8 +2197,11 @@ console.log(turnUUID, response);
             return a()(e, [{
                 key: "bindEventHandlers",
                 value: function() {
-                    if (this.domHelper.getMenuInput()) {
-                      this.domHelper.getMenuInput().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
+                    if (this.domHelper.getMenuInputTR()) {
+                      this.domHelper.getMenuInputTR().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
+                    }
+                    if (this.domHelper.getMenuInputBR()) {
+                      this.domHelper.getMenuInputBR().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
                     }
                     this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, supportsPassive() ? {passive : false} : false),
                     window.addEventListener("message", this.handleChatWindow, !1),

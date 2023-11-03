@@ -54,6 +54,14 @@ noscript h1 {
   text-shadow: 0 0 0 #fff;
   z-index: 10000;
 }
+.ey-menu-right {
+  position: absolute;
+  right: 0;
+}
+.ey-close-left {
+  left: 0;
+  text-align: center;
+}
 .ey-chat-logo-container {
   position: relative;
   display: flex;
@@ -989,6 +997,9 @@ noscript h1 {
 @media(max-width:799px){
   .ey-chat .status-update {
     font-size: 1.0rem;
+  }
+  .ey_input-menu {
+    width: 22%;
   }
 }
 
