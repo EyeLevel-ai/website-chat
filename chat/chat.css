@@ -680,6 +680,33 @@ noscript h1 {
   font-size: 0.9rem;
   font-style: italic;
 }
+.ai-feedback-container-stars {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.ai-feedback-stars {
+  display: flex;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 0 6px;
+  margin-left: 6px;
+}
+.ai-feedback-star-inactive {
+  padding: 10px 0 10px 10px;
+  height: 20px;
+  width: 20px;
+  background: url(https://cdn.eyelevel.ai/chat/inactive-star.png) no-repeat center center;
+  background-size: 20px 20px;
+}
+.ai-feedback-star-active {
+  padding: 10px 0 10px 10px;
+  height: 20px;
+  width: 20px;
+  background: url(https://cdn.eyelevel.ai/chat/active-star.png) no-repeat center center;
+  background-size: 20px 20px;
+}
 .ai-feedback-positive {
   padding: 10px 0 10px 10px;
   height: 20px;

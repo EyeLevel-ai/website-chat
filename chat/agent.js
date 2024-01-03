@@ -68,6 +68,66 @@ function supportsPassive() {
 }
 window.supportsPassive = supportsPassive;
 
+function doFeedback() {
+  return (window.eySocket
+    && window.eySocket.lastInteraction
+    && window.eySocket.lastInteraction.metadata
+    && window.eySocket.lastInteraction.metadata.feedbackType) ||
+    (window.eyfeedback);
+}
+
+function feedbackType() {
+  if (window.eySocket
+    && window.eySocket.lastInteraction
+    && window.eySocket.lastInteraction.metadata
+    && window.eySocket.lastInteraction.metadata.feedbackType) {
+      return window.eySocket.lastInteraction.metadata.feedbackType;
+  }
+
+  return window.eyfeedback;
+}
+
+function reportFeedback(data, callback) {
+  var xhr = new XMLHttpRequest();
+
+  var apiu = "https://api.eyelevel.ai/track";
+  switch(window.eyEnv) {
+    case 'dev':
+    case 'local':
+    case 'local-chat-dev':
+    case 'local-css-dev':
+    case 'local-dev':
+      apiu = "https://devapi.eyelevel.ai/track";
+      break;
+  }
+
+  xhr.open("POST", apiu, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+
+  xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+          if (xhr.status !== 200) {
+              console.error("Error:", xhr.statusText);
+              if (callback) {
+                callback(false);
+              }
+          } else if (callback) {
+            callback(true);
+          }
+      }
+  };
+
+  xhr.onerror = function () {
+      console.error("Request failed");
+      if (callback) {
+        callback(false);
+      }
+  };
+
+  xhr.send(JSON.stringify(data));
+}
+
+
 if (!window.localStorage) {
   Object.defineProperty(window, "localStorage", new (function () {
     var aKeys = [], oStorage = {};
@@ -1036,26 +1096,51 @@ window.menu = null;
                     vc.appendChild(s2);
                     window.videoElm.appendChild(vc);
                   }
-                }, this.feedbackClick = function(turnUUID, response) {
-console.log(turnUUID, response);
-                  var wid = t.domHelper.workplace.getElementById('ai-feedback');
-                  while (wid.childNodes.length) {
-                    wid.removeChild(wid.childNodes[0]);
+                }, this.feedbackClick = function(turnUUID, response, ty) {
+                  switch (ty) {
+                    case 'five-scale':
+                      var star = t.domHelper.workplace.getElementById(`ai-feedback-prompt`);
+                      star.innerHTML = '';
+                      for (var st = 1; st < 6; st++) {
+                        var star = t.domHelper.workplace.getElementById(`ai-feedback-star-${st}`);
+                        if (star) {
+                          if (st <= response) {
+                            star.classList.remove('ai-feedback-star-inactive');
+                            star.classList.add('ai-feedback-star-active');
+                          } else {
+                            star.classList.remove('ai-feedback-star-active');
+                            star.classList.add('ai-feedback-star-inactive');
+                          }
+                        }
+                      }
+                      reportFeedback({
+                        rating: response,
+                        turnUUID: turnUUID,
+                      }, function() {
+                        var star = t.domHelper.workplace.getElementById(`ai-feedback-prompt`);
+                        star.innerHTML = 'Thanks!';
+                      })
+                      break;
+                    default:
+                      var wid = t.domHelper.workplace.getElementById('ai-feedback');
+                      while (wid.childNodes.length) {
+                        wid.removeChild(wid.childNodes[0]);
+                      }
+                      var prompt = t.domHelper.workplace.createElement('div');
+                      prompt.classList.add('ai-feedback-prompt');
+                      prompt.innerHTML = 'Thanks!';
+                      wid.appendChild(prompt);
+                      setTimeout(function() {
+                        wid.parentNode.removeChild(wid);
+                        t.scrollToBottom();
+                      }, 3000);
                   }
-                  var prompt = t.domHelper.workplace.createElement('div');
-                  prompt.classList.add('ai-feedback-prompt');
-                  prompt.innerHTML = 'Thanks!';
-                  wid.appendChild(prompt);
-                  setTimeout(function() {
-                    wid.parentNode.removeChild(wid);
-                    t.scrollToBottom();
-                  }, 3000);
                 }, this.removeFeedbackWidget = function() {
                   var wid = t.domHelper.workplace.getElementById('ai-feedback');
                   if (wid) {
                     t.removeItem(wid);
                   }
-                }, this.updateFeedbackWidget = function() {
+                }, this.updateFeedbackWidget = function(ty) {
                   var aa = t.domHelper.workplace.getElementById('result');
                   if (aa.childNodes.length) {
                     var le = aa.childNodes[aa.childNodes.length - 1];
@@ -1066,20 +1151,44 @@ console.log(turnUUID, response);
                         var wid = t.domHelper.workplace.createElement('div');
                         wid.id = 'ai-feedback';
                         wid.classList.add('ai-feedback-container');
-                        var prompt = t.domHelper.workplace.createElement('div');
-                        prompt.classList.add('ai-feedback-prompt');
-                        prompt.innerHTML = 'Was this helpful?';
-                        wid.appendChild(prompt);
-                        var thumbUp = t.domHelper.workplace.createElement('div');
-                        thumbUp.classList.add('ai-feedback-positive');
-                        thumbUp.setAttribute('data-turn-uuid', turnUUID);
-                        thumbUp.onclick = t.feedbackClick.bind(t, turnUUID, 1);
-                        wid.appendChild(thumbUp);
-                        var thumbDown = t.domHelper.workplace.createElement('div');
-                        thumbDown.classList.add('ai-feedback-negative');
-                        thumbDown.setAttribute('data-turn-uuid', turnUUID);
-                        thumbDown.onclick = t.feedbackClick.bind(t, turnUUID, -1);
-                        wid.appendChild(thumbDown);
+                        switch(ty) {
+                          case 'five-scale':
+                            var pstid = t.domHelper.workplace.createElement('div');
+                            pstid.classList.add('ai-feedback-container-stars');
+                            var prompt = t.domHelper.workplace.createElement('div');
+                            prompt.id = 'ai-feedback-prompt';
+                            prompt.classList.add('ai-feedback-prompt');
+                            prompt.innerHTML = 'Rate this response: ';
+                            pstid.appendChild(prompt);
+                            var stid = t.domHelper.workplace.createElement('div');
+                            stid.classList.add('ai-feedback-stars');
+                            for (var st = 1; st < 6; st++) {
+                              var star = t.domHelper.workplace.createElement('div');
+                              star.classList.add('ai-feedback-star-inactive');
+                              star.id = `ai-feedback-star-${st}`;
+                              star.setAttribute('data-turn-uuid', turnUUID);
+                              star.onclick = t.feedbackClick.bind(t, turnUUID, st, ty);
+                              stid.appendChild(star);
+                            }
+                            pstid.appendChild(stid);
+                            wid.appendChild(pstid);
+                            break;
+                          default:
+                            var prompt = t.domHelper.workplace.createElement('div');
+                            prompt.classList.add('ai-feedback-prompt');
+                            prompt.innerHTML = 'Was this helpful?';
+                            wid.appendChild(prompt);
+                            var thumbUp = t.domHelper.workplace.createElement('div');
+                            thumbUp.classList.add('ai-feedback-positive');
+                            thumbUp.setAttribute('data-turn-uuid', turnUUID);
+                            thumbUp.onclick = t.feedbackClick.bind(t, turnUUID, 1);
+                            wid.appendChild(thumbUp);
+                            var thumbDown = t.domHelper.workplace.createElement('div');
+                            thumbDown.classList.add('ai-feedback-negative');
+                            thumbDown.setAttribute('data-turn-uuid', turnUUID);
+                            thumbDown.onclick = t.feedbackClick.bind(t, turnUUID, -1, ty);
+                            wid.appendChild(thumbDown);
+                        }
                         aa.appendChild(wid);
                         t.scrollToBottom();
                         wid.classList.add('ey-add-item');
@@ -1087,24 +1196,23 @@ console.log(turnUUID, response);
                     }
                   }
                 }, this.handleFeedback = function() {
-                  if (window.eySocket
-                    && window.eySocket.lastInteraction
-                    && window.eySocket.lastInteraction.metadata
-                    && window.eySocket.lastInteraction.metadata.feedbackType) {
+                  if (doFeedback()) {
                       t.removeFeedbackWidget();
                   }
-                  setTimeout(function() {
-                    if (window.eySocket
-                      && window.eySocket.lastInteraction
-                      && window.eySocket.lastInteraction.metadata
-                      && window.eySocket.lastInteraction.metadata.feedbackType
-                      && !window.isChatting) {
-                        switch(window.eySocket.lastInteraction.metadata.feedbackType) {
-                          case 'binary':
-                            t.updateFeedbackWidget();
-                        }
+
+                    if (doFeedback()) {
+                      var ty = feedbackType();
+                      switch(ty) {
+                        case 'five-scale':
+                          t.updateFeedbackWidget(ty);
+                          break;
+                        case 'binary':
+                          setTimeout(function() {
+                            t.updateFeedbackWidget(ty);
+                          }, 5000);
+                      }
                     }
-                  }, 5000);
+
                 }, this.initAnimation = function() {
                   window.isInit = true;
                   setTimeout(function() {
@@ -1166,10 +1274,7 @@ console.log(turnUUID, response);
                                 window.eySocket.queuedMessages.push(wsRes);
                                 t.processQueue()
                                   .then(function() {
-                                    if (window.eySocket
-                                      && window.eySocket.lastInteraction
-                                      && window.eySocket.lastInteraction.metadata
-                                      && window.eySocket.lastInteraction.metadata.feedbackType) {
+                                    if (doFeedback()) {
                                       t.handleFeedback();
                                     }
                                     if (!window.isInit) {
@@ -1227,10 +1332,7 @@ console.log(turnUUID, response);
                               window.eySocket.queuedMessages.push(wsRes);
                               t.processQueue()
                                 .then(function() {
-                                  if (window.eySocket
-                                    && window.eySocket.lastInteraction
-                                    && window.eySocket.lastInteraction.metadata
-                                    && window.eySocket.lastInteraction.metadata.feedbackType) {
+                                  if (doFeedback()) {
                                     t.handleFeedback();
                                   }
                                   if (!window.isInit) {
@@ -1447,8 +1549,12 @@ console.log(turnUUID, response);
                     if (!ttt.classList.contains('ai-response')) {
                       ttt.classList.add('ai-response');
                     }
-                    if (sess && sess.Trace && sess.Trace.turnUUID) {
-                      ttt.setAttribute('data-turn-uuid', sess.Trace.turnUUID);
+                    if (sess) {
+                        if (sess.TraceNext && sess.TraceNext.turnUUID) {
+                          ttt.setAttribute('data-turn-uuid', sess.TraceNext.turnUUID);
+                        } else if (sess.Trace && sess.Trace.turnUUID) {
+                          ttt.setAttribute('data-turn-uuid', sess.Trace.turnUUID);
+                        }
                     }
                     if (aiMetadata.showSource && aiMetadata.type) {
                       ttt.setAttribute('data-type', aiMetadata.type);
