@@ -978,6 +978,13 @@ try {
         clearAll();
       }
 
+      var modelId = params.modelId
+      var mId = getQueryVar("modelId", params.isIframe);
+      if (mId) {
+        modelId = mId;
+      }
+      window.modelId = modelId
+
       var username = params.username;
       var un = getQueryVar("un", params.isIframe);
       if (un) {
