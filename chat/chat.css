@@ -624,8 +624,12 @@ noscript h1 {
 }
 .ey-chat .ey_input-menu.active {
   background-color: #2076f2;
+  border-radius: 50px;
   color: #fff;
   display: flex;
+  height: 44px;
+  margin: 0 10px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 2px 6px;
   align-items: center;
   justify-content: center;
 }
