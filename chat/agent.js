@@ -4,6 +4,23 @@ try {
   var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
   var aiMessages = {};
 
+  window.myText = "";
+ 
+  function renderText(div) {
+     var interval = setInterval(() => {
+     if (!window.myText) {
+          clearInterval(interval);
+          return;
+     } else {
+        // div.insertAdjacentHTML('beforeend', window.myText[0]);
+        var prev = div.innerHTML;
+        div.innerHTML = prev + window.myText[0];
+        // div.innerHTML += window.myText[0];
+        window.myText = window.myText.substring(1);
+     }
+    }, 10)
+}
+
 function randomString(length) {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -1257,7 +1274,7 @@ window.menu = null;
                         return t.processQueue();
                       });
                   }
-                }, this.handleWSMessage = function(n) {
+                }, this.handleWSMessage = async function(n) {
                   window.isChatting = false;
                   if (n && n.data) {
                     try {
@@ -1597,9 +1614,21 @@ window.menu = null;
                 }, this.setText = function(ee, nn) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (sc && sc.length && sc.length === 1) {
-                      sc[0].innerHTML = ee;
-                      t.colorAISource(nn, sc[0]);
-                      return nn, this
+                      // remove "..." after receiving streaming data;
+                      if(sc[0].innerHTML === "...") {
+                        sc[0].innerHTML = "";
+                      }
+
+                      if (ee) {
+                        sc[0].innerHTML += ee;
+                        t.colorAISource(nn, sc[0]);
+                        return nn, this
+                      } else {
+                        renderText(sc[0]);
+                        t.colorAISource(nn, sc[0]);
+                        return nn, this
+                      }
+                      
                     } else {
                       console.warn('unexpected response', nn);
                     }
@@ -2241,8 +2270,11 @@ window.menu = null;
                           }
                         } else {
                           if (data.text) {
+                            // STEP 5
                             html = t.chat.text(data.text);
-                            t.setText(html, ttt);
+                            window.myText += html;
+                            t.setText(null, ttt);
+                            // t.setText(html, ttt)
                             needsReset = true;
                           }
                           if (data.attachment && data.attachment.payload) {
@@ -2250,8 +2282,11 @@ window.menu = null;
                               if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
-                              t.setText(t.chat.text(data.attachment.payload.text), ttt);
-                              needsReset = true;
+                               // STEP 5
+                               window.myText += t.chat.text(data.attachment.payload.text)
+                               // t.setText(t.chat.text(data.attachment.payload.text), ttt);
+                               t.setText(null, ttt);
+                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
                               if (t.doReset(needsReset, ttt)) {
@@ -2303,13 +2338,22 @@ window.menu = null;
                           }
                         }
                         t.updateResponses();
-                        if (msg.typing) {
-                          window.eySocket.typingElement = t.empty(isConsent, msgSession, aiMetadata);
+
+                        if (!msg.isDone) {
                           resolve();
                         } else {
                           window.eySocket.typingElement = null;
                           resolve();
-                        }
+                        };
+                       
+                        // end message: msg.typing === false && msg.isDone === true
+                        // if (msg.typing) {
+                        //   window.eySocket.typingElement = t.empty(isConsent, msgSession, aiMetadata);
+                        //   resolve();
+                        // } else {
+                        //   window.eySocket.typingElement = null;
+                        //   resolve();
+                        // }
                     });
                 }
             }
