@@ -59,7 +59,7 @@ noscript h1 {
   right: 0;
 }
 .ey-close-left {
-  left: 0;
+  left: 0 !important;
   text-align: center;
 }
 .ey-chat-logo-container {
@@ -627,7 +627,7 @@ noscript h1 {
   border-radius: 50px;
   color: #fff;
   display: flex;
-  height: 44px;
+  height: 38px;
   margin: 0 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 2px 6px;
   align-items: center;
@@ -1031,6 +1031,9 @@ noscript h1 {
   }
   .ey_input-menu {
     width: 22%;
+  }
+  .ey-chat .ey_input-menu.active {
+    font-size: 0.875rem;
   }
 }
 
