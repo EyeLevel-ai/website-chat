@@ -14,6 +14,13 @@ function randomString(length) {
   return text;
 }
 
+function scrollToBottomOfDiv() {
+  var div = document.getElementById("resultWrapper");
+  if (div) {
+      div.scrollTop = div.scrollHeight;
+  }
+}
+
 function extractUrl(queryString) {
   var urlRegex = /[?&]url=([^&#]*)/;
   var match = urlRegex.exec(queryString);
@@ -1802,6 +1809,7 @@ window.menu = null;
                         sc[0].parentElement.classList.add('user-input-hidden');
                       }
                     }
+                    scrollToBottomOfDiv()
                     return nn, this
                   } else {
                     console.warn('unexpected response', nn);
@@ -1861,7 +1869,7 @@ window.menu = null;
                       t.domHelper.setInputValue("");
                       t.domHelper.handleStopSend();
                     }
-                    t.scrollToBottom();
+                    scrollToBottomOfDiv();
                   }
                 }, this.sessionId = this.guid(), this.stage = 'welcome', this.nextStage = 'welcome', this.confirmationValue = null, this.menu = null, this.handleMenuButtonClick = function(ben) {
                     if (!t.domHelper.getMainMenu().style.height) {
@@ -2407,7 +2415,8 @@ window.menu = null;
                           }
                         } else {
                           if (data.text) {
-                            html = t.chat.text(data.text);
+                            var html = data.text.replaceAll("\\n", "<br />");
+                            html = data.text.replaceAll("\n", "<br />"); 
                             t.setText(html, ttt, msg);
                             needsReset = true;
                           }
