@@ -3,23 +3,7 @@ try {
   var devURL = 'wss://dws.eyelevel.ai';
   var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
   var aiMessages = {};
-
-  window.myText = "";
- 
-  function renderText(div) {
-     var interval = setInterval(() => {
-     if (!window.myText) {
-          clearInterval(interval);
-          return;
-     } else {
-        // div.insertAdjacentHTML('beforeend', window.myText[0]);
-        var prev = div.innerHTML;
-        div.innerHTML = prev + window.myText[0];
-        // div.innerHTML += window.myText[0];
-        window.myText = window.myText.substring(1);
-     }
-    }, 10)
-}
+  var userScrolledUp = false;
 
 function randomString(length) {
   var text = "";
@@ -351,6 +335,7 @@ retrieveInteractions = function(doAI) {
     var history = JSON.parse(h);
     if (doAI) {
       for (var t = 0; t < history.length; t++) {
+        history[t].isCached = true;
         updateAIMessages(history[t]);
       }
     }
@@ -997,6 +982,8 @@ window.menu = null;
                   window.eySocket = new WebSocket(wssURL+'?uid='+window.user.userId+'&username='+window.username+'&origin='+(window.origin || 'web')+(window.eyid ? '&guid='+window.eyid : ''));
                   window.eySocket.connectTime = Date.now();
                   window.eySocket.queuedMessages = [];
+                  window.eySocket.streamedMessages = [];
+                  window.eySocket.isStreaming = false;
                   if (isRestart) {
                     window.eySocket.isStarted = true;
                   } else {
@@ -1268,13 +1255,78 @@ window.menu = null;
                   }, 2000);
                 }, this.processQueue = function() {
                   if (window.eySocket.queuedMessages.length) {
+                    t.scrollToBottom();
                     var wsRes = window.eySocket.queuedMessages.shift();
                     return t.createMessage(wsRes, window.eySocket.typingElement)
                       .then(function(r) {
                         return t.processQueue();
                       });
+                  } else {
+                    return Promise.resolve();
                   }
-                }, this.handleWSMessage = async function(n) {
+                }, this.processStream = function() {
+                  if (window.eySocket.streamedMessages.length) {
+                    t.scrollToBottom();
+                    var wsRes = window.eySocket.streamedMessages.shift();
+                    return t.renderText(wsRes)
+                      .then(function(r) {
+                        return t.processStream();
+                      });
+                  } else {
+                    window.eySocket.isStreaming = false;
+                    return Promise.resolve();
+                  }
+                }, this.renderText = function(msg) {
+                  return new Promise(function(resolve) {
+                    if (!msg || !msg.text || !msg.container) {
+                      resolve();
+                      return;
+                    }
+
+                    var parts = msg.text.split('<br />');
+                    var partIndex = 0;
+
+                    function processPart() {
+                      if (partIndex >= parts.length) {
+                        resolve();
+                        return;
+                      }
+
+                      var text = parts[partIndex];
+                      var i = 0;
+
+                      function processCharacter() {
+                        if (i < text.length) {
+                          var min = 1, max = 10;
+                          var rand = Math.floor(Math.random() * (max - min + 1) + min);
+
+                          setTimeout(function() {
+                            var char = text.charAt(i);
+                            var inner = msg.container.innerHTML + char;
+                            
+                            msg.container.innerHTML = inner.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                            i++;
+                            processCharacter();
+                            t.scrollToBottom();
+                          }, rand);
+                        } else {
+                          if (partIndex < parts.length - 1) {
+                            msg.container.innerHTML += '<br />';
+                          }
+
+                          partIndex++;
+                          processPart();
+                          t.scrollToBottom();
+                        }
+                      }
+
+                      processCharacter();
+                    }
+
+                    processPart();
+                  });
+                }, this.handleWSMessage = function(n) {
                   window.isChatting = false;
                   if (n && n.data) {
                     try {
@@ -1384,6 +1436,13 @@ window.menu = null;
                   n.preventDefault(), n.stopPropagation(), window.eymenu && window.eymenu.pos ?  t.handleEvent('chat', 'chat', null, window.eymenu.pos) : ''
                 }, this.handleSendClick = function(n) {
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
+                }, this.handleScrollEvents = function(n) {
+                  var q = t.domHelper.getQueryResultWrapper();
+
+                  if (q.scrollHeight - q.scrollTop <= q.clientHeight) {
+                    userScrolledUp = false;
+                  }
+                  userScrolledUp = true;
                 }, this.handleCloseWindow = function(n) {
                   n.preventDefault();
                   n.stopPropagation();
@@ -1491,7 +1550,10 @@ window.menu = null;
                   }
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
-                    return q.scrollTop = q.scrollHeight, this
+                    if (!userScrolledUp || q.scrollHeight - q.scrollTop <= q.clientHeight + 30) {
+                      return q.scrollTop = q.scrollHeight, this
+                    }
+                    return
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
                 }, this.escapeAndDecorateString = function(txt) {
@@ -1561,17 +1623,24 @@ window.menu = null;
                       obj.appendChild(na);
                       break;
                   }
+                }, this.turnUUID = function(sess) {
+                  if (sess) {
+                    if (sess.TraceNext && sess.TraceNext.turnUUID) {
+                      return sess.TraceNext.turnUUID;
+                    } else if (sess.Trace && sess.Trace.turnUUID) {
+                      return sess.Trace.turnUUID;
+                    }
+                  }
+                  return null;
                 }, this.addAIMetadata = function(ttt, sess, aiMetadata) {
                   if (aiMetadata) {
                     if (!ttt.classList.contains('ai-response')) {
                       ttt.classList.add('ai-response');
                     }
-                    if (sess) {
-                        if (sess.TraceNext && sess.TraceNext.turnUUID) {
-                          ttt.setAttribute('data-turn-uuid', sess.TraceNext.turnUUID);
-                        } else if (sess.Trace && sess.Trace.turnUUID) {
-                          ttt.setAttribute('data-turn-uuid', sess.Trace.turnUUID);
-                        }
+
+                    var turnUUID = t.turnUUID(sess);
+                    if (turnUUID) {
+                      ttt.setAttribute('data-turn-uuid', turnUUID);
                     }
                     if (aiMetadata.showSource && aiMetadata.type) {
                       ttt.setAttribute('data-type', aiMetadata.type);
@@ -1611,24 +1680,32 @@ window.menu = null;
                         nn.parentNode.removeChild(nn);
                       }
                     }, 200);
-                }, this.setText = function(ee, nn) {
+                }, this.setText = function(ee, nn, msg) {
                     var sc = nn.getElementsByClassName('server-response');
+                    if (!sc || !sc.length || sc.length !== 1) {
+                      sc = nn.parentElement.getElementsByClassName('server-response');
+                    }
                     if (sc && sc.length && sc.length === 1) {
-                      // remove "..." after receiving streaming data;
-                      if(sc[0].innerHTML === "...") {
-                        sc[0].innerHTML = "";
-                      }
-
-                      if (ee) {
-                        sc[0].innerHTML += ee;
-                        t.colorAISource(nn, sc[0]);
-                        return nn, this
+                      if (nn.id) {
+                        window.eySocket.streamedMessages.push({
+                          container: nn,
+                          text: ee,
+                        });
+                        if (!window.eySocket.isStreaming) {
+                          window.eySocket.isStreaming = true;
+                          t.processStream();
+                        }
                       } else {
-                        renderText(sc[0]);
+                        if (!msg.isDone) {
+                          var turnUUID = t.turnUUID(msg.session);
+                          if (turnUUID) {
+                            sc[0].id = 'text-' + turnUUID;
+                          }
+                        }
+                        sc[0].innerHTML = ee;
                         t.colorAISource(nn, sc[0]);
                         return nn, this
                       }
-                      
                     } else {
                       console.warn('unexpected response', nn);
                     }
@@ -2209,11 +2286,13 @@ window.menu = null;
                         }
                         return html;
                     }
+                }, this.isNullObj = function(obj) {
+                  return !obj || typeof obj === 'undefined' || typeof obj.classList !== 'object' || typeof obj.classList.contains !== 'function';
                 }, this.doReset = function(nr, ttt) {
                   if (nr) {
                     return nr;
                   }
-                  if (!ttt || typeof ttt === 'undefined' || typeof ttt.classList !== 'object' || typeof ttt.classList.contains !== 'function') {
+                  if (t.isNullObj(ttt)) {
                     return true;
                   }
                   if (ttt.classList.contains('ey-remove-item')) {
@@ -2222,26 +2301,34 @@ window.menu = null;
                   return false;
                 }, this.createMessage = function(msg, obj, isConsent) {
                     return new Promise(function(resolve, reject) {
-                        delete window.eySocket.turnType;
-                        delete window.eySocket.turnID;
-
-                        var ttt;
-                        var needsReset = false;
-                        if (t.doReset(needsReset, obj)) {
-                          ttt = t.empty(isConsent, msg.metadata);
-                        } else {
-                          ttt = obj;
-                        }
-
                         var data = {};
                         if (msg && msg.payload) {
                           data = JSON.parse(msg.payload);
                         } else {
                           return resolve();
                         }
+
+                        delete window.eySocket.turnType;
+                        delete window.eySocket.turnID;
+
+                        var ttt;
+                        var needsReset = false;
                         var aiMetadata = msg.metadata;
                         var msgSession = msg.session;
-                        t.addAIMetadata(ttt, msgSession, aiMetadata);
+                        var turnUUID = t.turnUUID(msgSession);
+                        var existingText = null;
+                        if (turnUUID) {
+                          existingText = document.getElementById('text-' + turnUUID);
+                        }
+                        if (t.isNullObj(ttt) && existingText)  {
+                          ttt = existingText;
+                        } else if (t.doReset(needsReset, obj)) {
+                          ttt = t.empty(isConsent, msg.metadata);
+                          t.addAIMetadata(ttt, msgSession, aiMetadata);
+                        } else {
+                          ttt = obj;
+                          t.addAIMetadata(ttt, msgSession, aiMetadata);
+                        }
 
                         var html = '';
                         if (data.set_attributes) {
@@ -2270,11 +2357,8 @@ window.menu = null;
                           }
                         } else {
                           if (data.text) {
-                            // STEP 5
                             html = t.chat.text(data.text);
-                            window.myText += html;
-                            t.setText(null, ttt);
-                            // t.setText(html, ttt)
+                            t.setText(html, ttt, msg);
                             needsReset = true;
                           }
                           if (data.attachment && data.attachment.payload) {
@@ -2282,11 +2366,8 @@ window.menu = null;
                               if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
-                               // STEP 5
-                               window.myText += t.chat.text(data.attachment.payload.text)
-                               // t.setText(t.chat.text(data.attachment.payload.text), ttt);
-                               t.setText(null, ttt);
-                               needsReset = true;
+                              t.setText(t.chat.text(data.attachment.payload.text), ttt, msg);
+                              needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
                               if (t.doReset(needsReset, ttt)) {
@@ -2338,22 +2419,12 @@ window.menu = null;
                           }
                         }
                         t.updateResponses();
-
-                        if (!msg.isDone) {
-                          resolve();
+                        if (msg.typing && msg.isDone) {
+                          window.eySocket.typingElement = t.empty(isConsent, msgSession, aiMetadata);
                         } else {
                           window.eySocket.typingElement = null;
-                          resolve();
-                        };
-                       
-                        // end message: msg.typing === false && msg.isDone === true
-                        // if (msg.typing) {
-                        //   window.eySocket.typingElement = t.empty(isConsent, msgSession, aiMetadata);
-                        //   resolve();
-                        // } else {
-                        //   window.eySocket.typingElement = null;
-                        //   resolve();
-                        // }
+                        }
+                        resolve();
                     });
                 }
             }
@@ -2370,6 +2441,7 @@ window.menu = null;
                     window.addEventListener("message", this.handleChatWindow, !1),
                     this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getQueryResultWrapper().addEventListener("scroll", this.handleScrollEvents, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),

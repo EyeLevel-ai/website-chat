@@ -600,7 +600,7 @@ try {
       if (eyc.env) {
         eyc.loadEnv();
       }
-      eyc.socket = new WebSocket(wssURL+'?agentID='+window.agentID+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid+'&sessUUID='+window.sessUUID+'&modelId='+window.modelId);
+      eyc.socket = new WebSocket(wssURL+'?agentID='+window.agentID+'&channelID='+window.channelID+'&origin='+window.origin+'&guid='+window.guid+'&sessUUID='+window.sessUUID);
       eyc.socket.connectTime = Date.now();
       eyc.socket.queuedMessages = [];
       if (isRestart) {
