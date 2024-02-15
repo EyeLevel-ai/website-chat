@@ -205,6 +205,17 @@ window.getUser = function() {
   return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
 }
 
+turnUUID = function(sess) {
+  if (sess) {
+    if (sess.TraceNext && sess.TraceNext.turnUUID) {
+      return sess.TraceNext.turnUUID;
+    } else if (sess.Trace && sess.Trace.turnUUID) {
+      return sess.Trace.turnUUID;
+    }
+  }
+  return null;
+}
+
 saveInteraction = function(interaction) {
   interaction.time = Date.now();
   if (interaction && interaction.sender && interaction.sender === 'user') {
@@ -226,13 +237,27 @@ saveInteraction = function(interaction) {
       }
     }
   }
-  updateAIMessages(interaction)
+  interaction = updateAIMessages(interaction);
 
   var h = window.localStorage.getItem('eyelevel.conversation.history');
   if (h && typeof h !== 'undefined') {
     var history = JSON.parse(h);
     if (history) {
-      history.push(interaction)
+      var interUUID = turnUUID(interaction.session);
+      var isSet = false;
+      if (interUUID) {
+        for (var i = 0; i < history.length; i++) {
+          var tid = turnUUID(history[i].session);
+          if (tid && tid === interUUID) {
+            history[i] = interaction;
+            isSet = true;
+            break;
+          }
+        }
+      }
+      if (!isSet) {
+        history.push(interaction)
+      }
     } else {
       history = [interaction];
     }
@@ -320,13 +345,46 @@ function updateAIMessages(intr) {
     && intr.session
     && intr.session.Trace
     && intr.session.Trace.turnUUID) {
-      var turnUUID = intr.session.Trace.turnUUID;
-      if (aiMessages[turnUUID] && typeof aiMessages[turnUUID] === 'object') {
-        aiMessages[turnUUID].push(intr);
-      } else {
-        aiMessages[turnUUID] = [intr];
+    var turnUUID = intr.session.Trace.turnUUID;
+    if (aiMessages[turnUUID] && typeof aiMessages[turnUUID] === 'object') {
+      var isSet = false;
+      for (var i = 0; i < aiMessages[turnUUID].length; i++) {
+        var msg = aiMessages[turnUUID][i];
+        if (!msg.isDone && msg.payload && intr.payload) {
+          var mdata = JSON.parse(msg.payload);
+          var idata = JSON.parse(intr.payload);
+          if (mdata.text) {
+            if (idata.text) {
+              mdata.text += idata.text;
+            } else if (idata.attachment && idata.attachment.payload && idata.attachment.payload.text) {
+              idata.attachment.payload.text = mdata.text + idata.attachment.payload.text;
+              mdata = idata;
+            }
+          } else if (mdata.attachment && mdata.attachment.payload && mdata.attachment.payload.text) {
+            if (idata.text) {
+              mdata.attachment.payload.text += idata.text;
+            } else if (idata.attachment && idata.attachment.payload && idata.attachment.payload.text) {
+              idata.attachment.payload.text = mdata.attachment.payload.text + idata.attachment.payload.text;
+              mdata = idata;
+            }
+          }
+          msg.isDone = intr.isDone;
+          msg.typing = intr.typing;
+          msg.payload = JSON.stringify(mdata);
+          aiMessages[turnUUID][i] = msg;
+          intr = msg;
+          isSet = true;
+          break;
+        }
       }
+      if (!isSet) {
+        aiMessages[turnUUID].push(intr);
+      }
+    } else {
+      aiMessages[turnUUID] = [intr];
+    }
   }
+  return intr;
 }
 
 retrieveInteractions = function(doAI) {
@@ -1623,24 +1681,15 @@ window.menu = null;
                       obj.appendChild(na);
                       break;
                   }
-                }, this.turnUUID = function(sess) {
-                  if (sess) {
-                    if (sess.TraceNext && sess.TraceNext.turnUUID) {
-                      return sess.TraceNext.turnUUID;
-                    } else if (sess.Trace && sess.Trace.turnUUID) {
-                      return sess.Trace.turnUUID;
-                    }
-                  }
-                  return null;
                 }, this.addAIMetadata = function(ttt, sess, aiMetadata) {
                   if (aiMetadata) {
                     if (!ttt.classList.contains('ai-response')) {
                       ttt.classList.add('ai-response');
                     }
 
-                    var turnUUID = t.turnUUID(sess);
-                    if (turnUUID) {
-                      ttt.setAttribute('data-turn-uuid', turnUUID);
+                    var tid = turnUUID(sess);
+                    if (tid) {
+                      ttt.setAttribute('data-turn-uuid', tid);
                     }
                     if (aiMetadata.showSource && aiMetadata.type) {
                       ttt.setAttribute('data-type', aiMetadata.type);
@@ -1697,9 +1746,9 @@ window.menu = null;
                         }
                       } else {
                         if (!msg.isDone) {
-                          var turnUUID = t.turnUUID(msg.session);
-                          if (turnUUID) {
-                            sc[0].id = 'text-' + turnUUID;
+                          var tid = turnUUID(msg.session);
+                          if (tid) {
+                            sc[0].id = 'text-' + tid;
                           }
                         }
                         sc[0].innerHTML = ee;
@@ -2315,10 +2364,10 @@ window.menu = null;
                         var needsReset = false;
                         var aiMetadata = msg.metadata;
                         var msgSession = msg.session;
-                        var turnUUID = t.turnUUID(msgSession);
+                        var tid = turnUUID(msgSession);
                         var existingText = null;
-                        if (turnUUID) {
-                          existingText = document.getElementById('text-' + turnUUID);
+                        if (tid) {
+                          existingText = document.getElementById('text-' + tid);
                         }
                         if (t.isNullObj(ttt) && existingText)  {
                           ttt = existingText;
