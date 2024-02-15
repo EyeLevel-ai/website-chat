@@ -394,6 +394,7 @@ retrieveInteractions = function(doAI) {
     if (doAI) {
       for (var t = 0; t < history.length; t++) {
         history[t].isCached = true;
+        history[t].isDone = true;
         updateAIMessages(history[t]);
       }
     }
