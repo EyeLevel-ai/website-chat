@@ -2415,8 +2415,7 @@ window.menu = null;
                           }
                         } else {
                           if (data.text) {
-                            var html = data.text.replaceAll("\\n", "<br />");
-                            html = data.text.replaceAll("\n", "<br />"); 
+                            var html = t.chat.text(data.text);
                             t.setText(html, ttt, msg);
                             needsReset = true;
                           }
@@ -2425,7 +2424,8 @@ window.menu = null;
                               if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
-                              t.setText(t.chat.text(data.attachment.payload.text), ttt, msg);
+                              var answerText = t.chat.text(data.attachment.payload.text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                              t.setText(answerText, ttt, msg);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
