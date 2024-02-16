@@ -1327,8 +1327,6 @@ window.menu = null;
                       .then(function(r) {
                         return t.processQueue();
                       });
-                  } else {
-                    return Promise.resolve();
                   }
                 }, this.processStream = function() {
                   if (window.eySocket.streamedMessages.length) {
@@ -1340,7 +1338,7 @@ window.menu = null;
                       });
                   } else {
                     window.eySocket.isStreaming = false;
-                    return Promise.resolve();
+                    return;
                   }
                 }, this.renderText = function(msg) {
                   return new Promise(function(resolve) {
@@ -1742,23 +1740,30 @@ window.menu = null;
                     if (!sc || !sc.length || sc.length !== 1) {
                       sc = nn.parentElement.getElementsByClassName('server-response');
                     }
-                    if (sc && sc.length && sc.length === 1) {
-                      if (nn.id) {
+
+                     if (sc && sc.length && sc.length === 1) { 
+                      if (nn.id || !msg.isDone) {
+                        // streaming messages;
+                        if (!nn.id) {
+                          sc[0].innerHTML = "";
+                          var tid = turnUUID(msg.session);
+                          if (tid) {
+                            sc[0].id = 'text-' + tid;
+                          }
+                          nn = sc[0];
+                        }
+
                         window.eySocket.streamedMessages.push({
                           container: nn,
                           text: ee,
                         });
+
                         if (!window.eySocket.isStreaming) {
                           window.eySocket.isStreaming = true;
                           t.processStream();
                         }
                       } else {
-                        if (!msg.isDone) {
-                          var tid = turnUUID(msg.session);
-                          if (tid) {
-                            sc[0].id = 'text-' + tid;
-                          }
-                        }
+                        // non-streaming messages
                         sc[0].innerHTML = ee;
                         t.colorAISource(nn, sc[0]);
                         return nn, this
@@ -2456,7 +2461,13 @@ window.menu = null;
                               }
                               html = t.chat.buttons(data.attachment.payload.buttons);
                               if (html && html.length) {
-                                t.setButtons(html, ttt);
+                                if (!window.eySocket.isStreaming) {
+                                  t.setButtons(html, ttt);
+                                } else {
+                                  setTimeout(function(){
+                                    t.setButtons(html, ttt);
+                                  }, 1500)
+                                }
                               } else {
                                 t.removeItem(ttt);
                               }
