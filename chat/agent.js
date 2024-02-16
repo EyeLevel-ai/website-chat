@@ -14,13 +14,6 @@ function randomString(length) {
   return text;
 }
 
-function scrollToBottomOfDiv() {
-  var div = document.getElementById("resultWrapper");
-  if (div) {
-      div.scrollTop = div.scrollHeight;
-  }
-}
-
 function extractUrl(queryString) {
   var urlRegex = /[?&]url=([^&#]*)/;
   var match = urlRegex.exec(queryString);
@@ -214,9 +207,9 @@ window.getUser = function() {
 
 turnUUID = function(sess) {
   if (sess) {
-    if (sess.TraceNext && sess.TraceNext.turnUUID) {
+    if (sess.TraceNext && sess.TraceNext.turnUUID && sess.TraceNext.turnUUID !== '00000000-0000-0000-0000-000000000000') {
       return sess.TraceNext.turnUUID;
-    } else if (sess.Trace && sess.Trace.turnUUID) {
+    } else if (sess.Trace && sess.Trace.turnUUID && sess.Trace.turnUUID !== '00000000-0000-0000-0000-000000000000') {
       return sess.Trace.turnUUID;
     }
   }
@@ -255,7 +248,7 @@ saveInteraction = function(interaction) {
       if (interUUID) {
         for (var i = 0; i < history.length; i++) {
           var tid = turnUUID(history[i].session);
-          if (tid && tid === interUUID) {
+          if (tid && tid === interUUID && !history[i].isDone) {
             history[i] = interaction;
             isSet = true;
             break;
@@ -391,6 +384,7 @@ function updateAIMessages(intr) {
       aiMessages[turnUUID] = [intr];
     }
   }
+
   return intr;
 }
 
@@ -806,6 +800,13 @@ window.menu = null;
                 key: "addUserRequestNode",
                 value: function(n, ben) {
                     var t = this.workplace.createElement("div");
+                    t.addEventListener('load', function() {
+                      var q = this.queryResultWrapper;
+                      if (!userScrolledUp || q.scrollHeight - q.scrollTop <= q.clientHeight + 20) {
+                        return q.scrollTop = q.scrollHeight, this
+                      }
+                      return;
+                    }, !1);
                     if (n.text) {
                       return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n.text + '</div>', this.queryResult.appendChild(t), this;
                     } else if (n.input_value && n.id) {
@@ -1026,6 +1027,13 @@ window.menu = null;
                 }, this.handleInputFocus = function(n) {
                   window.scrollTo(0, 0);
                   document.body.scrollTop = 0;
+                }, this.createElement = function(ty) {
+                  var nele = t.domHelper.workplace.createElement(ty);
+                  t.scrollToBottomOnLoad(nele);
+                  return nele;
+                }, this.removeFromParent= function(child) {
+                  child.parentNode.removeChild(child);
+                  t.scrollToBottom();
                 }, this.heartbeat = function() {
                   if (!window.eySocket) return;
                   window.eySocket.heartbeat = true;
@@ -1115,14 +1123,14 @@ window.menu = null;
                     window.attnElm = false;
                   }
                   if (window.videoElm) {
-                    window.videoElm.parentNode.removeChild(window.videoElm);
+                    t.removeFromParent(window.videoElm);
                     window.videoElm = false;
                   }
                   return false;
                 }, this.loadVideo = function() {
                   if (window.eyvideo) {
                     var w = t.domHelper.getChatWindow();
-                    window.videoElm = t.domHelper.workplace.createElement('div');
+                    window.videoElm = t.createElement('div');
                     window.videoElm.classList.add('ey-class-video-cnt');
                     window.videoElm.onclick = function(e) {
                       e.stopPropagation();
@@ -1131,7 +1139,7 @@ window.menu = null;
                       vic.play();
                     };
                     if (window.eyvideo.img) {
-                      var pimg = t.domHelper.workplace.createElement('img');
+                      var pimg = t.createElement('img');
                       pimg.id = 'eyVideoImg';
                       pimg.classList.add('ey-class-video');
                       pimg.src = window.eyvideo.img;
@@ -1142,7 +1150,7 @@ window.menu = null;
                   }
                 }, this.initVideo = function() {
                   if (window.videoElm) {
-                    var vc = t.domHelper.workplace.createElement('video');
+                    var vc = t.createElement('video');
                     vc.id = 'eyVideo';
                     vc.preload = true;
                     vc.autoplay = true;
@@ -1153,14 +1161,14 @@ window.menu = null;
                       if (window.eyvideo.img) {
                         var pimg = t.domHelper.workplace.getElementById('eyVideoImg');
                         if (pimg) {
-                          pimg.parentNode.removeChild(pimg);
+                          t.removeFromParent(pimg);
                         }
                       }
                     }, !1);
-                    var s1 = t.domHelper.workplace.createElement('source');
+                    var s1 = t.createElement('source');
                     s1.type = 'video/webm';
                     vc.appendChild(s1);
-                    var s2 = t.domHelper.workplace.createElement('source');
+                    var s2 = t.createElement('source');
                     s2.type = 'video/mp4';
                     s2.src = window.eyvideo.full;
                     vc.appendChild(s2);
@@ -1183,26 +1191,27 @@ window.menu = null;
                           }
                         }
                       }
+                      t.scrollToBottom();
                       reportFeedback({
                         rating: response,
                         turnUUID: turnUUID,
                       }, function() {
                         var star = t.domHelper.workplace.getElementById(`ai-feedback-prompt`);
                         star.innerHTML = 'Thanks!';
+                        t.scrollToBottom();
                       })
                       break;
                     default:
                       var wid = t.domHelper.workplace.getElementById('ai-feedback');
                       while (wid.childNodes.length) {
-                        wid.removeChild(wid.childNodes[0]);
+                        t.removeFromParent(wid.childNodes[0]);
                       }
-                      var prompt = t.domHelper.workplace.createElement('div');
+                      var prompt = t.createElement('div');
                       prompt.classList.add('ai-feedback-prompt');
                       prompt.innerHTML = 'Thanks!';
                       wid.appendChild(prompt);
                       setTimeout(function() {
-                        wid.parentNode.removeChild(wid);
-                        t.scrollToBottom();
+                        t.removeFromParent(wid);
                       }, 3000);
                   }
                 }, this.removeFeedbackWidget = function() {
@@ -1218,22 +1227,22 @@ window.menu = null;
                       var turnUUID = le.getAttribute('data-turn-uuid');
                       if (turnUUID) {
                         t.removeFeedbackWidget();
-                        var wid = t.domHelper.workplace.createElement('div');
+                        var wid = t.createElement('div');
                         wid.id = 'ai-feedback';
                         wid.classList.add('ai-feedback-container');
                         switch(ty) {
                           case 'five-scale':
-                            var pstid = t.domHelper.workplace.createElement('div');
+                            var pstid = t.createElement('div');
                             pstid.classList.add('ai-feedback-container-stars');
-                            var prompt = t.domHelper.workplace.createElement('div');
+                            var prompt = t.createElement('div');
                             prompt.id = 'ai-feedback-prompt';
                             prompt.classList.add('ai-feedback-prompt');
                             prompt.innerHTML = 'Rate this response: ';
                             pstid.appendChild(prompt);
-                            var stid = t.domHelper.workplace.createElement('div');
+                            var stid = t.createElement('div');
                             stid.classList.add('ai-feedback-stars');
                             for (var st = 1; st < 6; st++) {
-                              var star = t.domHelper.workplace.createElement('div');
+                              var star = t.createElement('div');
                               star.classList.add('ai-feedback-star-inactive');
                               star.id = `ai-feedback-star-${st}`;
                               star.setAttribute('data-turn-uuid', turnUUID);
@@ -1244,23 +1253,22 @@ window.menu = null;
                             wid.appendChild(pstid);
                             break;
                           default:
-                            var prompt = t.domHelper.workplace.createElement('div');
+                            var prompt = t.createElement('div');
                             prompt.classList.add('ai-feedback-prompt');
                             prompt.innerHTML = 'Was this helpful?';
                             wid.appendChild(prompt);
-                            var thumbUp = t.domHelper.workplace.createElement('div');
+                            var thumbUp = t.createElement('div');
                             thumbUp.classList.add('ai-feedback-positive');
                             thumbUp.setAttribute('data-turn-uuid', turnUUID);
                             thumbUp.onclick = t.feedbackClick.bind(t, turnUUID, 1);
                             wid.appendChild(thumbUp);
-                            var thumbDown = t.domHelper.workplace.createElement('div');
+                            var thumbDown = t.createElement('div');
                             thumbDown.classList.add('ai-feedback-negative');
                             thumbDown.setAttribute('data-turn-uuid', turnUUID);
                             thumbDown.onclick = t.feedbackClick.bind(t, turnUUID, -1, ty);
                             wid.appendChild(thumbDown);
                         }
                         aa.appendChild(wid);
-                        t.scrollToBottom();
                         wid.classList.add('ey-add-item');
                       }
                     }
@@ -1321,7 +1329,6 @@ window.menu = null;
                   }, 2000);
                 }, this.processQueue = function() {
                   if (window.eySocket.queuedMessages.length) {
-                    t.scrollToBottom();
                     var wsRes = window.eySocket.queuedMessages.shift();
                     return t.createMessage(wsRes, window.eySocket.typingElement)
                       .then(function(r) {
@@ -1330,7 +1337,6 @@ window.menu = null;
                   }
                 }, this.processStream = function() {
                   if (window.eySocket.streamedMessages.length) {
-                    t.scrollToBottom();
                     var wsRes = window.eySocket.streamedMessages.shift();
                     return t.renderText(wsRes)
                       .then(function(r) {
@@ -1367,12 +1373,11 @@ window.menu = null;
                           setTimeout(function() {
                             var char = text.charAt(i);
                             var inner = msg.container.innerHTML + char;
-                            
-                            msg.container.innerHTML = inner.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            msg.container.innerHTML = t.escapeAndDecorateString(inner.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'), true);
 
                             i++;
-                            processCharacter();
                             t.scrollToBottom();
+                            processCharacter();
                           }, rand);
                         } else {
                           if (partIndex < parts.length - 1) {
@@ -1380,8 +1385,8 @@ window.menu = null;
                           }
 
                           partIndex++;
-                          processPart();
                           t.scrollToBottom();
+                          processPart();
                         }
                       }
 
@@ -1397,6 +1402,9 @@ window.menu = null;
                       var wsRes = JSON.parse(n.data);
                       saveSession(wsRes.session);
                       if (wsRes) {
+                        if (typeof wsRes.isDone === 'undefined') {
+                          wsRes.isDone = true;
+                        }
                         if (wsRes.action) {
                           if (wsRes.action === 'reconnect') {
                             setTransfer(false);
@@ -1502,16 +1510,16 @@ window.menu = null;
                     n.preventDefault(), n.stopPropagation(), t.checkWS()
                 }, this.handleScrollEvents = function(n) {
                   var q = t.domHelper.getQueryResultWrapper();
-
-                  if (q.scrollHeight - q.scrollTop <= q.clientHeight) {
+                  if (q.scrollHeight - q.scrollTop <= q.clientHeight + 20) {
                     userScrolledUp = false;
+                  } else {
+                    userScrolledUp = true;
                   }
-                  userScrolledUp = true;
                 }, this.handleCloseWindow = function(n) {
                   n.preventDefault();
                   n.stopPropagation();
                   if (window.videoElm) {
-                    window.videoElm.parentNode.removeChild(window.videoElm);
+                    t.removeFromParent(window.videoElm);
                     window.videoElm = false;
                   }
                   window.parent.postMessage("close", "*");
@@ -1531,7 +1539,6 @@ window.menu = null;
                           t.initializeWS();
                         }
                         setSeen();
-                        t.scrollToBottom();
                         window.parent.postMessage("alert-update", "*");
                       } else if (n.data.indexOf && n.data.indexOf("Consent||") === 0) {
                         window.Consent = true;
@@ -1540,7 +1547,7 @@ window.menu = null;
                       } else if (n.data.indexOf && n.data.indexOf("close") === 0) {
                         window.isOpen = false;
                         if (window.videoElm) {
-                          window.videoElm.parentNode.removeChild(window.videoElm);
+                          t.removeFromParent(window.videoElm);
                           window.videoElm = false;
                         }
                       } else if (n.data.indexOf && n.data.indexOf("hide close") === 0) {
@@ -1555,7 +1562,6 @@ window.menu = null;
                     if (!window.eySocket) {
                       t.initializeWS();
                     }
-                    t.scrollToBottom();
                   }
                 }, this.updateResponses = function() {
                     var tc = [];
@@ -1604,7 +1610,6 @@ window.menu = null;
                   int1.typing = false;
                   if (int1.sender === 'user') {
                     t.domHelper.addUserRequestNode(pay, t);
-                    t.scrollToBottom();
                     t.loadInteractions(idx + 1, inter);
                   } else {
                     t.createMessage(int1)
@@ -1612,20 +1617,27 @@ window.menu = null;
                         return t.loadInteractions(idx + 1, inter);
                       });
                   }
+                }, this.scrollToBottomOnLoad = function(obj) {
+                  t.scrollToBottom();
+                  obj.addEventListener('load', function() {
+                    t.scrollToBottom();
+                  }, !1);
                 }, this.scrollToBottom = function() {
                     var q = t.domHelper.getQueryResultWrapper();
-                    if (!userScrolledUp || q.scrollHeight - q.scrollTop <= q.clientHeight + 30) {
+                    if (!userScrolledUp || q.scrollHeight - q.scrollTop <= q.clientHeight + 20) {
                       return q.scrollTop = q.scrollHeight, this
                     }
                     return
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
-                }, this.escapeAndDecorateString = function(txt) {
+                }, this.escapeAndDecorateString = function(txt, isStreaming) {
                   var regex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-z0-9-]{2,})+\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
                   while ((match = regex.exec(txt)) != null) {
                     var rawTxt = txt.substr(startIndex, (match.index - startIndex));
-                    rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;
+                    if (!isStreaming) {
+                      rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;
+                    }
                     splitText += rawTxt;
                     var cleanedLink = txt.substr(match.index, (match[0].length));
                     splitText += '<a href="' + cleanedLink + '" target="_blank">' + cleanedLink + '</a>';
@@ -1633,7 +1645,9 @@ window.menu = null;
                   }
                   if (startIndex < txt.length) {
                     var rawTxt = txt.substr(startIndex);
-                    rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;                    
+                    if (!isStreaming) {
+                      rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt; 
+                    }                   
                     splitText += rawTxt;
                   }
                   return splitText;
@@ -1644,14 +1658,13 @@ window.menu = null;
                     window.consentLoaded = true;
                     var q = t.domHelper.getQueryResultWrapper();
                     q.classList.add('consent-screen');
-                    var na = t.domHelper.workplace.createElement('div');
+                    var na = t.createElement('div');
                     na.id = 'consentWindow';
                     na.className = 'ey_result consent-overlay';
                     na.innerHTML = '<div class="consent-container"><table class="ey_result-table"><tr><td id="consentResult"></td></tr></table></div>';
                     q.appendChild(na);
                     t.createMessage(window.ConsentContent, null, true)
                     var ba = t.domHelper.workplace.getElementById('consentWindow');
-                    ba.scrollTop = ba.scrollHeight;
                   }
                 }, this.colorAISource = function(ttt, obj) {
                   var ty = ttt.getAttribute('data-type');
@@ -1661,7 +1674,7 @@ window.menu = null;
                     case 'override':
                       break;
                     case 'gpt3-completion':
-                      var na = t.domHelper.workplace.createElement('div');
+                      var na = t.createElement('div');
                       na.classList.add('ai-source');
                       var turnUUID = ttt.getAttribute('data-turn-uuid');
                       if (turnUUID) {
@@ -1681,7 +1694,7 @@ window.menu = null;
                       obj.appendChild(na);
                       break;
                     case 'gpt3-chitchat':
-                      var na = t.domHelper.workplace.createElement('div');
+                      var na = t.createElement('div');
                       na.classList.add('ai-source');
                       na.classList.add('ai-source-gpt3');
                       obj.appendChild(na);
@@ -1704,7 +1717,7 @@ window.menu = null;
                     ttt.classList.remove('ai-response');
                   }
                 }, this.empty = function(isConsent, sess, aiMetadata) {
-                    var na = t.domHelper.workplace.createElement('div');
+                    var na = t.createElement('div');
                     na.className = 'server-response-container';
                     t.addAIMetadata(na, sess, aiMetadata);
                     na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response">...</div>';
@@ -1726,27 +1739,27 @@ window.menu = null;
                           }
                         }
                       }
-                    }, 15000);
+                    }, 20000);
                     return na;
                 }, this.removeItem = function(nn) {
                     nn.classList.add('ey-remove-item');
                     setTimeout(function() {
                       if (nn && nn.parentNode) {
-                        nn.parentNode.removeChild(nn);
+                        t.removeFromParent(nn);
                       }
                     }, 200);
-                }, this.setText = function(ee, nn, msg) {
+                }, this.setText = function(ee, nn, isStreaming, sess) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (!sc || !sc.length || sc.length !== 1) {
                       sc = nn.parentElement.getElementsByClassName('server-response');
                     }
 
                      if (sc && sc.length && sc.length === 1) { 
-                      if (nn.id || !msg.isDone) {
+                      if (isStreaming) {
                         // streaming messages;
                         if (!nn.id) {
                           sc[0].innerHTML = "";
-                          var tid = turnUUID(msg.session);
+                          var tid = turnUUID(sess);
                           if (tid) {
                             sc[0].id = 'text-' + tid;
                           }
@@ -1766,6 +1779,7 @@ window.menu = null;
                         // non-streaming messages
                         sc[0].innerHTML = ee;
                         t.colorAISource(nn, sc[0]);
+                        t.scrollToBottom();
                         return nn, this
                       }
                     } else {
@@ -1775,7 +1789,7 @@ window.menu = null;
                     var sc = nn.getElementsByClassName('server-response');
                     if (sc && sc.length && sc.length === 1) {
                       while (sc[0].firstChild) {
-                        sc[0].removeChild(sc[0].firstChild);
+                        t.removeFromParent(sc[0].firstChild);
                       }
                       sc[0].classList.add('chat-multimedia');
                       sc[0].appendChild(ee);
@@ -1787,7 +1801,7 @@ window.menu = null;
                   var sc = nn.getElementsByClassName('server-response');
                   if (sc && sc.length && sc.length === 1) {
                     while (sc[0].firstChild) {
-                      sc[0].removeChild(sc[0].firstChild);
+                      t.removeFromParent(sc[0].firstChild);
                     }
 
                     var isInput = false;
@@ -1814,7 +1828,6 @@ window.menu = null;
                         sc[0].parentElement.classList.add('user-input-hidden');
                       }
                     }
-                    scrollToBottomOfDiv()
                     return nn, this
                   } else {
                     console.warn('unexpected response', nn);
@@ -1838,6 +1851,7 @@ window.menu = null;
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
                         window.parent.postMessage(ty, "*");
+                        t.scrollToBottom();
                       }, 500);
                     } else if (lower === 'send empty') {
                       setTimeout(function() {
@@ -1846,6 +1860,7 @@ window.menu = null;
                         window.eySocket.send(JSON.stringify(t.buildPayLoad("", "")));
                         t.domHelper.setInputValue("");
                         t.domHelper.handleStopSend();
+                        t.scrollToBottom();
                       }, 500);
                     } else if (window.eySocket.turnType
                       && window.eySocket.turnID
@@ -1859,6 +1874,7 @@ window.menu = null;
                       input.value = n;
                       inBtn.click();
                       t.domHelper.setInputValue("");
+                      t.scrollToBottom();
                     } else {
                       t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
                       if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
@@ -1873,8 +1889,8 @@ window.menu = null;
                       window.eySocket.send(JSON.stringify(t.buildPayLoad(n)));
                       t.domHelper.setInputValue("");
                       t.domHelper.handleStopSend();
+                      t.scrollToBottom();
                     }
-                    scrollToBottomOfDiv();
                   }
                 }, this.sessionId = this.guid(), this.stage = 'welcome', this.nextStage = 'welcome', this.confirmationValue = null, this.menu = null, this.handleMenuButtonClick = function(ben) {
                     if (!t.domHelper.getMainMenu().style.height) {
@@ -1893,11 +1909,11 @@ window.menu = null;
                   var futureSteps = false;
                   var mm = t.domHelper.getMenuList();
                   while (mm.firstChild) {
-                    mm.removeChild(mm.firstChild);
+                    t.removeFromParent(mm.firstChild);
                   }
                   for (var i in menu) {
                       if (menu[i].title) {
-                          var li = t.domHelper.workplace.createElement('li');
+                          var li = t.createElement('li');
                           if (futureSteps) {
                               li.classList.add('inactive-link');
                           }
@@ -1915,27 +1931,27 @@ window.menu = null;
                   }
                   t.domHelper.setMenuHeight();
                   t.menu = menu;
+                  t.scrollToBottom();
                 }, this.makeCopy = function(rr) {
                   return JSON.parse(JSON.stringify(rr));
                 }, this.getSpeech = function(n) {
                   return (n.length ? n : [ { speech: e.DEFAULT_NO_ANSWER } ]);
                 }, this.chat = {
-                    text: function(data) {
-                        var html = t.escapeAndDecorateString(data);
+                    text: function(data, isStreaming) {
+                        var html = data;
+                        if (!isStreaming) {
+                          html = t.escapeAndDecorateString(data);
+                        }
                         html = html.replaceAll("\\n", "<br />");
-                        html = html.replaceAll("\n", "<br />");
-                        return html;
+                        return html.replaceAll("\n", "<br />");
                     }, image: function(data) {
-                        var img = t.domHelper.workplace.createElement('img');
+                        var img = t.createElement('img');
                         img.src = data;
                         img.classList.add('chat-image');
-                        img.addEventListener('load', function() {
-                          t.scrollToBottom();
-                        }, !1);
                         return img;
                     }, video: function(data) {
                       if (data.indexOf('youtu.be/') > -1 || data.indexOf('youtube.com/watch?v=') > -1) {
-                        var cnt = t.domHelper.workplace.createElement('div');
+                        var cnt = t.createElement('div');
                         cnt.classList.add('youtube-container');
                         var ytPre = '';
                         if (data.indexOf('youtu.be/') > -1) {
@@ -1957,7 +1973,7 @@ window.menu = null;
                       var sc = ttt.getElementsByClassName('server-response');
                       if (sc && sc.length && sc.length === 1) {
                         while (sc[0].firstChild) {
-                          sc[0].removeChild(sc[0].firstChild);
+                          t.removeFromParent(sc[0].firstChild);
                         }
                       }
                       sc[0].parentElement.classList.add('chat-cards');
@@ -1965,16 +1981,16 @@ window.menu = null;
                       if (data.length === 1){
                         sc[0].classList.add('card-single');
                       }
-                      var cardWrap = t.domHelper.workplace.createElement('div');
+                      var cardWrap = t.createElement('div');
                       cardWrap.classList.add('card-wrapper');
                       cardWrap.id = 'card-wrap-' + now;
-                      var cardInner = t.domHelper.workplace.createElement('div');
+                      var cardInner = t.createElement('div');
                       cardInner.classList.add('card-inner');
                       cardInner.id = 'card-slider-' + now;
 
                       var indicators = [];
                       for (var idx in data) {
-                        var indicator = t.domHelper.workplace.createElement('button');
+                        var indicator = t.createElement('button');
                         indicator.classList.add('card-indicator');
                         if (indicators.length === 0) {
                           indicator.classList.add('active');
@@ -1983,31 +1999,28 @@ window.menu = null;
                         indicators.push(indicator);
                         var cd = data[idx];
                         var isEmpty = true;
-                        var cardCnt = t.domHelper.workplace.createElement('div');
+                        var cardCnt = t.createElement('div');
                         cardCnt.classList.add('card-container');
                         if (cd.image_url) {
-                          var imgCnt = t.domHelper.workplace.createElement('div');
+                          var imgCnt = t.createElement('div');
                           imgCnt.classList.add('card-image-container');
-                          var imgHolder = t.domHelper.workplace.createElement('div');
+                          var imgHolder = t.createElement('div');
                           imgHolder.classList.add('card-image-holder');
-                          var img = t.domHelper.workplace.createElement('img');
+                          var img = t.createElement('img');
                           img.classList.add('card-image');
                           img.src = cd.image_url;
-                          img.addEventListener('load', function() {
-                            t.scrollToBottom();
-                          }, !1);
                           imgHolder.appendChild(img);
                           imgCnt.appendChild(imgHolder);
                           cardCnt.appendChild(imgCnt);
                         }
                         if (cd.title) {
-                          var title = t.domHelper.workplace.createElement('div');
+                          var title = t.createElement('div');
                           title.classList.add('card-title');
                           title.innerHTML = cd.title;
                           cardCnt.appendChild(title);
                           isEmpty = false;
                           if (cd.subtitle) {
-                            var subtitle = t.domHelper.workplace.createElement('div');
+                            var subtitle = t.createElement('div');
                             subtitle.classList.add('card-subtitle');
                             subtitle.innerHTML = cd.subtitle;
                             cardCnt.appendChild(subtitle);
@@ -2016,7 +2029,7 @@ window.menu = null;
                         if (cd.buttons && cd.buttons.length) {
                           var bt = t.chat.buttons(cd.buttons);
                           if (bt && bt.length) {
-                            var buttons = t.domHelper.workplace.createElement('div');
+                            var buttons = t.createElement('div');
                             buttons.classList.add('card-buttons');
                             buttons.classList.add('chat-buttons');
                             for (var i in bt) {
@@ -2032,7 +2045,7 @@ window.menu = null;
                         sc[0].appendChild(cardWrap);
                       }
                       if (indicators.length > 1) {
-                        var map = t.domHelper.workplace.createElement('div');
+                        var map = t.createElement('div');
                         map.classList.add('card-indicators');
                         map.id = 'card-indicators-' + now;
                         for (var idx in indicators) {
@@ -2129,7 +2142,7 @@ window.menu = null;
                         }, supportsPassive() ? {passive : false} : false);
                       }
                     }, button: function(data) {
-                        var button = t.domHelper.workplace.createElement('button');
+                        var button = t.createElement('button');
                         button.classList.add('chat-button');
                         var objData = data;
                         if (objData.type === 'phone_number') {
@@ -2162,7 +2175,7 @@ window.menu = null;
                           }
                           var dupeButton = t.domHelper.workplace.getElementById(bid);
                           if (dupeButton) {
-                            dupeButton.parentNode.removeChild(dupeButton);
+                            t.removeFromParent(dupeButton);
                           }
                         }
                         button.setAttribute('id', bid);
@@ -2170,7 +2183,7 @@ window.menu = null;
                         button.onclick = t.sendButton.bind(t);
                         return button;
                     }, button_facebook: function(data) {
-                        var button = t.domHelper.workplace.createElement('button');
+                        var button = t.createElement('button');
                         button.classList.add('chat-button');
                         button.setAttribute('id', data.intent);
                         button.innerHTML = data.label;
@@ -2212,26 +2225,26 @@ window.menu = null;
                         idPrefix = 'in-' + Date.now();
                         msg.id = idPrefix;
                       }
-                      var cnt = t.domHelper.workplace.createElement('div');
+                      var cnt = t.createElement('div');
                       cnt.classList.add('user-input-container');
-                      var holder = t.domHelper.workplace.createElement('div');
+                      var holder = t.createElement('div');
                       holder.classList.add('user-input-holder');
-                      var input = t.domHelper.workplace.createElement('input');
+                      var input = t.createElement('input');
                       input.classList.add('user-input');
                       input.id = idPrefix + '-input';
                       input.required = true;
                       input.addEventListener("keydown", t.handleInputKeyDown, !1);
                       holder.appendChild(input);
-                      var status = t.domHelper.workplace.createElement('div');
+                      var status = t.createElement('div');
                       status.classList.add('user-input-status');
                       status.id = idPrefix + '-status';
                       status.innerHTML = '&nbsp;';
-                      var inBtn = t.domHelper.workplace.createElement('div');
+                      var inBtn = t.createElement('div');
                       inBtn.classList.add('user-input-button');
                       inBtn.classList.add('icon-send');
                       inBtn.id = idPrefix;
                       inBtn.onclick = t.inputButton.bind(t);
-                      var label = t.domHelper.workplace.createElement('label');
+                      var label = t.createElement('label');
                       label.classList.add('user-input-label');
                       label.innerHTML = payload.text;
                       switch (data.content_type) {
@@ -2312,7 +2325,7 @@ window.menu = null;
                         return t.chat.button({ title: objData.title, type: "phone_number", payload: objData.url, url: objData.url });
                       }
                     }
-                      var button = t.domHelper.workplace.createElement('button');
+                      var button = t.createElement('button');
                       button.classList.add('chat-button');
                       button.setAttribute('id', objData.payload);
                       button.innerHTML = objData.payload;
@@ -2362,6 +2375,17 @@ window.menu = null;
                     return true;
                   }
                   return false;
+                }, this.streamButtons = function(html, isConsent, msgSession, aiMetadata, attempt) {
+                  if (!window.eySocket.isStreaming || attempt > 7) {
+                    setTimeout(function() {
+                      var ttt = t.empty(isConsent, msgSession, aiMetadata);
+                      t.setButtons(html, ttt);
+                    }, 500);
+                  } else {
+                    setTimeout(function() {
+                      t.streamButtons(html, isConsent, msgSession, aiMetadata, attempt+1);
+                    }, 500);
+                  }
                 }, this.createMessage = function(msg, obj, isConsent) {
                     return new Promise(function(resolve, reject) {
                         var data = {};
@@ -2392,6 +2416,7 @@ window.menu = null;
                           ttt = obj;
                           t.addAIMetadata(ttt, msgSession, aiMetadata);
                         }
+                        var isStreaming = ttt.id || !msg.isDone;
 
                         var html = '';
                         if (data.set_attributes) {
@@ -2409,7 +2434,8 @@ window.menu = null;
                               } catch (e) {}
                             }
                           }
-                          return resolve();
+                          resolve();
+                          return;
                         }
                         if (t.chat.is_input(msg)) {
                           html = t.chat.user_input(msg);
@@ -2420,8 +2446,8 @@ window.menu = null;
                           }
                         } else {
                           if (data.text) {
-                            var html = t.chat.text(data.text);
-                            t.setText(html, ttt, msg);
+                            var html = t.chat.text(data.text, isStreaming);
+                            t.setText(html, ttt, isStreaming, msg.session);
                             needsReset = true;
                           }
                           if (data.attachment && data.attachment.payload) {
@@ -2429,8 +2455,7 @@ window.menu = null;
                               if (t.doReset(needsReset, ttt)) {
                                 ttt = t.empty(isConsent, msgSession, aiMetadata);
                               }
-                              var answerText = t.chat.text(data.attachment.payload.text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                              t.setText(answerText, ttt, msg);
+                              t.setText(t.chat.text(data.attachment.payload.text, isStreaming), ttt, isStreaming, msg.session);
                               needsReset = true;
                             }
                             if (data.attachment.type && data.attachment.type === 'video' && data.attachment.payload.url) {
@@ -2456,19 +2481,25 @@ window.menu = null;
                               needsReset = true;
                             }
                             if (data.attachment.payload.buttons) {
-                              if (t.doReset(needsReset, ttt)) {
-                                ttt = t.empty(isConsent, msgSession, aiMetadata);
-                              }
                               html = t.chat.buttons(data.attachment.payload.buttons);
                               if (html && html.length) {
                                 if (!window.eySocket.isStreaming) {
+                                  if (t.doReset(needsReset, ttt)) {
+                                    ttt = t.empty(isConsent, msgSession, aiMetadata);
+                                  }
                                   t.setButtons(html, ttt);
                                 } else {
-                                  setTimeout(function(){
-                                    t.setButtons(html, ttt);
-                                  }, 1500)
+                                  setTimeout(function() {
+                                    if (!t.doReset(needsReset, ttt)) {
+                                      t.removeItem(ttt);
+                                    }
+                                    t.streamButtons(html, isConsent, msgSession, aiMetadata, 0);
+                                  }, 500);
                                 }
                               } else {
+                                if (t.doReset(needsReset, ttt)) {
+                                  ttt = t.empty(isConsent, msgSession, aiMetadata);
+                                }
                                 t.removeItem(ttt);
                               }
                             }
@@ -2543,10 +2574,12 @@ window.menu = null;
                     status.innerHTML = '&nbsp;';
                     var inputVal = input.value;
                     if (!inputVal) {
+                      this.scrollToBottom();
                       return;
                     }
                     inputVal = inputVal.replace(whiteSpace, "");
                     if (!inputVal) {
+                      this.scrollToBottom();
                       return;
                     }
                     switch (ee.target.type) {
@@ -2614,13 +2647,14 @@ window.menu = null;
                       default:
                         break;
                     }
+                    this.scrollToBottom();
                   }
                 }
             }, {
                 key: "sendButton",
                 value: function(ee) {
                   if (ee.target.classList.contains('click-to-call')) {
-                    var aa = document.createElement('a');
+                    var aa = this.createElement('a');
                     var splitNum = ee.target.id.split('url=');
                     if (splitNum.length === 2) {
                       aa.href = decodeURIComponent(splitNum[1].split('&')[0]);
@@ -2629,7 +2663,6 @@ window.menu = null;
                     }
                     aa.click();
                     this.handleEvent(aa.href);
-                    this.scrollToBottom();
                   } else if (ee.target.classList.contains('web-url')) {
                     var curl = ee.target.value;
                     if (isiOS()) {
@@ -2639,19 +2672,18 @@ window.menu = null;
                         curl = curl.replace('.pdf%23page%3D', '.pdf%23page');
                       }
                     }
-                    var aa = document.createElement('a');
+                    var aa = this.createElement('a');
                     aa.href = curl;
                     aa.target = '_blank';
                     aa.click();
                     this.handleEvent('web}'+curl);
-                    this.scrollToBottom();
                   } else if (ee.target.classList.contains('consent-button')) {
                     if (ee.target.value === 'true') {
                       saveConsent(ee.target.value);
                       var gw = document.getElementById('consentWindow');
                       if (gw) {
                         gw.parentNode.classList.remove('consent-screen');
-                        gw.parentNode.removeChild(gw);
+                        t.removeFromParent(gw);
                       }
                     } else {
                       window.parent.postMessage('close', '*');
@@ -2673,7 +2705,7 @@ window.menu = null;
                 key: "facebookButton",
                 value: function(ee) {
                     var t = this;
-                    ee.target.parentElement.parentElement.removeChild(ee.target.parentElement);
+                    t.removeFromParent(ee.target.parentElement);
                     window.isChatting = true;
                     t.removeFeedbackWidget();
                     FB.login(function(res) {
@@ -2746,7 +2778,7 @@ window.menu = null;
                       t.removeFeedbackWidget();
                       window.eySocket.send(JSON.stringify(t.buildPayLoad(evt || t.domHelper.getInputValue(), type || 'event', dt, pos)));
                     }
-                    this.scrollToBottom();
+                    t.scrollToBottom();
                   }
                 }
             }, {

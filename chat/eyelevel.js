@@ -45,6 +45,7 @@ try {
     switch(eyEnv) {
       case 'local':
       case 'local-dev':
+      case 'local-prod':
         cssURL = localCssURL;
         chatURL = localChatURL;
         window.cssURL = cssURL;
