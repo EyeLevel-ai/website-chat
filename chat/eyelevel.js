@@ -45,6 +45,7 @@ try {
     switch(eyEnv) {
       case 'local':
       case 'local-dev':
+      case 'local-prod':
         cssURL = localCssURL;
         chatURL = localChatURL;
         window.cssURL = cssURL;
@@ -984,6 +985,13 @@ try {
         params.reset = true;
         clearAll();
       }
+
+      var modelId = params.modelId
+      var mId = getQueryVar("modelId", params.isIframe);
+      if (mId) {
+        modelId = mId;
+      }
+      window.modelId = modelId
 
       var username = params.username;
       var un = getQueryVar("un", params.isIframe);
