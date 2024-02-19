@@ -2027,7 +2027,7 @@ window.menu = null;
                           }
                         }
                         if (cd.buttons && cd.buttons.length) {
-                          var bt = t.chat.buttons(cd.buttons);
+                          var bt = t.chat.buttons(cd.buttons, idx);
                           if (bt && bt.length) {
                             var buttons = t.createElement('div');
                             buttons.classList.add('card-buttons');
@@ -2141,7 +2141,7 @@ window.menu = null;
                           }
                         }, supportsPassive() ? {passive : false} : false);
                       }
-                    }, button: function(data) {
+                    }, button: function(data, idx) {
                         var button = t.createElement('button');
                         button.classList.add('chat-button');
                         var objData = data;
@@ -2169,6 +2169,10 @@ window.menu = null;
                           } catch (e) {}
                         }
                         var bid = objData.payload;
+                        button.setAttribute('data-payload', objData.payload);
+                        if (idx) {
+                          bid = bid + "-" + idx;
+                        }
                         if (bid) {
                           if (objData.type && objData.type === 'web_url') {
                             bid = objData.title + ':' + extractUrl(bid);
@@ -2189,10 +2193,14 @@ window.menu = null;
                         button.innerHTML = data.label;
                         button.onclick = t.sendButton.bind(t);
                         return button;
-                    }, buttons: function(data) {
+                    }, buttons: function(data, setIdx) {
                         var html = [];
                         for (var i in data) {
-                          html.push(t.chat.button(data[i]));
+                          if (setIdx) {
+                            html.push(t.chat.button(data[i], setIdx + '-' + i));
+                          } else {
+                            html.push(t.chat.button(data[i]));
+                          }
                         }
                         return html;
                     }, user_input: function(msg) {
@@ -2693,12 +2701,17 @@ window.menu = null;
                     delete window.eySocket.turnID;
                     var flowUUID = ee.target.getAttribute('data-flow-uuid');
                     var turnID = parseInt(ee.target.getAttribute('data-turn-id'));
+                    var objId = ee.target.id;
+                    var pay = ee.target.getAttribute('data-payload');
+                    if (pay) {
+                      objId = pay;
+                    }
                     var pos;
                     if (flowUUID && turnID && !isNaN(turnID)) {
                       pos = { flowUUID: flowUUID, turnID: turnID };
                     }
                     var dt = ee.target.outerHTML || null;
-                    this.handleEvent(ee.target.id, null, dt, pos);
+                    this.handleEvent(objId, null, dt, pos);
                   }
                 }
             }, {
