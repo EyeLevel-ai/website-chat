@@ -4,6 +4,7 @@ try {
   var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
   var aiMessages = {};
   var userScrolledUp = false;
+  var IS_STREAMING_ACTIVE = false; 
 
 function randomString(length) {
   var text = "";
@@ -840,7 +841,29 @@ window.menu = null;
                     var n = new RegExp("(?:^|\\s)" + e.CLASS_SEND_ACTIVE + "(?!\\S)", "gi");
                     return this.sendBtn.className = this.sendBtn.className.replace(n, ""), this
                 }
-            }, {
+            }, { 
+              key: "addStopStreamingButton",
+              value: function() {
+                if (!this.sendBtn.classList.contains(e.CLASS_SEND_ACTIVE)) {
+                  // remove send icon
+                  this.sendBtn.classList.remove('icon-send');
+                  this.sendBtn.className += " " + e.CLASS_SEND_ACTIVE;
+                }
+
+                var stopIcon = document.getElementById("icon-stop");
+                if (stopIcon) {
+                  return this.sendBtn, this
+                } else {
+                  this.sendBtn.innerHTML = `
+                    <svg id="icon-stop" xmlns="http://www.w3.org/2000/svg" version="1.1" width="32" height="32" viewBox="0 0 32 32">
+                      <title>stop</title>
+                      <path fill="red" d="M16 0c-8.837 0-16 7.163-16 16s7.163 16 16 16 16-7.163 16-16-7.163-16-16-16zM16 29c-7.18 0-13-5.82-13-13s5.82-13 13-13 13 5.82 13 13-5.82 13-13 13zM10 10h12v12h-12z"/>
+                    </svg>
+                  `
+                  return this.sendBtn, this
+                }
+              }
+          }, {
                 key: "markBodyAsMobile",
                 value: function() {
                     this.body.className += "mobile"
@@ -1797,7 +1820,20 @@ window.menu = null;
                     } else {
                       console.warn('unexpected response', nn);
                     }
-                }, this.setButtons = function(ee, nn) {
+                }, this.removeStopStreamingButton = function() {
+                  var eySend = document.getElementById("ey-send");
+                  if (!eySend.classList.contains("icon-send")) {
+                   // return back sent icon
+                   eySend.className += " " + "icon-send"
+                  }
+                  var stopIcon = document.getElementById("icon-stop");
+                  if (stopIcon) {
+                    // remove from ui stop icon
+                    stopIcon.parentNode.removeChild(stopIcon);
+                  }
+                  
+                  return;
+              }, this.setButtons = function(ee, nn) {
                   var sc = nn.getElementsByClassName('server-response');
                   if (sc && sc.length && sc.length === 1) {
                     while (sc[0].firstChild) {
@@ -1833,6 +1869,41 @@ window.menu = null;
                     console.warn('unexpected response', nn);
                   }
                 }, this.handleInput = function(n) {
+
+                  if(n && IS_STREAMING_ACTIVE) {
+                    // case: during a streaming user enter new message and press stop streaming button;
+                    var ty = "cancel streaming text"; 
+                    window.isChatting = true; 
+                    t.removeFeedbackWidget();
+                    IS_STREAMING_ACTIVE = false;
+                    window.eySocket.streamedMessages = [];
+                    window.eySocket.queuedMessages = [];
+                    window.eySocket.send(JSON.stringify(t.buildPayLoad("", ty)));
+                    window.isChatting = false; 
+                    window.parent.postMessage(ty, "*"); 
+                    t.removeStopStreamingButton()
+                    t.domHelper.handleStartSend()
+                    return;
+                  }
+
+                  if (!n && IS_STREAMING_ACTIVE) {
+                    // case: stop streaming and message is empty;
+                    var ty = "cancel streaming text"; 
+                    window.isChatting = true; 
+                    t.removeFeedbackWidget();
+                    IS_STREAMING_ACTIVE = false;
+                    window.eySocket.streamedMessages = [];
+                    window.eySocket.queuedMessages = [];
+                    window.eySocket.send(JSON.stringify(t.buildPayLoad("", ty)));
+                    t.domHelper.setInputValue(""); 
+                    window.isChatting = false; 
+                    window.parent.postMessage(ty, "*"); 
+                    t.removeStopStreamingButton()
+                    t.domHelper.handleStopSend();
+                    return
+                }
+
+
                   if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
                     var lower = n.toLowerCase().trim();
                     if (lower === 'clear all' || lower === 'reset chat' || lower === 'clear chat' || lower === 'ask another question') {
@@ -1890,6 +1961,7 @@ window.menu = null;
                       t.domHelper.setInputValue("");
                       t.domHelper.handleStopSend();
                       t.scrollToBottom();
+                      t.domHelper.addStopStreamingButton();
                     }
                   }
                 }, this.sessionId = this.guid(), this.stage = 'welcome', this.nextStage = 'welcome', this.confirmationValue = null, this.menu = null, this.handleMenuButtonClick = function(ben) {
@@ -2425,6 +2497,14 @@ window.menu = null;
                           t.addAIMetadata(ttt, msgSession, aiMetadata);
                         }
                         var isStreaming = ttt.id || !msg.isDone;
+
+                        if (msg.isDone) {
+                          // track last streaming message
+                          IS_STREAMING_ACTIVE = false;
+                          t.removeStopStreamingButton();
+                        } else {
+                          IS_STREAMING_ACTIVE = true;
+                        }
 
                         var html = '';
                         if (data.set_attributes) {
