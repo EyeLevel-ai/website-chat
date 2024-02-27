@@ -1402,7 +1402,7 @@ window.menu = null;
                           setTimeout(function() {
                             var char = text.charAt(i);
                             var inner = msg.container.innerHTML + char;
-                            msg.container.innerHTML = t.escapeAndDecorateStream(inner);
+                            msg.container.innerHTML = inner;
 
                             i++;
                             t.scrollToBottom();
