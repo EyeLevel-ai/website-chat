@@ -1633,8 +1633,6 @@ window.menu = null;
                 }, this.escapeAndDecorateStream = function(txt, isStreaming) {
                   txt = txt.replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>');
                   var regex = new RegExp(/\[(.*?)\]\((.*?)\)/g);
-                  console.log(txt);
-                  console.log(txt.matchAll(regex));
                   for (var match of txt.matchAll(regex)) {
                     console.log(match);
                     var linkText = match[1];
