@@ -4,9 +4,12 @@
     <title>KPMG - EyeLevel.ai : Advisory</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <style type="text/css">
+      body {
+        margin: 0;
+      }
       .image-container {
         text-align: center; /* Center the image */
-        padding: 20px; /* Add some padding around the image */
+        padding: 0; /* Add some padding around the image */
         max-width: 100%; /* Ensure the container doesn't exceed the width of the viewport */
       }
       .responsive-image {
@@ -14,13 +17,18 @@
         height: auto; /* Maintain aspect ratio */
       }
       @media(min-width:800px) {
-	.ey-section {
-	  width: 66% !important;
-	  bottom: 105px !important;
+	      .ey-section {
+	        width: 70% !important;
+	        bottom: 88px !important;
+          height: calc(100% - 100px) !important;
         }
-	.ey-app {
-	  bottom: 0 !important;
-	}
+        .ey-section-visible {
+          max-height: 840px !important;
+        }
+	      .ey-app {
+	        bottom: 0 !important;
+          height: 90px !important;
+	      }
       }
     </style>
     <!-- EyeLevel Chat -->
@@ -32,6 +40,7 @@
         window.eyelevel.push(['init', {
           username: window.eyusername,
           flowname: window.eyflowname,
+          forceReset: true,
           menu: {
             label: 'LIVE CHAT',
             position: 'top-right',
@@ -51,7 +60,7 @@
 <body>
 
 <div class="image-container">
-    <img src="/kpmg/fake-kpmg.png" alt="Landing Page Image" class="responsive-image">
+    <img src="/kpmg/fake-kpmg.webp" alt="Landing Page Image" class="responsive-image">
 </div>
 
 </body>

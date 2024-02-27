@@ -711,7 +711,6 @@ try {
     if (typeof window.eymenu === 'object') {
       hasMenu = true;
     }
-    console.log(window.eymenu);
 
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
