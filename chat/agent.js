@@ -4,7 +4,13 @@ try {
   var whiteSpace = /^\s+|\s+$|\s+(?=\s)/g;
   var aiMessages = {};
   var userScrolledUp = false;
-  var IS_STREAMING_ACTIVE = false; 
+  var isStreamingActive = false;
+
+  var mdConverter = new parent.window.showdown.Converter({
+    tables: true,
+    simpleLineBreaks: true, 
+  });
+
 
 function randomString(length) {
   var text = "";
@@ -857,7 +863,7 @@ window.menu = null;
                   this.sendBtn.innerHTML = `
                     <svg id="icon-stop" xmlns="http://www.w3.org/2000/svg" version="1.1" width="32" height="32" viewBox="0 0 32 32">
                       <title>stop</title>
-                      <path fill="red" d="M16 0c-8.837 0-16 7.163-16 16s7.163 16 16 16 16-7.163 16-16-7.163-16-16-16zM16 29c-7.18 0-13-5.82-13-13s5.82-13 13-13 13 5.82 13 13-5.82 13-13 13zM10 10h12v12h-12z"/>
+                      <path fill="var(--button-background)" d="M16 0c-8.837 0-16 7.163-16 16s7.163 16 16 16 16-7.163 16-16-7.163-16-16-16zM16 29c-7.18 0-13-5.82-13-13s5.82-13 13-13 13 5.82 13 13-5.82 13-13 13zM10 10h12v12h-12z"/>
                     </svg>
                   `
                   return this.sendBtn, this
@@ -1396,7 +1402,7 @@ window.menu = null;
                           setTimeout(function() {
                             var char = text.charAt(i);
                             var inner = msg.container.innerHTML + char;
-                            msg.container.innerHTML = t.escapeAndDecorateString(inner.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'), true);
+                            msg.container.innerHTML = t.escapeAndDecorateString(inner, true);
 
                             i++;
                             t.scrollToBottom();
@@ -1801,6 +1807,7 @@ window.menu = null;
                       } else {
                         // non-streaming messages
                         sc[0].innerHTML = ee;
+                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText);
                         t.colorAISource(nn, sc[0]);
                         t.scrollToBottom();
                         return nn, this
@@ -1831,7 +1838,7 @@ window.menu = null;
                     // remove from ui stop icon
                     stopIcon.parentNode.removeChild(stopIcon);
                   }
-                  
+
                   return;
               }, this.setButtons = function(ee, nn) {
                   var sc = nn.getElementsByClassName('server-response');
@@ -1868,41 +1875,30 @@ window.menu = null;
                   } else {
                     console.warn('unexpected response', nn);
                   }
-                }, this.handleInput = function(n) {
-
-                  if(n && IS_STREAMING_ACTIVE) {
-                    // case: during a streaming user enter new message and press stop streaming button;
+                }, this.stopStreaming = function(n) {
                     var ty = "cancel streaming text"; 
                     window.isChatting = true; 
                     t.removeFeedbackWidget();
-                    IS_STREAMING_ACTIVE = false;
+                    isStreamingActive = false;
                     window.eySocket.streamedMessages = [];
                     window.eySocket.queuedMessages = [];
                     window.eySocket.send(JSON.stringify(t.buildPayLoad("", ty)));
                     window.isChatting = false; 
                     window.parent.postMessage(ty, "*"); 
-                    t.removeStopStreamingButton()
-                    t.domHelper.handleStartSend()
+                    t.removeStopStreamingButton();
+
+                    if (n) {
+                      t.domHelper.handleStartSend();
+                    } else {
+                      t.domHelper.handleStopSend();
+                    }
+
                     return;
+              }, this.handleInput = function(n) {
+
+                  if (isStreamingActive) {
+                    t.stopStreaming(n);
                   }
-
-                  if (!n && IS_STREAMING_ACTIVE) {
-                    // case: stop streaming and message is empty;
-                    var ty = "cancel streaming text"; 
-                    window.isChatting = true; 
-                    t.removeFeedbackWidget();
-                    IS_STREAMING_ACTIVE = false;
-                    window.eySocket.streamedMessages = [];
-                    window.eySocket.queuedMessages = [];
-                    window.eySocket.send(JSON.stringify(t.buildPayLoad("", ty)));
-                    t.domHelper.setInputValue(""); 
-                    window.isChatting = false; 
-                    window.parent.postMessage(ty, "*"); 
-                    t.removeStopStreamingButton()
-                    t.domHelper.handleStopSend();
-                    return
-                }
-
 
                   if ("" !== n.replace(whiteSpace, "") && !window.isChatting) {
                     var lower = n.toLowerCase().trim();
@@ -2466,6 +2462,9 @@ window.menu = null;
                       t.streamButtons(html, isConsent, msgSession, aiMetadata, attempt+1);
                     }, 500);
                   }
+                }, this.markdownConverter = function(messageText){
+                    var html = mdConverter.makeHtml(messageText);
+                    return html;
                 }, this.createMessage = function(msg, obj, isConsent) {
                     return new Promise(function(resolve, reject) {
                         var data = {};
@@ -2500,10 +2499,16 @@ window.menu = null;
 
                         if (msg.isDone) {
                           // track last streaming message
-                          IS_STREAMING_ACTIVE = false;
+                          isStreamingActive = false;
                           t.removeStopStreamingButton();
+
+                          if (isStreaming) {
+                            setTimeout(function() {
+                              ttt.innerHTML = t.markdownConverter(ttt.innerText)
+                            }, 1000)
+                          }
                         } else {
-                          IS_STREAMING_ACTIVE = true;
+                          isStreamingActive = true;
                         }
 
                         var html = '';

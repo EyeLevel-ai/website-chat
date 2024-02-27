@@ -232,6 +232,28 @@ noscript h1 {
   -ms-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
 }
+
+/* MESSAGE TABLE */
+.server-response table, td, th {  
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.server-response table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.server-response th, td {
+  padding: 15px;
+}
+
+.server-response th {
+  background-color: #494949;
+  color: #fff;
+}
+/* MESSAGE TABLE */
+
 .ey-chat .status-container {
   display: flex;
   justify-content: center;
