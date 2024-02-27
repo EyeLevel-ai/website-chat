@@ -1402,7 +1402,7 @@ window.menu = null;
                           setTimeout(function() {
                             var char = text.charAt(i);
                             var inner = msg.container.innerHTML + char;
-                            msg.container.innerHTML = t.escapeAndDecorateString(inner, true);
+                            msg.container.innerHTML = t.escapeAndDecorateStream(inner);
 
                             i++;
                             t.scrollToBottom();
@@ -1659,6 +1659,16 @@ window.menu = null;
                     return
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
+                }, this.escapeAndDecorateStream = function(txt, isStreaming) {
+                  txt = txt.replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>');
+                  var regex = new RegExp(/\[(.*?)\]\((.*?)\)/g);
+                  for (var match of txt.matchAll(regex)) {
+                    console.log(match);
+                    var linkText = match[1];
+                    var url = match[2];
+                    txt = txt.replace('['+linkText+']('+url+')', '<a href="' + url + '" target="_blank">' + linkText + '</a>');
+                  }
+                  return txt;
                 }, this.escapeAndDecorateString = function(txt, isStreaming) {
                   var regex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-z0-9-]{2,})+\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
