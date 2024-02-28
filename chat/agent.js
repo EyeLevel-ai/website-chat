@@ -5,6 +5,7 @@ try {
   var aiMessages = {};
   var userScrolledUp = false;
   var isStreamingActive = false;
+  var originalWsResText = "";
 
   var mdConverter = new parent.window.showdown.Converter({
     tables: true,
@@ -1367,8 +1368,12 @@ window.menu = null;
                 }, this.processStream = function() {
                   if (window.eySocket.streamedMessages.length) {
                     var wsRes = window.eySocket.streamedMessages.shift();
+                    originalWsResText += wsRes.text;
                     return t.renderText(wsRes)
                       .then(function(r) {
+                        var resText = originalWsResText.replace(/<br \/>/g, '\n');
+                        // t.markdownConverter() - lib by default wrap result in <p>, that's why it should removed;
+                        wsRes.container.innerHTML = t.markdownConverter(resText).replace(/<\/?p>/g, '')
                         return t.processStream();
                       });
                   } else {
@@ -1817,7 +1822,7 @@ window.menu = null;
                       } else {
                         // non-streaming messages
                         sc[0].innerHTML = ee;
-                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText);
+                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText).replace(/<\/?p>/g, '');
                         t.colorAISource(nn, sc[0]);
                         t.scrollToBottom();
                         return nn, this
@@ -1905,6 +1910,8 @@ window.menu = null;
 
                     return;
               }, this.handleInput = function(n) {
+                  // cleanup state before new message;
+                  originalWsResText = "";
 
                   if (isStreamingActive) {
                     t.stopStreaming(n);
@@ -2511,12 +2518,6 @@ window.menu = null;
                           // track last streaming message
                           isStreamingActive = false;
                           t.removeStopStreamingButton();
-
-                          if (isStreaming) {
-                            setTimeout(function() {
-                              ttt.innerHTML = t.markdownConverter(ttt.innerText)
-                            }, 1000)
-                          }
                         } else {
                           isStreamingActive = true;
                         }

@@ -242,6 +242,8 @@ noscript h1 {
 .server-response table {
   border-collapse: collapse;
   width: 100%;
+  margin-bottom: 12px;
+  margin-top: 12px;
 }
 
 .server-response th, td {
