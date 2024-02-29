@@ -2398,6 +2398,7 @@ window.menu = null;
                     setTimeout(function() {
                       var ttt = t.empty(isConsent, msgSession, aiMetadata);
                       t.setButtons(html, ttt);
+                      t.updateResponses();
                     }, 500);
                   } else {
                     setTimeout(function() {
