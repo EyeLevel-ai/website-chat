@@ -1,3 +1,7 @@
+:root{
+  --button-background: #ffffff;
+  --button-text: #2076f2;
+}
 body {
   margin: 0;
   background: #ffffff;
@@ -310,13 +314,13 @@ noscript h1 {
   bottom: 0;
   left: auto;
   width: 40px;
-  background: #2076f2;
+  background: var(--button-text);
   border-radius: 0 4px 4px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #fff;
+  color: var(--button-background);
 }
 .ey-chat .user-input-button:focus {
   outline: none;
@@ -512,7 +516,7 @@ noscript h1 {
  padding: 0 12px 12px !important;
 }
 .card-buttons .chat-button {
-  border: 1px solid #2076f2;
+  border: 1px solid var(--button-text);
 }
 .card-buttons .chat-button:focus {
   outline: none;
@@ -614,13 +618,11 @@ noscript h1 {
   flex-shrink: 0;
   font-size: 1.75rem;
   width: 54px;
-  height: 54px;
   cursor: pointer;
   text-align: center;
-  /* line-height: 30px; */
-  line-height: 54px;
-  background: #ffffff;
-  color: #ffffff;
+  line-height: 66px;
+  background: var(--button-background);
+  color: var(--button-text);
 }
 .ey_input-menu {
   display: none;
@@ -636,10 +638,10 @@ noscript h1 {
   cursor: pointer;
   text-align: left;
   /* line-height: 30px; */
-  line-height: 1.25rem;
+  line-height: 66px;
   padding: 0 12px;
-  background: #ffffff;
-  color: #ffffff;
+  background: var(--button-background);
+  color: var(--button-text);
 }
 .ey-chat .ey_input-menu .ey_input-menu-text {
   display: none;
@@ -649,9 +651,9 @@ noscript h1 {
   display: flex;
 }
 .ey-chat .ey_input-menu.active {
-  background-color: #2076f2;
+  background-color: var(--button-background);
   border-radius: 50px;
-  color: #fff;
+  color: var(--button-text);
   display: flex;
   height: 38px;
   margin: 0 10px;
@@ -660,7 +662,7 @@ noscript h1 {
   justify-content: center;
 }
 .ey-chat .ey_input-send.active {
-  color: #2076f2;
+  color: var(--button-text);
   display: block;
 }
 .clearfix {
@@ -672,9 +674,9 @@ noscript h1 {
   margin-right: 0;
   margin-top: 10px;
   border-radius: 4px;
-  border: 1px solid #2076f2;
-  background: #fff;
-  color: #2076f2;
+  border: 1px solid var(--button-text);
+  background: var(--button-background);
+  color: var(--button-text);
   font-weight: normal;
   font-size: 1.0rem;
   box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px;
