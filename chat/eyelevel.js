@@ -449,9 +449,12 @@ try {
   }
 
   window.initEYScripts = function() {
-    var es1 = document.createElement("script");
-    es1.src = remoteURL + '/iframeResizer.min.js';
-    document.body.appendChild(es1);
+    var es1a = document.createElement("script");
+    es1a.src = remoteURL + '/iframeResizer.min.js';
+    document.body.appendChild(es1a);
+    var es1b = document.createElement("script");
+    es1b.src = remoteURL + '/showdown.min.js';
+    document.body.appendChild(es1b);
     if (window.eyusername) {
       var es2 = document.createElement("script");
       es2.src = cssURL + '/' + window.eyusername + '/config.js' + window.cacheBust;
@@ -1002,15 +1005,6 @@ try {
       }
       window.eyusername = username;
 
-      var sn = params.resetTime;
-      var ssn = getQueryVar("resetTime", params.isIframe);
-      if (un) {
-        sn = ssn;
-      }
-      if (!isNaN(sn)) {
-        resetSessionTime = parseInt(sn) * 1000;
-      }
-
       var flowname = params.flowname;
       if (flowname !== undefined && flowname) {
         window.eyfnset = true;
@@ -1031,6 +1025,17 @@ try {
         }
       }
       window.eyreset = false;
+
+      var sn = params.resetTime;
+      var ssn = getQueryVar("resetTime", params.isIframe);
+      if (ssn) {
+        sn = ssn;
+      }
+      if (!isNaN(sn)) {
+        resetSessionTime = parseInt(sn) * 1000;
+        reset = true;
+      }
+
       if (reset) {
         if (shouldResetChat()) {
           window.eyreset = true;
