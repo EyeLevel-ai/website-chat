@@ -1358,12 +1358,14 @@ window.menu = null;
                     return t.renderText(wsRes)
                       .then(function(r) {
                         var resText = originalWsResText.replace(/<br \/>/g, '\n');
-                        wsRes.container.innerHTML = t.markdownConverter(resText).replace(/<\/?p>/g, '');
+                        wsRes.container.innerHTML = t.markdownConverter(resText);
+                        t.scrollToBottom();
                         return t.processStream();
                       });
                   } else if (!window.eySocket.isStreaming) {
                     originalWsResText = '';
                     window.eySocket.isCancelled = false;
+                    t.removeStopStreamingButton();
                   }
                 }, this.renderText = function(msg) {
                   return new Promise(function(resolve) {
@@ -1386,32 +1388,43 @@ window.menu = null;
                       }
 
                       var text = parts[partIndex];
-                      var i = 0;
 
-                      function processCharacter() {
-                        if (i < text.length) {
-                          var min = 1, max = 1;
-                          var rand = Math.floor(Math.random() * (max - min + 1) + min);
-
-                          setTimeout(function() {
-                            msg.container.innerHTML += text.charAt(i);
-
-                            i++;
-                            t.scrollToBottom();
-                            processCharacter();
-                          }, rand);
-                        } else {
-                          if (partIndex < parts.length - 1) {
-                            msg.container.innerHTML += '<br />';
-                          }
-
-                          partIndex++;
-                          t.scrollToBottom();
-                          processPart();
+                      setTimeout(function() {
+                        msg.container.innerHTML += text;
+                        if (partIndex < parts.length - 1) {
+                          msg.container.innerHTML += '<br />';
                         }
-                      }
 
-                      processCharacter();
+                        partIndex++;
+                        t.scrollToBottom();
+                        processPart();
+                      }, 1);
+
+                      if (false) {
+                        var wordArr = text.split(' ');
+
+                        function processWord(idx) {
+                          if (idx < wordArr.length) {
+                            setTimeout(function() {
+                              msg.container.innerHTML += wordArr[idx];
+
+                              t.scrollToBottom();
+
+                              processWord(idx+1);
+                            }, 1);
+                          } else {
+                            if (partIndex < parts.length - 1) {
+                              msg.container.innerHTML += '<br />';
+                            }
+
+                            partIndex++;
+                            t.scrollToBottom();
+                            processPart();
+                          }
+                        }
+
+                        processWord(0);
+                      }
                     }
 
                     processPart();
@@ -1536,6 +1549,7 @@ window.menu = null;
                   n.preventDefault();
                   n.stopPropagation();
                   t.checkWS();
+console.log('handleSendClick');
                 }, this.handleScrollEvents = function(n) {
                   var q = t.domHelper.getQueryResultWrapper();
                   if (q.scrollHeight - q.scrollTop <= q.clientHeight + 20) {
@@ -1922,7 +1936,7 @@ window.menu = null;
                     window.parent.postMessage(ty, "*");
                     window.isChatting = false;
               }, this.handleInput = function(n) {
-                  if (window.eySocket.isStreaming) {
+                  if (window.eySocket.isStreaming || window.eySocket.renderingStream) {
                     t.stopStreaming(n);
                     if (!n) {
                       return;
