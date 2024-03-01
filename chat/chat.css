@@ -236,6 +236,30 @@ noscript h1 {
   -ms-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
 }
+
+/* MESSAGE TABLE */
+.server-response table, td, th {  
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.server-response table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 12px;
+  margin-top: 12px;
+}
+
+.server-response th, td {
+  padding: 15px;
+}
+
+.server-response th {
+  background-color: #494949;
+  color: #fff;
+}
+/* MESSAGE TABLE */
+
 .ey-chat .status-container {
   display: flex;
   justify-content: center;
@@ -310,7 +334,7 @@ noscript h1 {
   -ms-animation: fadein 0.5s;
   -o-animation: fadein 0.5s;
 }
-.ey-chat .user-input-button.icon-send.icon-success {
+.ey-chat .user-input-button.icon-send.icon-stop.icon-success {
   opacity: 0;
   transition: opacity 0.5s ease-in;
   -webkit-transition: opacity 0.5s ease-in;
@@ -821,7 +845,7 @@ noscript h1 {
   font-style: italic;
   color: #393939;
 }
-@font-face{font-family:icomoon;src:url('icomoon.eot?o8kcso');src:url('icomoon.eot?o8kcso#iefix') format('embedded-opentype'),url('icomoon.ttf?o8kcso') format('truetype'),url(icomoon.woff?o8kcso) format('woff'),url('icomoon.svg?o8kcso#icomoon') format('svg');font-weight:400;font-style:normal}[class*=" icon-"],[class^=icon-]{font-family:icomoon!important;speak:none;font-style:normal;font-weight:400;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-send:before{content:"\ea42"}.icon-success:before{content:"\ea10"}
+@font-face{font-family:icomoon;src:url('icomoon.eot?o8kcso');src:url('icomoon.eot?o8kcso#iefix') format('embedded-opentype'),url('icomoon.ttf?o8kcso') format('truetype'),url(icomoon.woff?o8kcso) format('woff'),url('icomoon.svg?o8kcso#icomoon') format('svg');font-weight:400;font-style:normal}[class*=" icon-"],[class^=icon-]{font-family:icomoon!important;speak:none;font-style:normal;font-weight:400;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-send:before{content:"\ea42"}.icon-stop:before{content:"\ea17"}.icon-success:before{content:"\ea10"}
 .btn--shockwave.is-active {
   animation: shockwaveJump 4s -1s ease-out infinite;
   -webkit-animation: shockwaveJump 4s -1s ease-out infinite;
