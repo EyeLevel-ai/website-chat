@@ -11,6 +11,221 @@ try {
     simpleLineBreaks: true, 
   });
 
+  var isModal = false;
+
+  function initModal() {
+    var modalContainer = document.createElement('div');
+    modalContainer.className = "modal-container";
+    modalContainer.id = "eyModal";
+    modalContainer.style = "display: none;position: fixed; z-index: 9999;left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5);"
+    
+    var modalContent = document.createElement('div');
+    modalContent.className = "modal-content";
+
+    var modalTopRow = document.createElement('div');
+    modalTopRow.className = "modal-top-row";
+
+    var modalUrl = document.createElement('div');
+    modalUrl.id = "modal-url";
+
+    var modalClose = document.createElement('div');
+    modalClose.id = "modal-close";
+    modalClose.className = "close";
+    modalClose.innerHTML = "&#x2715;"
+
+    var modalText = document.createElement('div');
+    modalText.id = "modal-text";
+    modalText.className = "modal-text";
+    modalText.style = "margin-top: 16px;margin-bottom: 5px;font-size: 1.0rem; word-break: break-word;"
+     
+    modalTopRow.appendChild(modalUrl);
+    modalTopRow.appendChild(modalClose)
+
+    modalContent.appendChild(modalTopRow)
+    modalContent.appendChild(modalText)
+
+    modalContainer.appendChild(modalContent)
+    
+    var eyChat = document.getElementById('eyChat');
+    eyChat.appendChild(modalContainer);
+  };
+  initModal();
+
+  // TODO: remove before mergin;
+  const mockSearchResults = [
+    { aggScore: 1,
+      document: "mock-id-document", 
+      metadata: {url: "https://www.groundx.ai/"}, 
+      text: `What is Lorem Ipsum?
+      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`
+    },
+    { aggScore: 2,
+      document: "mock-id-document",
+      metadata: {url: "https://music.youtube.com/"},
+      text: `What is Lorem Ipsum?
+      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. What is Lorem Ipsum?
+      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`
+    },
+    { aggScore: 3,
+      document: "mock-id-document",
+      metadata: {url: "https://jsfiddle.net/0ow5km31/6/"},
+      text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+    },
+    { aggScore: 4,
+      document: "mock-id-document",
+      metadata: {url: "https://www.npmjs.com/package/showdown?activeTab=readme"},
+      text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"},
+    { aggScore: 5,
+      document: "mock-id-document", 
+      metadata: {url: "https://football.ua/"}, 
+      text: "Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    },
+  ];
+
+  var svgExternalLink = `<svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="30"
+      height="12"
+      fill="#4f4f4f"
+      viewBox="0 0 44 44">
+        <path d="M 40.960938 4.9804688 A 2.0002 2.0002 0 0 0 40.740234 5 L 28 5 A 2.0002 2.0002 0 1 0 28 9 L 36.171875 9 L 22.585938 22.585938 A 2.0002 2.0002 0 1 0 25.414062 25.414062 L 39 11.828125 L 39 20 A 2.0002 2.0002 0 1 0 43 20 L 43 7.2460938 A 2.0002 2.0002 0 0 0 40.960938 4.9804688 z M 12.5 8 C 8.3826878 8 5 11.382688 5 15.5 L 5 35.5 C 5 39.617312 8.3826878 43 12.5 43 L 32.5 43 C 36.617312 43 40 39.617312 40 35.5 L 40 26 A 2.0002 2.0002 0 1 0 36 26 L 36 35.5 C 36 37.446688 34.446688 39 32.5 39 L 12.5 39 C 10.553312 39 9 37.446688 9 35.5 L 9 15.5 C 9 13.553312 10.553312 12 12.5 12 L 22 12 A 2.0002 2.0002 0 1 0 22 8 L 12.5 8 z">
+      </path>
+  </svg>`;
+
+  function externalLinkIcon() {
+      var d = document.createElement("div");
+      d.innerHTML = svgExternalLink;
+      return d;
+  };
+
+  function createHeaderElement(config) {
+      var h = document.createElement(config.h);
+      h.innerText = config.innerText;
+      h.className = config.className;
+      return h;
+  };
+  
+  function createDivElement(config) {
+      var div = document.createElement("div");
+      div.id = config.id;
+      div.className = config.className;
+      return div;
+  };
+  
+  function linkItemComponent(num, link) {
+      // link-item
+      var linkItem = document.createElement("div");
+      linkItem.className = "link-item";
+   
+      // link-number
+      var linkNumber = document.createElement("div");
+      linkNumber.className = "link-number";
+      linkNumber.textContent = num;
+  
+      //link-text
+      var linkText = document.createElement("div");
+      linkText.className = "link-text";
+      linkText.textContent = link;
+  
+      // fill component;
+      linkItem.appendChild(linkNumber);
+      linkItem.appendChild(linkText)
+  
+      return linkItem;
+  };
+
+  function openModal(url, text, index) {
+    var eyModal = document.getElementById("eyModal"); 
+    var modalUrlDiv = document.getElementById("modal-url"); 
+    var modalText = document.getElementById("modal-text"); 
+    var closeModal = document.getElementById("modal-close"); 
+
+    closeModal.onclick = function() {
+      modalUrlDiv.innerHTML = "";
+      modalText.innerHTML = "";
+      eyModal.style.display = "none";
+    }
+   
+    var link = linkItemComponent(index, url);
+    var icon = externalLinkIcon()
+    link.appendChild(icon)
+    link.onclick = function() {
+      window.open(url, '_blank')
+    }
+
+
+    modalUrlDiv.appendChild(link);
+    modalText.innerText = text;
+    eyModal.style.display = "block";
+    return;
+  };
+
+  function handleClickSourceUrl(url, text, index, messageContainerId) {
+    if (isModal) {
+      return openModal(url, text, index);
+    };
+
+    var isSideBarIsOpen = document.getElementById("side-bar-" + messageContainerId);;
+    if (isSideBarIsOpen) {
+      isSideBarIsOpen.remove();
+    }
+    
+    var messageContainer = document.querySelector('[data-turn-uuid="' + messageContainerId  +'"]');
+    var serverResponse = document.getElementById("text-" + messageContainerId);
+    serverResponse.style = "flex: 1";
+
+    var sideBar = createDivElement({id: "side-bar-" + messageContainerId, className: "source-sideBar"});
+    var sideBarTopRow = document.createElement("div");
+    sideBarTopRow.style="display: flex;flex-direction: row; align-items: center; justify-content: space-between;";
+
+    var sideBarClose = document.createElement("div");
+    sideBarClose.style="margin-left: 1rem;cursor:pointer;";
+    sideBarClose.innerHTML = "&#x2715;";
+    sideBarClose.onclick = function() {
+      var sideBar = document.getElementById("side-bar-" + messageContainerId);;
+      sideBar.remove();
+    };
+
+    var link = linkItemComponent(index, url);
+    var icon = externalLinkIcon()
+    link.appendChild(icon)
+    link.onclick = function() {
+      window.open(url, '_blank')
+    }
+
+    sideBarTopRow.appendChild(link);
+    sideBarTopRow.appendChild(sideBarClose)
+
+    var textDiv = createDivElement({id: "", className: ""});
+    textDiv.style = "margin-top: 2rem"
+    textDiv.innerText = text
+
+    sideBar.appendChild(sideBarTopRow);
+    sideBar.appendChild(textDiv);
+    messageContainer.append(sideBar)
+  };
+
+  function createClickableSourceURLs(urls, messageContainerId) {
+    var container = createDivElement({ id: "source-links", className: "source-links" })
+    var header = createHeaderElement({ h: "h4", innerText: "Source", className: "source-header" })
+    container.appendChild(header);
+
+    var sourceLinksContainer = createDivElement({ 
+      id: "source-links-container", className: "source-links-container"
+    })
+    
+    urls.forEach(function(item, index) {
+        var component = linkItemComponent(index + 1, item.url);
+        component.onclick = function() {
+          handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId);
+        };
+
+        sourceLinksContainer.appendChild(component);
+    });
+
+    container.appendChild(sourceLinksContainer);
+    return container;
+  };
 
 function randomString(length) {
   var text = "";
@@ -1358,11 +1573,22 @@ window.menu = null;
                     return t.renderText(wsRes)
                       .then(function(r) {
                         var resText = originalWsResText.replace(/<br \/>/g, '\n');
-                        wsRes.container.innerHTML = t.markdownConverter(resText);
+                        wsRes.container.innerHTML = t.markdownConverter(resText).replace(/<\/?p>/g, '');;
                         t.scrollToBottom();
                         return t.processStream();
                       });
                   } else if (!window.eySocket.isStreaming) {
+                    var msg = window.eySocket.lastInteraction;
+                    // for prod: 
+                    // if (msg.metadata) {
+                    //   if (msg.metadata.searchResults && msg.metadata.searchResults.length) {
+                    //     t.renderSources(msg);
+                    //   }
+                    // };
+
+                    // mock data for test. Remove before merging;
+                    msg.metadata.searchResults = mockSearchResults;
+                    t.renderSources(msg);
                     originalWsResText = '';
                     window.eySocket.isCancelled = false;
                     t.removeStopStreamingButton();
@@ -1810,6 +2036,47 @@ console.log('handleSendClick');
                         t.removeFromParent(nn);
                       }
                     }, 200);
+                }, this.renderSources = function (message) {
+                  var aiMetadata = message.metadata;
+                  var msgSession = message.session;
+                  var messageContainerId = "";
+                  var urls = [];
+
+                  if (msgSession && msgSession.TraceNext && msgSession.TraceNext.turnUUID) {
+                    messageContainerId = msgSession.TraceNext.turnUUID;
+                  };
+                  
+                  if (aiMetadata.searchResults && aiMetadata.searchResults.length) {
+                    for (var i = 0; i < aiMetadata.searchResults.length; i++) {
+                      var searchResultsTempText = '';
+                      if (aiMetadata.searchResults[i].text) {
+                        searchResultsTempText = aiMetadata.searchResults[i].text;
+                      };
+
+                      if (aiMetadata.searchResults[i].metadata) {
+                        if (aiMetadata.searchResults[i].metadata.url) {
+                          urls.push({
+                            url: aiMetadata.searchResults[i].metadata.url,
+                            text: searchResultsTempText,
+                          });
+                        }
+                      }
+
+                      searchResultsTempText = '';
+                    };
+                  };
+
+                  var divWithSpans = createClickableSourceURLs(urls, messageContainerId);
+                  var messageContainer = document.getElementById("text-"+ messageContainerId);
+                  messageContainer.appendChild(divWithSpans);
+
+                  return;
+                }, this.openModal = function (text, link, num) {
+                  // 
+
+                }, this.createModal = function () {
+                  // 
+  
                 }, this.setText = function(ee, nn, isStreaming, sess) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (!sc || !sc.length || sc.length !== 1) {
