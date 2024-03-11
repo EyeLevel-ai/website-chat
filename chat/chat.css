@@ -372,6 +372,34 @@ noscript h1 {
 }
 /* source links */
 
+.dot {
+  width: 5px;
+  height: 5px;
+  background-color:  #ddd;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: jump 1s infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes jump {
+  0%, 100% {
+    transform: translateY(0);
+    background-color:  #ddd;
+  }
+  50% {
+    transform: translateY(-5px);
+    background-color:  var(--button-text);;
+  }
+}
+
 .ey-chat .status-container {
   display: flex;
   justify-content: center;

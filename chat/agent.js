@@ -1997,7 +1997,7 @@ console.log('handleSendClick');
                     var na = t.createElement('div');
                     na.className = 'server-response-container';
                     t.addAIMetadata(na, sess, aiMetadata);
-                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response">...</div>';
+                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response"><div id="animated-dots" style="display: flex"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
                     var aa;
                     if (isConsent) {
                       aa = t.domHelper.workplace.getElementById('consentResult'); 
@@ -2021,7 +2021,8 @@ console.log('handleSendClick');
                       if (na && na.getElementsByClassName) {
                         const res = na.getElementsByClassName('server-response');
                         if (res && res.length && res.length === 1) {
-                          if (res[0].innerHTML === '...') {
+                          var animatedDots = document.getElementById("animated-dots");
+                          if (animatedDots) {
                             t.removeItem(na);
                             window.isChatting = false;
                           }
