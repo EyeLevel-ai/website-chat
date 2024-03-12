@@ -53,30 +53,29 @@ try {
 
   // TODO: remove before mergin;
   const mockSearchResults = [
-    { aggScore: 1,
-      document: "mock-id-document", 
+    { score: 1,
+      fileNameD: "ground x", 
       metadata: {url: "https://www.groundx.ai/"}, 
       text: `What is Lorem Ipsum?
       Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`
     },
-    { aggScore: 2,
-      document: "mock-id-document",
+    { score: 2,
+      fileNameD: "youtube music",
       metadata: {url: "https://music.youtube.com/"},
       text: `What is Lorem Ipsum?
       Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. What is Lorem Ipsum?
       Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`
     },
-    { aggScore: 3,
-      document: "mock-id-document",
+    { score: 3,
+      fileNameD: "jsfiddle",
       metadata: {url: "https://jsfiddle.net/0ow5km31/6/"},
       text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
     },
-    { aggScore: 4,
-      document: "mock-id-document",
+    {
       metadata: {url: "https://www.npmjs.com/package/showdown?activeTab=readme"},
-      text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"},
-    { aggScore: 5,
-      document: "mock-id-document", 
+      text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    },
+    { score: 5,
       metadata: {url: "https://football.ua/"}, 
       text: "Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
     },
@@ -112,7 +111,7 @@ try {
       return div;
   };
   
-  function linkItemComponent(num, link) {
+  function linkItemComponent(num, link, name) {
       // link-item
       var linkItem = document.createElement("div");
       linkItem.className = "link-item";
@@ -123,9 +122,13 @@ try {
       linkNumber.textContent = num;
   
       //link-text
+      var txt = link;
+      if (name) {
+        txt = decodeURIComponent(decodeURIComponent(name));
+      }
       var linkText = document.createElement("div");
       linkText.className = "link-text";
-      linkText.textContent = link;
+      linkText.textContent = txt;
   
       // fill component;
       linkItem.appendChild(linkNumber);
@@ -161,17 +164,21 @@ try {
   };
 
   function handleClickSourceUrl(url, text, index, messageContainerId) {
+    if (true) {
+      window.open(url, '_blank');
+      return;
+    }
+
     if (isModal) {
       return openModal(url, text, index);
     };
 
-    var isSideBarIsOpen = document.getElementById("side-bar-" + messageContainerId);;
+    var isSideBarIsOpen = document.getElementById("side-bar-" + messageContainerId);
     if (isSideBarIsOpen) {
       isSideBarIsOpen.remove();
     }
-    
-    var messageContainer = document.querySelector('[data-turn-uuid="' + messageContainerId  +'"]');
-    var serverResponse = document.getElementById("text-" + messageContainerId);
+
+    var serverResponse = document.getElementById(messageContainerId);
     serverResponse.style = "flex: 1";
 
     var sideBar = createDivElement({id: "side-bar-" + messageContainerId, className: "source-sideBar"});
@@ -202,12 +209,12 @@ try {
 
     sideBar.appendChild(sideBarTopRow);
     sideBar.appendChild(textDiv);
-    messageContainer.append(sideBar)
+    serverResponse.append(sideBar)
   };
 
   function createClickableSourceURLs(urls, messageContainerId) {
     var container = createDivElement({ id: "source-links", className: "source-links" })
-    var header = createHeaderElement({ h: "h4", innerText: "Source", className: "source-header" })
+    var header = createHeaderElement({ h: "h4", innerText: "Sources", className: "source-header" })
     container.appendChild(header);
 
     var sourceLinksContainer = createDivElement({ 
@@ -215,12 +222,12 @@ try {
     })
     
     urls.forEach(function(item, index) {
-        var component = linkItemComponent(index + 1, item.url);
-        component.onclick = function() {
-          handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId);
-        };
+      var component = linkItemComponent(index + 1, item.url, item.fileName);
+      component.onclick = function() {
+        handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId);
+      };
 
-        sourceLinksContainer.appendChild(component);
+      sourceLinksContainer.appendChild(component);
     });
 
     container.appendChild(sourceLinksContainer);
@@ -433,6 +440,17 @@ turnUUID = function(sess) {
       return sess.TraceNext.turnUUID;
     } else if (sess.Trace && sess.Trace.turnUUID && sess.Trace.turnUUID !== '00000000-0000-0000-0000-000000000000') {
       return sess.Trace.turnUUID;
+    }
+  }
+  return null;
+}
+
+turnUUIDInvert = function(sess) {
+  if (sess) {
+    if (sess.Trace && sess.Trace.turnUUID && sess.Trace.turnUUID !== '00000000-0000-0000-0000-000000000000') {
+      return sess.Trace.turnUUID;
+    } else if (sess.TraceNext && sess.TraceNext.turnUUID && sess.TraceNext.turnUUID !== '00000000-0000-0000-0000-000000000000') {
+      return sess.TraceNext.turnUUID;
     }
   }
   return null;
@@ -1578,17 +1596,6 @@ window.menu = null;
                         return t.processStream();
                       });
                   } else if (!window.eySocket.isStreaming) {
-                    var msg = window.eySocket.lastInteraction;
-                    // for prod: 
-                    // if (msg.metadata) {
-                    //   if (msg.metadata.searchResults && msg.metadata.searchResults.length) {
-                    //     t.renderSources(msg);
-                    //   }
-                    // };
-
-                    // mock data for test. Remove before merging;
-                    msg.metadata.searchResults = mockSearchResults;
-                    t.renderSources(msg);
                     originalWsResText = '';
                     window.eySocket.isCancelled = false;
                     t.removeStopStreamingButton();
@@ -1997,7 +2004,7 @@ console.log('handleSendClick');
                     var na = t.createElement('div');
                     na.className = 'server-response-container';
                     t.addAIMetadata(na, sess, aiMetadata);
-                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response"><div id="animated-dots" style="display: flex;margin-top: 5px"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response"><div id="animated-dots" style="display: flex; padding-top: 3px; margin-bottom: -3px;"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
                     var aa;
                     if (isConsent) {
                       aa = t.domHelper.workplace.getElementById('consentResult'); 
@@ -2006,7 +2013,7 @@ console.log('handleSendClick');
                     }
 
                     if (checkTID) {
-                      var naa = t.domHelper.workplace.getElementById('text-' + turnUUID(sess));
+                      var naa = t.domHelper.workplace.getElementById('stream-' + turnUUID(sess));
                       if (naa && naa.parentNode.parentNode) {
                         naa.parentNode.parentNode.insertBefore(na, naa.parentNode.nextSibling);
                       } else {
@@ -2038,38 +2045,61 @@ console.log('handleSendClick');
                       }
                     }, 200);
                 }, this.renderSources = function (message) {
+                  if (!window.eysources) {
+                    return;
+                  }
+
+                  if (!message || window.eySocket.isStreaming) {
+                    return;
+                  }
+
                   var aiMetadata = message.metadata;
-                  var msgSession = message.session;
-                  var messageContainerId = "";
+
+                  if (!aiMetadata || !aiMetadata.searchResults) {
+                    return;
+                  }
+
                   var urls = [];
 
-                  if (msgSession && msgSession.TraceNext && msgSession.TraceNext.turnUUID) {
-                    messageContainerId = msgSession.TraceNext.turnUUID;
-                  };
+                  var tid = turnUUIDInvert(message.session, true);
                   
-                  if (aiMetadata.searchResults && aiMetadata.searchResults.length) {
+                  if (aiMetadata.searchResults) {
                     for (var i = 0; i < aiMetadata.searchResults.length; i++) {
                       var searchResultsTempText = '';
+                      var fileName = '';
+
                       if (aiMetadata.searchResults[i].text) {
                         searchResultsTempText = aiMetadata.searchResults[i].text;
-                      };
+                      }
+
+                      if (aiMetadata.searchResults[i].fileNameD) {
+                        fileName = aiMetadata.searchResults[i].fileNameD;
+                      }
 
                       if (aiMetadata.searchResults[i].metadata) {
                         if (aiMetadata.searchResults[i].metadata.url) {
                           urls.push({
-                            url: aiMetadata.searchResults[i].metadata.url,
+                            fileName: fileName,
                             text: searchResultsTempText,
+                            url: aiMetadata.searchResults[i].metadata.url,
                           });
                         }
                       }
+                    }
+                  }
 
-                      searchResultsTempText = '';
-                    };
-                  };
-
-                  var divWithSpans = createClickableSourceURLs(urls, messageContainerId);
-                  var messageContainer = document.getElementById("text-"+ messageContainerId);
-                  messageContainer.appendChild(divWithSpans);
+                  if (urls.length && tid) {
+                    var mid = "stream-" + tid;
+                    var messageContainer = document.getElementById(mid);
+                    if (!messageContainer) {
+                      mid = "static-" + tid; 
+                      messageContainer = document.getElementById(mid);
+                    }
+                    if (messageContainer) {
+                      var divWithSpans = createClickableSourceURLs(urls, mid);
+                      messageContainer.appendChild(divWithSpans);
+                    }
+                  }
 
                   return;
                 }, this.openModal = function (text, link, num) {
@@ -2090,7 +2120,7 @@ console.log('handleSendClick');
                           sc[0].innerHTML = "";
                           var tid = turnUUID(sess);
                           if (tid) {
-                            sc[0].id = 'text-' + tid;
+                            sc[0].id = 'stream-' + tid;
                           }
                           nn = sc[0];
 
@@ -2107,6 +2137,10 @@ console.log('handleSendClick');
                         }
                       } else {
                         // non-streaming messages
+                        var tid = turnUUIDInvert(sess);
+                        if (tid) {
+                          sc[0].id = 'static-' + tid;
+                        }
                         sc[0].innerHTML = ee;
                         sc[0].innerHTML = t.markdownConverter(sc[0].innerText).replace(/<\/?p>/g, '');
                         t.colorAISource(nn, sc[0]);
@@ -2791,12 +2825,12 @@ console.log('handleSendClick');
                         var ttt;
                         var needsReset = false;
                         var tid = turnUUID(msg.session);
-                        var existingText = null;
+                        var existingStream = null;
                         if (tid) {
-                          existingText = document.getElementById('text-' + tid);
+                          existingStream = document.getElementById('stream-' + tid);
                         }
-                        if (t.isNullObj(ttt) && existingText)  {
-                          ttt = existingText;
+                        if (t.isNullObj(ttt) && existingStream)  {
+                          ttt = existingStream;
                         } else if (t.doReset(needsReset, obj)) {
                           ttt = t.empty(isConsent, msg.metadata);
                           t.addAIMetadata(ttt, msg.session, msg.metadata);
@@ -2907,8 +2941,10 @@ console.log('handleSendClick');
                             }
                           }
                         }
+
+                        t.renderSources(msg);
                         t.updateResponses();
-                        if (msg.typing && msg.isDone) {
+                        if (msg && msg.typing && msg.isDone) {
                           if (!window.eySocket.typingElement || needsReset) {
                             window.eySocket.typingElement = t.empty(isConsent, msg.session, msg.metadata);
                           }
