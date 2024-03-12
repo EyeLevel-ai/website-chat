@@ -1997,7 +1997,7 @@ console.log('handleSendClick');
                     var na = t.createElement('div');
                     na.className = 'server-response-container';
                     t.addAIMetadata(na, sess, aiMetadata);
-                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response"><div id="animated-dots" style="display: flex"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response"><div id="animated-dots" style="display: flex;margin-top: 5px"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
                     var aa;
                     if (isConsent) {
                       aa = t.domHelper.workplace.getElementById('consentResult'); 
