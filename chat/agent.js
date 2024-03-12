@@ -2909,7 +2909,7 @@ console.log('handleSendClick');
                         }
                         t.updateResponses();
                         if (msg.typing && msg.isDone) {
-                          if (!window.eySocket.typingElement) {
+                          if (!window.eySocket.typingElement || needsReset) {
                             window.eySocket.typingElement = t.empty(isConsent, msg.session, msg.metadata);
                           }
                         } else if (!window.eySocket.cancelledEmpty) {
