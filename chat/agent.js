@@ -1561,7 +1561,7 @@ window.menu = null;
                     return t.renderText(wsRes)
                       .then(function(r) {
                         var resText = originalWsResText.replace(/<br \/>/g, '\n');
-                        wsRes.container.innerHTML = t.markdownConverter(resText).replace(/<\/?p>/g, '');;
+                        wsRes.container.innerHTML = t.markdownConverter(resText);
                         t.scrollToBottom();
                         return t.processStream();
                       });
@@ -1752,7 +1752,6 @@ window.menu = null;
                   n.preventDefault();
                   n.stopPropagation();
                   t.checkWS();
-console.log('handleSendClick');
                 }, this.handleScrollEvents = function(n) {
                   var q = t.domHelper.getQueryResultWrapper();
                   if (q.scrollHeight - q.scrollTop <= q.clientHeight + 20) {
@@ -1875,15 +1874,6 @@ console.log('handleSendClick');
                     return
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
-                }, this.escapeAndDecorateStream = function(txt, isStreaming) {
-                  txt = txt.replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>');
-                  var regex = new RegExp(/\[(.*?)\]\((.*?)\)/g);
-                  for (var match of txt.matchAll(regex)) {
-                    var linkText = match[1];
-                    var url = match[2];
-                    txt = txt.replace('['+linkText+']('+url+')', '<a href="' + url + '" target="_blank">' + linkText + '</a>');
-                  }
-                  return txt;
                 }, this.escapeAndDecorateString = function(txt, isStreaming) {
                   var regex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-z0-9-]{2,})+\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
@@ -2111,8 +2101,7 @@ console.log('handleSendClick');
                         if (tid) {
                           sc[0].id = 'static-' + tid;
                         }
-                        sc[0].innerHTML = ee;
-                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText).replace(/<\/?p>/g, '');
+                        sc[0].innerHTML = t.markdownConverter(ee).replace(/<\/?p>/g, '');
                         t.colorAISource(nn, sc[0]);
                         t.scrollToBottom();
                         return nn, this
@@ -2914,7 +2903,7 @@ console.log('handleSendClick');
 
                         t.renderSources(msg);
                         t.updateResponses();
-                        if (msg && msg.typing && msg.isDone) {
+                        if (msg.typing && msg.isDone) {
                           if (!window.eySocket.typingElement || needsReset) {
                             window.eySocket.typingElement = t.empty(isConsent, msg.session, msg.metadata);
                           }
