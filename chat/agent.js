@@ -1988,8 +1988,8 @@ window.menu = null;
                       if (na && na.getElementsByClassName) {
                         const res = na.getElementsByClassName('server-response');
                         if (res && res.length && res.length === 1) {
-                          var animatedDots = document.getElementById("animated-dots");
-                          if (animatedDots) {
+                          var animatedDots = t.domHelper.workplace.getElementById("animated-dots");
+                          if (animatedDots && res[0].contains(animatedDots)) {
                             t.removeItem(na);
                             window.isChatting = false;
                           }
