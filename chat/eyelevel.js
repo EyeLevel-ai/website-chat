@@ -998,7 +998,7 @@ try {
       }
       window.modelId = modelId;
 
-      var sources = params.sources
+      var sources = params.sources;
       var srcs = getQueryVar("sources", params.isIframe);
       if (srcs) {
         sources = srcs;

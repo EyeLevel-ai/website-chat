@@ -107,7 +107,7 @@ try {
       return linkItem;
   };
 
-  function openModal(url, text, index) {
+  function openSourceLinkInModal(url, text, index) {
     var eyModal = document.getElementById("eyModal"); 
     var modalUrlDiv = document.getElementById("modal-url"); 
     var modalText = document.getElementById("modal-text"); 
@@ -133,24 +133,22 @@ try {
     return;
   };
 
-  function handleClickSourceUrl(url, text, index, messageContainerId) {
-    if (true) {
-      window.open(url, '_blank');
-      return;
-    }
-
-    if (isModal) {
-      return openModal(url, text, index);
-    };
-
+  function openSourceLinkInSideBar (url, text, index, messageContainerId, mainResponseID) {
     var isSideBarIsOpen = document.getElementById("side-bar-" + messageContainerId);
     if (isSideBarIsOpen) {
       isSideBarIsOpen.remove();
     }
 
-    var serverResponse = document.getElementById(messageContainerId);
-    serverResponse.style = "flex: 1";
-
+    var messageContainer = document.querySelector('[data-turn-uuid="' + mainResponseID  +'"]');
+   
+    var serverResponse = document.getElementById("static-" + messageContainerId);
+    if (serverResponse) {
+      serverResponse.style = "flex: 1";
+    } else {
+      var serverResponseStream = document.getElementById("stream-" + messageContainerId);
+      serverResponseStream.style = "flex: 1";
+    }
+   
     var sideBar = createDivElement({id: "side-bar-" + messageContainerId, className: "source-sideBar"});
     var sideBarTopRow = document.createElement("div");
     sideBarTopRow.style="display: flex;flex-direction: row; align-items: center; justify-content: space-between;";
@@ -179,10 +177,25 @@ try {
 
     sideBar.appendChild(sideBarTopRow);
     sideBar.appendChild(textDiv);
-    serverResponse.append(sideBar)
+    messageContainer.append(sideBar)
+  }
+
+  function handleClickSourceUrl(url, text, index, messageContainerId, mainResponseID) {
+    if (window.eysources === "link") {
+      window.open(url, '_blank');
+      return;
+    }
+
+    if (window.eysources === "modal") {
+      return openSourceLinkInModal(url, text, index);
+    };
+
+    if (window.eysources === "sidebar") {
+      return openSourceLinkInSideBar(url, text, index, messageContainerId, mainResponseID);
+    };
   };
 
-  function createClickableSourceURLs(urls, messageContainerId) {
+  function createClickableSourceURLs(urls, messageContainerId, mainResponseID) {
     var container = createDivElement({ id: "source-links", className: "source-links" })
     var header = createHeaderElement({ h: "h4", innerText: "Sources", className: "source-header" })
     container.appendChild(header);
@@ -194,7 +207,7 @@ try {
     urls.forEach(function(item, index) {
       var component = linkItemComponent(index + 1, item.url, item.fileName);
       component.onclick = function() {
-        handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId);
+        handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId, mainResponseID);
       };
 
       sourceLinksContainer.appendChild(component);
@@ -1561,12 +1574,13 @@ window.menu = null;
                     return t.renderText(wsRes)
                       .then(function(r) {
                         var resText = originalWsResText.replace(/<br \/>/g, '\n');
-                        wsRes.container.innerHTML = t.markdownConverter(resText);
+                        wsRes.container.innerHTML = t.markdownConverter(resText).replace(/<\/?p>/g, '');;
                         t.scrollToBottom();
                         return t.processStream();
                       });
                   } else if (!window.eySocket.isStreaming) {
                     originalWsResText = '';
+                    t.renderSources(window.eySocket.lastInteraction);
                     window.eySocket.isCancelled = false;
                     t.removeStopStreamingButton();
                   }
@@ -2022,7 +2036,8 @@ window.menu = null;
                   var urls = [];
 
                   var tid = turnUUIDInvert(message.session, true);
-                  
+                  var mainResponseID = turnUUID(message.session, true);
+                 
                   if (aiMetadata.searchResults) {
                     for (var i = 0; i < aiMetadata.searchResults.length; i++) {
                       var searchResultsTempText = '';
@@ -2047,7 +2062,7 @@ window.menu = null;
                       }
                     }
                   }
-
+                
                   if (urls.length && tid) {
                     var mid = "stream-" + tid;
                     var messageContainer = document.getElementById(mid);
@@ -2056,7 +2071,7 @@ window.menu = null;
                       messageContainer = document.getElementById(mid);
                     }
                     if (messageContainer) {
-                      var divWithSpans = createClickableSourceURLs(urls, mid);
+                      var divWithSpans = createClickableSourceURLs(urls, tid, mainResponseID);
                       messageContainer.appendChild(divWithSpans);
                     }
                   }
@@ -2101,7 +2116,8 @@ window.menu = null;
                         if (tid) {
                           sc[0].id = 'static-' + tid;
                         }
-                        sc[0].innerHTML = t.markdownConverter(ee).replace(/<\/?p>/g, '');
+                        sc[0].innerHTML = ee;
+                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText).replace(/<\/?p>/g, '');
                         t.colorAISource(nn, sc[0]);
                         t.scrollToBottom();
                         return nn, this
@@ -2903,7 +2919,7 @@ window.menu = null;
 
                         t.renderSources(msg);
                         t.updateResponses();
-                        if (msg.typing && msg.isDone) {
+                        if (msg && msg.typing && msg.isDone) {
                           if (!window.eySocket.typingElement || needsReset) {
                             window.eySocket.typingElement = t.empty(isConsent, msg.session, msg.metadata);
                           }
