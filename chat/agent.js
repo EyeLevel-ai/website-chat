@@ -133,13 +133,13 @@ try {
     return;
   };
 
-  function openSourceLinkInSideBar (url, text, index, messageContainerId, mainResponseID) {
+  function openSourceLinkInSideBar (url, text, index, messageContainerId) {
     var isSideBarIsOpen = document.getElementById("side-bar-" + messageContainerId);
     if (isSideBarIsOpen) {
       isSideBarIsOpen.remove();
     }
 
-    var messageContainer = document.querySelector('[data-turn-uuid="' + mainResponseID  +'"]');
+    var messageContainer = document.querySelector('[data-turn-uuid="' + messageContainerId  +'"]');
    
     var serverResponse = document.getElementById("static-" + messageContainerId);
     if (serverResponse) {
@@ -180,7 +180,7 @@ try {
     messageContainer.append(sideBar)
   }
 
-  function handleClickSourceUrl(url, text, index, messageContainerId, mainResponseID) {
+  function handleClickSourceUrl(url, text, index, messageContainerId) {
     if (window.eysources === "link") {
       window.open(url, '_blank');
       return;
@@ -191,11 +191,11 @@ try {
     };
 
     if (window.eysources === "sidebar") {
-      return openSourceLinkInSideBar(url, text, index, messageContainerId, mainResponseID);
+      return openSourceLinkInSideBar(url, text, index, messageContainerId);
     };
   };
 
-  function createClickableSourceURLs(urls, messageContainerId, mainResponseID) {
+  function createClickableSourceURLs(urls, messageContainerId) {
     var container = createDivElement({ id: "source-links", className: "source-links" })
     var header = createHeaderElement({ h: "h4", innerText: "Sources", className: "source-header" })
     container.appendChild(header);
@@ -207,7 +207,7 @@ try {
     urls.forEach(function(item, index) {
       var component = linkItemComponent(index + 1, item.url, item.fileName);
       component.onclick = function() {
-        handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId, mainResponseID);
+        handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId);
       };
 
       sourceLinksContainer.appendChild(component);
@@ -2071,7 +2071,7 @@ window.menu = null;
                       messageContainer = document.getElementById(mid);
                     }
                     if (messageContainer) {
-                      var divWithSpans = createClickableSourceURLs(urls, tid, mainResponseID);
+                      var divWithSpans = createClickableSourceURLs(urls, tid);
                       messageContainer.appendChild(divWithSpans);
                     }
                   }
