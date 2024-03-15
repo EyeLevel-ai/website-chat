@@ -2036,7 +2036,6 @@ window.menu = null;
                   var urls = [];
 
                   var tid = turnUUIDInvert(message.session, true);
-                  var mainResponseID = turnUUIDInvert(message.session, true);
                  
                   if (aiMetadata.searchResults) {
                     for (var i = 0; i < aiMetadata.searchResults.length; i++) {
