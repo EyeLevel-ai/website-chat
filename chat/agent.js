@@ -466,11 +466,11 @@ saveInteraction = function(interaction) {
   if (h && typeof h !== 'undefined') {
     var history = JSON.parse(h);
     if (history) {
-      var interUUID = turnUUID(interaction.session);
+      var interUUID = turnUUIDInvert(interaction.session);
       var isSet = false;
       if (interUUID) {
         for (var i = 0; i < history.length; i++) {
-          var tid = turnUUID(history[i].session);
+          var tid = turnUUIDInvert(history[i].session);
           if (tid && tid === interUUID && !history[i].isDone) {
             history[i] = interaction;
             isSet = true;
@@ -1964,7 +1964,7 @@ window.menu = null;
                       ttt.classList.add('ai-response');
                     }
 
-                    var tid = turnUUID(sess);
+                    var tid = turnUUIDInvert(sess);
                     if (tid) {
                       ttt.setAttribute('data-turn-uuid', tid);
                     }
@@ -1987,7 +1987,7 @@ window.menu = null;
                     }
 
                     if (checkTID) {
-                      var naa = t.domHelper.workplace.getElementById('stream-' + turnUUID(sess));
+                      var naa = t.domHelper.workplace.getElementById('stream-' + turnUUIDInvert(sess));
                       if (naa && naa.parentNode.parentNode) {
                         naa.parentNode.parentNode.insertBefore(na, naa.parentNode.nextSibling);
                       } else {
@@ -2036,7 +2036,7 @@ window.menu = null;
                   var urls = [];
 
                   var tid = turnUUIDInvert(message.session, true);
-                  var mainResponseID = turnUUID(message.session, true);
+                  var mainResponseID = turnUUIDInvert(message.session, true);
                  
                   if (aiMetadata.searchResults) {
                     for (var i = 0; i < aiMetadata.searchResults.length; i++) {
@@ -2093,7 +2093,7 @@ window.menu = null;
                       if (isStreaming) {
                         if (!nn.id) {
                           sc[0].innerHTML = "";
-                          var tid = turnUUID(sess);
+                          var tid = turnUUIDInvert(sess);
                           if (tid) {
                             sc[0].id = 'stream-' + tid;
                           }
@@ -2799,7 +2799,7 @@ window.menu = null;
 
                         var ttt;
                         var needsReset = false;
-                        var tid = turnUUID(msg.session);
+                        var tid = turnUUIDInvert(msg.session);
                         var existingStream = null;
                         if (tid) {
                           existingStream = document.getElementById('stream-' + tid);
