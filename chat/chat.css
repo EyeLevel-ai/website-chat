@@ -315,8 +315,16 @@ noscript h1 {
   margin-top: -1px;
 }
 
+.modal-url-container {
+  display: flex;
+}
+
 .modal-url-container .link-button {
-  margin-top: -3px;
+  margin-top: -5px;
+}
+
+.modal-url-container .link-number {
+  margin-top: 4px;
 }
 
 .link-item {
@@ -327,10 +335,20 @@ noscript h1 {
   border: 1px solid #ccc;
   width: fit-content;
   cursor: pointer;
+  flex: 1 1 50%;
+  max-width: calc(50% - 20px);
 }
 
 .side-bar-container .link-item {
   align-items: flex-start;
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
+
+.modal-url-container .link-item {
+  flex: 1 1 100%;
+  max-width: 100%;
 }
 
 .link-item .link-number {
@@ -390,6 +408,7 @@ noscript h1 {
   padding: 18px 24px;
   border: 1px solid #888;
   width: 90%;
+  border-radius: 6px;
 }
 
 .ey-chat .modal-container .modal-top-row {
@@ -1245,6 +1264,10 @@ noscript h1 {
   }
   .ey-chat .ey_input-menu.active {
     font-size: 0.875rem;
+  }
+  .link-item {
+    flex: 1 1 100%;
+    max-width: 100%;
   }
 }
 
