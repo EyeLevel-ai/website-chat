@@ -27,6 +27,7 @@ try {
 
     var modalUrl = document.createElement('div');
     modalUrl.id = "modal-url";
+    modalUrl.classList.add('modal-url-container');
 
     var modalClose = document.createElement('div');
     modalClose.id = "modal-close";
@@ -63,6 +64,7 @@ try {
 
   function externalLinkIcon() {
       var d = document.createElement("div");
+      d.classList.add('link-button');
       d.innerHTML = svgExternalLink;
       return d;
   };
@@ -151,10 +153,10 @@ try {
    
     var sideBar = createDivElement({id: "side-bar-" + messageContainerId, className: "source-sideBar"});
     var sideBarTopRow = document.createElement("div");
-    sideBarTopRow.style="display: flex;flex-direction: row; align-items: center; justify-content: space-between;";
+    sideBarTopRow.classList.add('side-bar-container');
 
     var sideBarClose = document.createElement("div");
-    sideBarClose.style="margin-left: 1rem;cursor:pointer;";
+    sideBarClose.classList.add('side-bar-close');
     sideBarClose.innerHTML = "&#x2715;";
     sideBarClose.onclick = function() {
       var sideBar = document.getElementById("side-bar-" + messageContainerId);;
@@ -172,20 +174,15 @@ try {
     sideBarTopRow.appendChild(sideBarClose)
 
     var textDiv = createDivElement({id: "", className: ""});
-    textDiv.style = "margin-top: 2rem"
-    textDiv.innerText = text
+    textDiv.classList.add('side-bar-text');
+    textDiv.innerText = text;
 
     sideBar.appendChild(sideBarTopRow);
     sideBar.appendChild(textDiv);
-    messageContainer.append(sideBar)
+    messageContainer.append(sideBar);
   }
 
   function handleClickSourceUrl(url, text, index, messageContainerId) {
-    if (window.eysources === "link") {
-      window.open(url, '_blank');
-      return;
-    }
-
     if (window.eysources === "modal") {
       return openSourceLinkInModal(url, text, index);
     };
@@ -193,6 +190,9 @@ try {
     if (window.eysources === "sidebar") {
       return openSourceLinkInSideBar(url, text, index, messageContainerId);
     };
+  
+    window.open(url, '_blank');
+
   };
 
   function createClickableSourceURLs(urls, messageContainerId) {
@@ -1574,7 +1574,7 @@ window.menu = null;
                     return t.renderText(wsRes)
                       .then(function(r) {
                         var resText = originalWsResText.replace(/<br \/>/g, '\n');
-                        wsRes.container.innerHTML = t.markdownConverter(resText).replace(/<\/?p>/g, '');;
+                        wsRes.container.innerHTML = t.markdownConverter(resText);
                         t.scrollToBottom();
                         return t.processStream();
                       });
@@ -2116,7 +2116,7 @@ window.menu = null;
                           sc[0].id = 'static-' + tid;
                         }
                         sc[0].innerHTML = ee;
-                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText).replace(/<\/?p>/g, '');
+                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText);
                         t.colorAISource(nn, sc[0]);
                         t.scrollToBottom();
                         return nn, this

@@ -258,6 +258,18 @@ noscript h1 {
   background-color: #494949;
   color: #fff;
 }
+
+.server-response p:only-child {
+  margin: 0;
+}
+
+.server-response p:first-child {
+  margin-top: 0;
+}
+
+.server-response p:last-child {
+  margin-bottom: 0;
+}
 /* MESSAGE TABLE */
 
 /*  source link feature */
@@ -282,14 +294,43 @@ noscript h1 {
   padding: 8px 0 8px 0;
 }
 
+.side-bar-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.side-bar-close {
+  margin-left: 1rem;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.side-bar-text {
+  margin-top: 1rem;
+}
+
+.side-bar-container .link-button {
+  margin-top: -1px;
+}
+
+.modal-url-container .link-button {
+  margin-top: -3px;
+}
+
 .link-item {
   display: flex;
   align-items: center;
-  border-radius: 30px;
+  border-radius: 6px;
   padding: 5px;
   border: 1px solid #ccc;
   width: fit-content;
   cursor: pointer;
+}
+
+.side-bar-container .link-item {
+  align-items: flex-start;
 }
 
 .link-item .link-number {
@@ -303,15 +344,14 @@ noscript h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: 8px;
-  margin-left: 4px;
+  margin: 3px 8px 5px 4px;
 }
 
 .link-item .link-text {
   flex: 1;
   overflow-wrap: break-word;
   margin-right: 10px;
-  font-size: 12px;
+  font-size: 0.625rem;
 }
 
 .source-sideBar {
