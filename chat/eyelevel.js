@@ -676,7 +676,7 @@ try {
   }
 
   var width;
-  window.initChatFrame = function(username, flowname, shouldOpen, origin, attn, menu) {
+  window.initChatFrame = function(username, flowname, shouldOpen, origin, attn, embed) {
     if(window.hideChat) {
       return;
     }
@@ -704,6 +704,13 @@ try {
     if (origin === 'linkedin'
       || origin === 'pdf') {
       var mainCnt = document.getElementById('linkedinContainer');
+      if (mainCnt) {
+        mainCnt.appendChild(sn);
+      } else {
+        document.body.appendChild(sn);
+      }
+    } else if (embed) {
+      var mainCnt = document.getElementById(embed);
       if (mainCnt) {
         mainCnt.appendChild(sn);
       } else {
@@ -819,7 +826,7 @@ try {
       if (bb) {
         window.removeChat();
         window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
-        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu, window.eyfeedback);
+        window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eyembed);
       }
     }
 
@@ -1004,6 +1011,13 @@ try {
         sources = srcs;
       }
       window.eysources = sources;
+
+      var embed = params.embed;
+      var emb = getQueryVar("embed", params.isIframe);
+      if (emb) {
+        embed = emb;
+      }
+      window.eyembed = embed;
 
       var username = params.username;
       var un = getQueryVar("un", params.isIframe);
@@ -1227,7 +1241,7 @@ try {
             && window.eybubble !== false) {
             window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
           }
-          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu, window.eyfeedback);
+          window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eyembed);
         }, 1000);
       } else {
         window.addEventListener("load", function() {
@@ -1238,7 +1252,7 @@ try {
               && window.eybubble !== false) {
               window.initChatBubble(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyvideo);
             }
-            window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eymenu, window.eyfeedback);
+            window.initChatFrame(window.eyusername, window.eyflowname, window.eyshouldopen, window.eyorigin, window.eyattn, window.eyembed);
           }, 1000);
         }, true);
       }
