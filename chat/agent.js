@@ -11,6 +11,211 @@ try {
     simpleLineBreaks: true, 
   });
 
+  var isModal = false;
+
+  function initModal() {
+    var modalContainer = document.createElement('div');
+    modalContainer.className = "modal-container";
+    modalContainer.id = "eyModal";
+    modalContainer.style = "display: none;position: fixed; z-index: 9999;left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5);"
+    
+    var modalContent = document.createElement('div');
+    modalContent.className = "modal-content";
+
+    var modalTopRow = document.createElement('div');
+    modalTopRow.className = "modal-top-row";
+
+    var modalUrl = document.createElement('div');
+    modalUrl.id = "modal-url";
+    modalUrl.classList.add('modal-url-container');
+
+    var modalClose = document.createElement('div');
+    modalClose.id = "modal-close";
+    modalClose.className = "close";
+    modalClose.innerHTML = "&#x2715;"
+
+    var modalText = document.createElement('div');
+    modalText.id = "modal-text";
+    modalText.className = "modal-text";
+    modalText.style = "margin-top: 16px;margin-bottom: 5px;font-size: 1.0rem; word-break: break-word;"
+     
+    modalTopRow.appendChild(modalUrl);
+    modalTopRow.appendChild(modalClose)
+
+    modalContent.appendChild(modalTopRow)
+    modalContent.appendChild(modalText)
+
+    modalContainer.appendChild(modalContent)
+    
+    var eyChat = document.getElementById('eyChat');
+    eyChat.appendChild(modalContainer);
+  };
+  initModal();
+
+  var svgExternalLink = `<svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="30"
+      height="12"
+      fill="#4f4f4f"
+      viewBox="0 0 44 44">
+        <path d="M 40.960938 4.9804688 A 2.0002 2.0002 0 0 0 40.740234 5 L 28 5 A 2.0002 2.0002 0 1 0 28 9 L 36.171875 9 L 22.585938 22.585938 A 2.0002 2.0002 0 1 0 25.414062 25.414062 L 39 11.828125 L 39 20 A 2.0002 2.0002 0 1 0 43 20 L 43 7.2460938 A 2.0002 2.0002 0 0 0 40.960938 4.9804688 z M 12.5 8 C 8.3826878 8 5 11.382688 5 15.5 L 5 35.5 C 5 39.617312 8.3826878 43 12.5 43 L 32.5 43 C 36.617312 43 40 39.617312 40 35.5 L 40 26 A 2.0002 2.0002 0 1 0 36 26 L 36 35.5 C 36 37.446688 34.446688 39 32.5 39 L 12.5 39 C 10.553312 39 9 37.446688 9 35.5 L 9 15.5 C 9 13.553312 10.553312 12 12.5 12 L 22 12 A 2.0002 2.0002 0 1 0 22 8 L 12.5 8 z">
+      </path>
+  </svg>`;
+
+  function externalLinkIcon() {
+      var d = document.createElement("div");
+      d.classList.add('link-button');
+      d.innerHTML = svgExternalLink;
+      return d;
+  };
+
+  function createHeaderElement(config) {
+      var h = document.createElement(config.h);
+      h.innerText = config.innerText;
+      h.className = config.className;
+      return h;
+  };
+  
+  function createDivElement(config) {
+      var div = document.createElement("div");
+      div.id = config.id;
+      div.className = config.className;
+      return div;
+  };
+  
+  function linkItemComponent(num, link, name) {
+      // link-item
+      var linkItem = document.createElement("div");
+      linkItem.className = "link-item";
+   
+      // link-number
+      var linkNumber = document.createElement("div");
+      linkNumber.className = "link-number";
+      linkNumber.textContent = num;
+  
+      //link-text
+      var txt = link;
+      if (name) {
+        txt = decodeURIComponent(decodeURIComponent(name));
+      }
+      var linkText = document.createElement("div");
+      linkText.className = "link-text";
+      linkText.textContent = txt;
+  
+      // fill component;
+      linkItem.appendChild(linkNumber);
+      linkItem.appendChild(linkText)
+  
+      return linkItem;
+  };
+
+  function openSourceLinkInModal(url, text, index) {
+    var eyModal = document.getElementById("eyModal"); 
+    var modalUrlDiv = document.getElementById("modal-url"); 
+    var modalText = document.getElementById("modal-text"); 
+    var closeModal = document.getElementById("modal-close"); 
+
+    closeModal.onclick = function() {
+      modalUrlDiv.innerHTML = "";
+      modalText.innerHTML = "";
+      eyModal.style.display = "none";
+    }
+   
+    var link = linkItemComponent(index, url);
+    var icon = externalLinkIcon()
+    link.appendChild(icon)
+    link.onclick = function() {
+      window.open(url, '_blank')
+    }
+
+
+    modalUrlDiv.appendChild(link);
+    modalText.innerText = text;
+    eyModal.style.display = "block";
+    return;
+  };
+
+  function openSourceLinkInSideBar (url, text, index, messageContainerId) {
+    var isSideBarIsOpen = document.getElementById("side-bar-" + messageContainerId);
+    if (isSideBarIsOpen) {
+      isSideBarIsOpen.remove();
+    }
+
+    var messageContainer = document.querySelector('[data-turn-uuid="' + messageContainerId  +'"]');
+   
+    var serverResponse = document.getElementById("static-" + messageContainerId);
+    if (serverResponse) {
+      serverResponse.style = "flex: 1";
+    } else {
+      var serverResponseStream = document.getElementById("stream-" + messageContainerId);
+      serverResponseStream.style = "flex: 1";
+    }
+   
+    var sideBar = createDivElement({id: "side-bar-" + messageContainerId, className: "source-sideBar"});
+    var sideBarTopRow = document.createElement("div");
+    sideBarTopRow.classList.add('side-bar-container');
+
+    var sideBarClose = document.createElement("div");
+    sideBarClose.classList.add('side-bar-close');
+    sideBarClose.innerHTML = "&#x2715;";
+    sideBarClose.onclick = function() {
+      var sideBar = document.getElementById("side-bar-" + messageContainerId);;
+      sideBar.remove();
+    };
+
+    var link = linkItemComponent(index, url);
+    var icon = externalLinkIcon()
+    link.appendChild(icon)
+    link.onclick = function() {
+      window.open(url, '_blank')
+    }
+
+    sideBarTopRow.appendChild(link);
+    sideBarTopRow.appendChild(sideBarClose)
+
+    var textDiv = createDivElement({id: "", className: ""});
+    textDiv.classList.add('side-bar-text');
+    textDiv.innerText = text;
+
+    sideBar.appendChild(sideBarTopRow);
+    sideBar.appendChild(textDiv);
+    messageContainer.append(sideBar);
+  }
+
+  function handleClickSourceUrl(url, text, index, messageContainerId) {
+    if (window.eysources === "modal") {
+      return openSourceLinkInModal(url, text, index);
+    };
+
+    if (window.eysources === "sidebar") {
+      return openSourceLinkInSideBar(url, text, index, messageContainerId);
+    };
+  
+    window.open(url, '_blank');
+
+  };
+
+  function createClickableSourceURLs(urls, messageContainerId) {
+    var container = createDivElement({ id: "source-links", className: "source-links" })
+    var header = createHeaderElement({ h: "h4", innerText: "Sources", className: "source-header" })
+    container.appendChild(header);
+
+    var sourceLinksContainer = createDivElement({ 
+      id: "source-links-container", className: "source-links-container"
+    })
+    
+    urls.forEach(function(item, index) {
+      var component = linkItemComponent(index + 1, item.url, item.fileName);
+      component.onclick = function() {
+        handleClickSourceUrl(item.url, item.text, index + 1, messageContainerId);
+      };
+
+      sourceLinksContainer.appendChild(component);
+    });
+
+    container.appendChild(sourceLinksContainer);
+    return container;
+  };
 
 function randomString(length) {
   var text = "";
@@ -223,6 +428,17 @@ turnUUID = function(sess) {
   return null;
 }
 
+turnUUIDInvert = function(sess) {
+  if (sess) {
+    if (sess.Trace && sess.Trace.turnUUID && sess.Trace.turnUUID !== '00000000-0000-0000-0000-000000000000') {
+      return sess.Trace.turnUUID;
+    } else if (sess.TraceNext && sess.TraceNext.turnUUID && sess.TraceNext.turnUUID !== '00000000-0000-0000-0000-000000000000') {
+      return sess.TraceNext.turnUUID;
+    }
+  }
+  return null;
+}
+
 saveInteraction = function(interaction) {
   interaction.time = Date.now();
   if (interaction && interaction.sender && interaction.sender === 'user') {
@@ -250,11 +466,11 @@ saveInteraction = function(interaction) {
   if (h && typeof h !== 'undefined') {
     var history = JSON.parse(h);
     if (history) {
-      var interUUID = turnUUID(interaction.session);
+      var interUUID = turnUUIDInvert(interaction.session);
       var isSet = false;
       if (interUUID) {
         for (var i = 0; i < history.length; i++) {
-          var tid = turnUUID(history[i].session);
+          var tid = turnUUIDInvert(history[i].session);
           if (tid && tid === interUUID && !history[i].isDone) {
             history[i] = interaction;
             isSet = true;
@@ -1364,6 +1580,7 @@ window.menu = null;
                       });
                   } else if (!window.eySocket.isStreaming) {
                     originalWsResText = '';
+                    t.renderSources(window.eySocket.lastInteraction);
                     window.eySocket.isCancelled = false;
                     t.removeStopStreamingButton();
                   }
@@ -1549,7 +1766,6 @@ window.menu = null;
                   n.preventDefault();
                   n.stopPropagation();
                   t.checkWS();
-console.log('handleSendClick');
                 }, this.handleScrollEvents = function(n) {
                   var q = t.domHelper.getQueryResultWrapper();
                   if (q.scrollHeight - q.scrollTop <= q.clientHeight + 20) {
@@ -1672,15 +1888,6 @@ console.log('handleSendClick');
                     return
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
-                }, this.escapeAndDecorateStream = function(txt, isStreaming) {
-                  txt = txt.replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>');
-                  var regex = new RegExp(/\[(.*?)\]\((.*?)\)/g);
-                  for (var match of txt.matchAll(regex)) {
-                    var linkText = match[1];
-                    var url = match[2];
-                    txt = txt.replace('['+linkText+']('+url+')', '<a href="' + url + '" target="_blank">' + linkText + '</a>');
-                  }
-                  return txt;
                 }, this.escapeAndDecorateString = function(txt, isStreaming) {
                   var regex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-z0-9-]{2,})+\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g);
                   var match = ''; var splitText = ''; var startIndex = 0;
@@ -1757,7 +1964,7 @@ console.log('handleSendClick');
                       ttt.classList.add('ai-response');
                     }
 
-                    var tid = turnUUID(sess);
+                    var tid = turnUUIDInvert(sess);
                     if (tid) {
                       ttt.setAttribute('data-turn-uuid', tid);
                     }
@@ -1771,7 +1978,7 @@ console.log('handleSendClick');
                     var na = t.createElement('div');
                     na.className = 'server-response-container';
                     t.addAIMetadata(na, sess, aiMetadata);
-                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response">...</div>';
+                    na.innerHTML = '<div class="server-icon"><div class="server-icon-img"></div></div><div class="server-response"><div id="animated-dots" style="display: flex; padding-top: 3px; margin-bottom: -3px;"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
                     var aa;
                     if (isConsent) {
                       aa = t.domHelper.workplace.getElementById('consentResult'); 
@@ -1780,7 +1987,7 @@ console.log('handleSendClick');
                     }
 
                     if (checkTID) {
-                      var naa = t.domHelper.workplace.getElementById('text-' + turnUUID(sess));
+                      var naa = t.domHelper.workplace.getElementById('stream-' + turnUUIDInvert(sess));
                       if (naa && naa.parentNode.parentNode) {
                         naa.parentNode.parentNode.insertBefore(na, naa.parentNode.nextSibling);
                       } else {
@@ -1795,7 +2002,8 @@ console.log('handleSendClick');
                       if (na && na.getElementsByClassName) {
                         const res = na.getElementsByClassName('server-response');
                         if (res && res.length && res.length === 1) {
-                          if (res[0].innerHTML === '...') {
+                          var animatedDots = t.domHelper.workplace.getElementById("animated-dots");
+                          if (animatedDots && res[0].contains(animatedDots)) {
                             t.removeItem(na);
                             window.isChatting = false;
                           }
@@ -1810,6 +2018,70 @@ console.log('handleSendClick');
                         t.removeFromParent(nn);
                       }
                     }, 200);
+                }, this.renderSources = function (message) {
+                  if (!window.eysources) {
+                    return;
+                  }
+
+                  if (!message || window.eySocket.isStreaming) {
+                    return;
+                  }
+
+                  var aiMetadata = message.metadata;
+
+                  if (!aiMetadata || !aiMetadata.searchResults) {
+                    return;
+                  }
+
+                  var urls = [];
+
+                  var tid = turnUUIDInvert(message.session, true);
+                 
+                  if (aiMetadata.searchResults) {
+                    for (var i = 0; i < aiMetadata.searchResults.length; i++) {
+                      var searchResultsTempText = '';
+                      var fileName = '';
+
+                      if (aiMetadata.searchResults[i].text) {
+                        searchResultsTempText = aiMetadata.searchResults[i].text;
+                      }
+
+                      if (aiMetadata.searchResults[i].fileNameD) {
+                        fileName = aiMetadata.searchResults[i].fileNameD;
+                      }
+
+                      if (aiMetadata.searchResults[i].metadata) {
+                        if (aiMetadata.searchResults[i].metadata.url) {
+                          urls.push({
+                            fileName: fileName,
+                            text: searchResultsTempText,
+                            url: aiMetadata.searchResults[i].metadata.url,
+                          });
+                        }
+                      }
+                    }
+                  }
+                
+                  if (urls.length && tid) {
+                    var mid = "stream-" + tid;
+                    var messageContainer = document.getElementById(mid);
+                    if (!messageContainer) {
+                      mid = "static-" + tid; 
+                      messageContainer = document.getElementById(mid);
+                    }
+                    if (messageContainer) {
+                      var divWithSpans = createClickableSourceURLs(urls, tid);
+                      messageContainer.appendChild(divWithSpans);
+                    }
+                  }
+
+                  return;
+                }, this.openModal = function (text, link, num) {
+                  // 
+
+                }, this.createModal = function () {
+                  // 
+  
                 }, this.setText = function(ee, nn, isStreaming, sess) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (!sc || !sc.length || sc.length !== 1) {
@@ -1820,9 +2092,9 @@ console.log('handleSendClick');
                       if (isStreaming) {
                         if (!nn.id) {
                           sc[0].innerHTML = "";
-                          var tid = turnUUID(sess);
+                          var tid = turnUUIDInvert(sess);
                           if (tid) {
-                            sc[0].id = 'text-' + tid;
+                            sc[0].id = 'stream-' + tid;
                           }
                           nn = sc[0];
 
@@ -1839,8 +2111,12 @@ console.log('handleSendClick');
                         }
                       } else {
                         // non-streaming messages
+                        var tid = turnUUIDInvert(sess);
+                        if (tid) {
+                          sc[0].id = 'static-' + tid;
+                        }
                         sc[0].innerHTML = ee;
-                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText).replace(/<\/?p>/g, '');
+                        sc[0].innerHTML = t.markdownConverter(sc[0].innerText);
                         t.colorAISource(nn, sc[0]);
                         t.scrollToBottom();
                         return nn, this
@@ -2522,13 +2798,13 @@ console.log('handleSendClick');
 
                         var ttt;
                         var needsReset = false;
-                        var tid = turnUUID(msg.session);
-                        var existingText = null;
+                        var tid = turnUUIDInvert(msg.session);
+                        var existingStream = null;
                         if (tid) {
-                          existingText = document.getElementById('text-' + tid);
+                          existingStream = document.getElementById('stream-' + tid);
                         }
-                        if (t.isNullObj(ttt) && existingText)  {
-                          ttt = existingText;
+                        if (t.isNullObj(ttt) && existingStream)  {
+                          ttt = existingStream;
                         } else if (t.doReset(needsReset, obj)) {
                           ttt = t.empty(isConsent, msg.metadata);
                           t.addAIMetadata(ttt, msg.session, msg.metadata);
@@ -2639,8 +2915,10 @@ console.log('handleSendClick');
                             }
                           }
                         }
+
+                        t.renderSources(msg);
                         t.updateResponses();
-                        if (msg.typing && msg.isDone) {
+                        if (msg && msg.typing && msg.isDone) {
                           if (!window.eySocket.typingElement || needsReset) {
                             window.eySocket.typingElement = t.empty(isConsent, msg.session, msg.metadata);
                           }
