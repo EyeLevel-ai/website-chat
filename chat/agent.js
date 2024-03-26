@@ -3207,16 +3207,19 @@ window.menu = null;
                       sess = JSON.stringify(sess);
                     }
                     var ben = {
-                        type: ty || 'text',
                         data: inputVal,
-                        username: window.username,
-                        path: window.location.pathname,
-                        uid: window.user.userId,
+                        email: window.eyemail,
+                        fullName: window.eyname,
                         guid: window.eyid && window.eyid,
                         origin: window.origin || 'web',
+                        path: window.location.pathname,
+                        phone: window.eyphone,
                         position: pos && pos,
                         ref: window.location.href,
-                        session: sess
+                        session: sess,
+                        type: ty || 'text',
+                        uid: window.user.userId,
+                        username: window.username,
                     };
                     if (typeof window.flowname !== 'undefined') {
                       ben.flowname = window.flowname;

@@ -75,7 +75,7 @@ try {
     return 0;
   }
 
-  function shouldResetChat() {
+  function shouldResetChat(requireUser) {
     var now = Date.now();
     var ah = window.localStorage.getItem('eyelevel.conversation.history');
     if (!ah) {
@@ -88,11 +88,24 @@ try {
         return true;
       }
       hist.sort(sortInteractions);
+      var userCheck = true;
+      if (requireUser) {
+        userCheck = false;
+        for(var i = 0; i < hist.length; i++) {
+          if (hist[i].sender) {
+            if (hist[i].sender === 'user') {
+              userCheck = true;
+            }
+          }
+        }
+      }
       var lastInteraction = hist[hist.length - 1];
-      if (!lastInteraction || !lastInteraction.time) {
+      console.log(userCheck, !lastInteraction, !lastInteraction.time);
+      if (userCheck && (!lastInteraction || !lastInteraction.time)) {
         return true;
       }
-      if (lastInteraction.time + resetSessionTime < now) {
+      console.log(lastInteraction.time + resetSessionTime < now);
+      if (userCheck && lastInteraction.time + resetSessionTime < now) {
         return true;
       }
     } catch (e) {
@@ -626,7 +639,7 @@ try {
 
   window.initChatStyle = function(origin) {
     var es = document.createElement("style");
-    es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{display:none;position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}section.ey-app{padding:0;}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}section.ey-alert-cnt{padding:0;max-width:400px;}.ey-badge-cnt{position:fixed;z-index:2147483000;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}section.ey-badge-cnt{padding:0;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:100%;max-height:100vh;max-height:-webkit-fill-available;max-height:-moz-available;width:' + ((origin && (origin === 'email')) ? 'calc(100vw - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((origin && (origin === 'email')) ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + ((origin === 'linkedin' || origin === 'pdf') ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}section.ey-section{padding:0;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(max-width:799px){.ey-prevent-scroll{display:block !important;position:fixed !important;overflow:hidden !important;height:100vh;height:-webkit-fill-available;height:-moz-available;}}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{' + ((origin === 'linkedin' || origin === 'pdf') ? 'height: 100%;min-width:376px;max-width:466px;display:block;width:40%;top:unset;bottom:unset;left:unset;right:unset;position:relative;' : 'width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;height:calc(100% - 120px);') + 'overflow: hidden;}.ey-section-visible{max-height:704px;}.ey-section-open{' + ((origin === 'linkedin' || origin === 'pdf') ? '' : 'max-height:704px;top:123px;bottom:auto') + '}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
+    es.innerHTML = '@keyframes ey-app-animate{from{opacity:0;-webkit-transform:scale(.5);-moz-transform:scale(.5);-ms-transform:scale(.5);-o-transform:scale(.5);transform:scale(.5);}to{opacity:1;-webkit-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);-o-transform:scale(1);transform:scale(1);}}.ey-app-container{position:absolute;width:100%;height:100%;z-index:2147483001;cursor:pointer;-webkit-animation:ey-app-animate 0.5s ease-in-out;-moz-animation:ey-app-animate 0.5s ease-in-out;-ms-animation:ey-app-animate 0.5s ease-in-out;-o-animation:ey-app-animate 0.5s ease-in-out;animation:ey-app-animate 0.5s ease-in-out;}.ey-app-animate:focus{outline:0}.ey-app{display:none;position:fixed;z-index:2147483000;bottom:15px;right:15px;width:100px;height:100px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif}section.ey-app{padding:0;}.ey-alert-cnt{position:fixed;z-index:2147483000;bottom:100px;right:14px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}section.ey-alert-cnt{padding:0;max-width:400px;}.ey-badge-cnt{position:fixed;z-index:2147483001;bottom:82px;right:18px;font-family:Roboto,"Helvetica Neue","Apple Color Emoji",Helvetica,Arial,sans-serif;-webkit-animation:ey-app-animate 0.25s ease-in-out;-moz-animation:ey-app-animate 0.25s ease-in-out;-ms-animation:ey-app-animate 0.25s ease-in-out;-o-animation:ey-app-animate 0.25s ease-in-out;animation:ey-app-animate 0.25s ease-in-out;}section.ey-badge-cnt{padding:0;}.ey-badge-frame{width:24px;height:26px;min-width:100%;}.ey-alert-frame{width:100%;min-width:100%;}.ey-iframe{font-size:100%;font-style:normal;letter-spacing:normal;font-stretch:normal;font-weight:400;text-align-last:initial;text-indent:0;text-shadow:none;text-transform:none;alignment-baseline:baseline;animation-play-state:running;backface-visibility:visible;background-color:transparent;background-image:none;baseline-shift:baseline;bottom:auto;-webkit-box-decoration-break:slice;box-shadow:none;box-sizing:content-box;caption-side:top;clear:none;clip:auto;color:inherit;column-count:auto;column-fill:balance;column-gap:normal;column-width:auto;content:normal;counter-increment:none;counter-reset:none;cursor:auto;direction:ltr;display:inline;dominant-baseline:auto;empty-cells:show;float:none;-webkit-hyphenate-character:auto;hyphens:manual;image-rendering:auto;left:auto;line-height:inherit;max-height:none;max-width:none;min-height:0;min-width:0;opacity:1;orphans:2;outline-offset:0;page:auto;perspective:none;perspective-origin:50% 50%;pointer-events:auto;position:static;quotes:none;resize:none;right:auto;size:auto;table-layout:auto;top:auto;transform:none;transform-origin:50% 50% 0;transform-style:flat;unicode-bidi:normal;vertical-align:baseline;white-space:normal;widows:2;word-break:normal;word-spacing:normal;overflow-wrap:normal;text-align:start;-webkit-font-smoothing:antialiased;font-variant:normal;text-decoration:none;border-width:0;border-style:none;border-color:transparent;border-image:initial;border-radius:0;list-style:outside none disc;margin:0;overflow:hidden;padding:0;page-break-after:auto;page-break-before:auto;page-break-inside:auto}.ey-container{height:100%;max-height:100vh;max-height:-webkit-fill-available;max-height:-moz-available;width:' + ((origin && (origin === 'email')) ? 'calc(100vw - 40px)' : '100%') + ';}.ey-section{display:flex;justify-content:center;align-items:center;' + ((origin && (origin === 'email')) ? 'background:rgba(0,0,0,0.50);' : '') + 'width:100%;height:100%;position:' + ((origin === 'linkedin' || origin === 'pdf') ? 'absolute' : 'fixed') + ';top:0;left:0;right:0;bottom:0;z-index:2147483002;}section.ey-section{padding:0;}.ey-section-invisible{opacity:0;top:100%;transition:all 0.5s ease-in;-webkit-transition:all 0.5s ease-in;-moz-transition:all 0.5s ease-in;-ms-transition:all 0.5s ease-in;-o-transition:all 0.5s ease-in;}.ey-section-visible {opacity:1;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}.ey-section-open{opacity:1;max-height:100%;transition:all 0.5s ease-out;-webkit-transition:all 0.5s ease-out;-moz-transition:all 0.5s ease-out;-ms-transition:all 0.5s ease-out;-o-transition:all 0.5s ease-out;}@media(max-width:799px){.ey-prevent-scroll{display:block !important;position:fixed !important;overflow:hidden !important;height:100vh;height:-webkit-fill-available;height:-moz-available;}}@media(min-width: 800px){.ey-container{width:100%;height:100%;}.ey-section{' + ((origin === 'linkedin' || origin === 'pdf') ? 'height: 100%;min-width:376px;max-width:466px;display:block;width:40%;top:unset;bottom:unset;left:unset;right:unset;position:relative;' : 'width:376px;min-height:250px;bottom:120px;top:auto;left:auto;right:30px;box-shadow:rgba(0, 0, 0, 0.35) 0px 5px 40px;border-radius: 8px;height:calc(100% - 120px);') + 'overflow: hidden;}.ey-section-visible{max-height:704px;}.ey-section-open{' + ((origin === 'linkedin' || origin === 'pdf') ? '' : 'max-height:704px;top:123px;bottom:auto') + '}.ey-section-invisible{top:100%;}}@media(max-width: 450px){.ey-app-open {display: none;}}';
     document.body.appendChild(es);
   }
 
@@ -728,7 +741,7 @@ try {
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.eysources = '+(window.eysources ? '"'+window.eysources+'"' : 'null')+';window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(window.eyfeedback ? 'window.eyfeedback = "'+window.eyfeedback+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div><div class="ey_input-menu ey-menu' + (hasMenu && window.eymenu.position && window.eymenu.position === 'top-right' ? ' active ey-menu-right' : '') + '"><span class="ey_input-menu-text" id="ey-menu-tr">' + (hasMenu && window.eymenu.label ? window.eymenu.label : 'VET CHAT >') + '</span></div></div><div id="eyMobileChatClose" class="ey-close-btn' + (hasMenu && window.eymenu.position && window.eymenu.position === 'top-right' ? ' ey-close-left' : '') + '" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form><div class="ey_input-menu ey-menu' + (hasMenu && (!window.eymenu.position || window.eymenu.position === 'lower-right') ? ' active' : '') + '"><span class="ey_input-menu-text" id="ey-menu-br">' + (hasMenu && window.eymenu.label ? window.eymenu.label : 'VET CHAT >') + '</span></div></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.eyemail = '+(window.eyemail ? '"'+window.eyemail+'"' : 'null')+';window.eyname = '+(window.eyname ? '"'+window.eyname+'"' : 'null')+';window.eyphone = '+(window.eyphone ? '"'+window.eyphone+'"' : 'null')+';window.eysources = '+(window.eysources ? '"'+window.eysources+'"' : 'null')+';window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(window.eyfeedback ? 'window.eyfeedback = "'+window.eyfeedback+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div><div class="ey_input-menu ey-menu' + (hasMenu && window.eymenu.position && window.eymenu.position === 'top-right' ? ' active ey-menu-right' : '') + '"><span class="ey_input-menu-text" id="ey-menu-tr">' + (hasMenu && window.eymenu.label ? window.eymenu.label : 'VET CHAT >') + '</span></div></div><div id="eyMobileChatClose" class="ey-close-btn' + (hasMenu && window.eymenu.position && window.eymenu.position === 'top-right' ? ' ey-close-left' : '') + '" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form><div class="ey_input-menu ey-menu' + (hasMenu && (!window.eymenu.position || window.eymenu.position === 'lower-right') ? ' active' : '') + '"><span class="ey_input-menu-text" id="ey-menu-br">' + (hasMenu && window.eymenu.label ? window.eymenu.label : 'VET CHAT >') + '</span></div></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
 
     if (!window.eynoclose) {
@@ -1076,6 +1089,46 @@ try {
         window.eyreset = true;
       }
 
+      var resetSession = params.resetSession;
+      var rss = getQueryVar("resetSession", params.isIframe);
+      if (rss) {
+        if (rss === 'true') {
+          resetSession = true;
+        } else {
+          resetSession = false;
+        }
+      }
+      if (resetSession) {
+        window.eyresetsession = true;
+      }
+
+      var email = params.email;
+      var em = getQueryVar("email", params.isIframe);
+      if (em) {
+        email = em
+      }
+      if (email) {
+        window.eyemail = email;
+      }
+
+      var name = params.fullName;
+      var nm = getQueryVar("fullName", params.isIframe);
+      if (nm) {
+        name = nm
+      }
+      if (name) {
+        window.eyname = name;
+      }
+
+      var phone = params.phone;
+      var ph = getQueryVar("phone", params.isIframe);
+      if (ph) {
+        phone = ph
+      }
+      if (phone) {
+        window.eyphone = phone;
+      }
+
       var invert = params.invert;
       var ins = getQueryVar("eyinvert", params.isIframe);
       if (ins) {
@@ -1263,6 +1316,13 @@ try {
             var jsonStr = e.data.replace("track:", "");
             var jsonObj = JSON.parse(jsonStr);
             trackEvent('chat_interaction', jsonObj);
+            if (window.eyresetsession) {
+              this.setTimeout(function() {
+                if (shouldResetChat(true)) {
+                  location.reload();
+                }
+              }, resetSessionTime + 1000);
+            }
           } else if (e.data === "close") {
             toggleChat();
           } else if (e.data === "close-alert") {
@@ -1276,6 +1336,13 @@ try {
             eyb.style.display = "block";
           } else if (e.data === 'alert-update') {
             window.updateAlerts();
+            if (window.eyresetsession) {
+              this.setTimeout(function() {
+                if (shouldResetChat(true)) {
+                  location.reload();
+                }
+              }, resetSessionTime + 1000);
+            }
           } else if (e.data === 'chat-loaded') {
             window.updateAlerts();
           }
