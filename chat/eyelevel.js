@@ -1323,6 +1323,12 @@ try {
                 }
               }, resetSessionTime + 1000);
             }
+          } else if (typeof e.data.indexOf === 'function' && e.data.indexOf("user:") === 0) {
+            var jsonStr = e.data.replace("user:", "");
+            var jsonObj = JSON.parse(jsonStr);
+            if (jsonObj && jsonObj.userId) {
+              window.eyuserid = jsonObj.userId;
+            }
           } else if (e.data === "close") {
             toggleChat();
           } else if (e.data === "close-alert") {

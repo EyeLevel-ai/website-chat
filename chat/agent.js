@@ -11,6 +11,7 @@ try {
     simpleLineBreaks: true, 
   });
 
+  var hasInit = false;
   var isModal = false;
 
   function initModal() {
@@ -402,7 +403,7 @@ if (!window.localStorage) {
   })());
 }
 
-window.getUser = function() {
+getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var aid = window.localStorage.getItem('eyelevel.user.aid');
   var isTransfer = window.localStorage.getItem('eyelevel.user.transfer') ? true : false;
@@ -415,6 +416,30 @@ window.getUser = function() {
   }
 
   return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
+}
+
+updateUser = function(req) {
+  if (!req || hasInit) {
+    return;
+  }
+
+  if (req.action && req.action === 'heartbeat') {
+    return;
+  }
+
+  if (!req.session || !req.session.GUID || !req.session.GUID.refUserId || !parseInt(req.session.GUID.aid)) {
+    return;
+  }
+
+  hasInit = true;
+  var user = getUser();
+  if (!user || !user.userId || !user.aid || user.userId != req.session.GUID.refUserId || user.aid != parseInt(req.session.GUID.aid)) {
+    window.localStorage.setItem('eyelevel.user.userId', req.session.GUID.refUserId);
+    window.localStorage.setItem('eyelevel.user.aid', parseInt(req.session.GUID.aid));
+    window.user.userId = req.session.GUID.refUserId;
+    window.user.aid = parseInt(req.session.GUID.aid);
+    window.parent.postMessage('user:'+JSON.stringify(window.user), "*");
+  }
 }
 
 turnUUID = function(sess) {
@@ -444,7 +469,7 @@ saveInteraction = function(interaction) {
   if (interaction && interaction.sender && interaction.sender === 'user') {
     interaction.host = window.location.host;
     interaction.pathname = window.location.pathname;
-    interaction.uid = window.getUser().userId;
+    interaction.uid = getUser().userId;
     interaction.username = window.username;
     interaction.origin = window.origin || 'web';
     if (typeof window.flowname !== 'undefined') {
@@ -520,7 +545,8 @@ saveSession = function(sess) {
     if (sess.GUID && sess.GUID.refUserId && sess.GUID.aid && parseInt(sess.GUID.aid) > 0) {
       window.localStorage.setItem('eyelevel.user.aid', parseInt(sess.GUID.aid));
       window.localStorage.setItem('eyelevel.user.userId', sess.GUID.refUserId);
-      window.user = window.getUser();
+      window.user.userId = sess.GUID.refUserId;
+      window.user.aid = parseInt(sess.GUID.aid);
     }
   }
 }
@@ -528,7 +554,7 @@ saveSession = function(sess) {
 setTransfer = function(val) {
   if (val) {
     window.localStorage.setItem('eyelevel.user.transfer', 'true');
-    window.user = window.getUser();
+    window.user = getUser();
     if (window.eymenu) {
       var mn = document.getElementById('ey-menu-tr');
       if (mn) {
@@ -543,7 +569,7 @@ setTransfer = function(val) {
     }
   } else {
     window.localStorage.removeItem('eyelevel.user.transfer');
-    window.user = window.getUser();
+    window.user = getUser();
   }
 }
 
@@ -671,7 +697,7 @@ swipeEnd = function(e) {
   return swipeDir;
 };
 
-window.user = window.getUser();
+window.user = getUser();
 window.isChatting = false;
 window.menu = null;
 
@@ -1662,6 +1688,7 @@ window.menu = null;
                           window.eySocket.isStreaming = true;
                         }
                         if (wsRes.action) {
+                          updateUser(wsRes);
                           if (wsRes.action === 'reconnect') {
                             setTransfer(false);
                             var ints = retrieveInteractions(true);
