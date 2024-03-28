@@ -540,7 +540,7 @@ getConsent = function() {
 window.isOpen = false;
 
 saveSession = function(sess) {
-  if (sess.Pos.flowUUID && sess.Pos.turnID && sess.Pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(sess.Pos.turnID) !== 0) {
+  if (sess && sess.Pos.flowUUID && sess.Pos.turnID && sess.Pos.flowUUID !== "00000000-0000-0000-0000-000000000000" && parseInt(sess.Pos.turnID) !== 0) {
     window.localStorage.setItem('eyelevel.conversation.session', JSON.stringify(sess));
     if (sess.GUID && sess.GUID.refUserId && sess.GUID.aid && parseInt(sess.GUID.aid) > 0) {
       window.localStorage.setItem('eyelevel.user.aid', parseInt(sess.GUID.aid));
