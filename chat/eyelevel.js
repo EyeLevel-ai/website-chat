@@ -100,11 +100,9 @@ try {
         }
       }
       var lastInteraction = hist[hist.length - 1];
-      console.log(userCheck, !lastInteraction, !lastInteraction.time);
       if (userCheck && (!lastInteraction || !lastInteraction.time)) {
         return true;
       }
-      console.log(lastInteraction.time + resetSessionTime < now);
       if (userCheck && lastInteraction.time + resetSessionTime < now) {
         return true;
       }

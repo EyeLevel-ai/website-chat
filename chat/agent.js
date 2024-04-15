@@ -283,11 +283,12 @@ function supportsPassive() {
 window.supportsPassive = supportsPassive;
 
 function doFeedback() {
-  return (window.eySocket
+  return ((window.eySocket
     && window.eySocket.lastInteraction
     && window.eySocket.lastInteraction.metadata
     && window.eySocket.lastInteraction.metadata.feedbackType) ||
-    (window.eyfeedback);
+    (window.eyfeedback))
+    && !window.eySocket.isStreaming;
 }
 
 function feedbackType() {
@@ -1528,6 +1529,7 @@ window.menu = null;
                         }
                         aa.appendChild(wid);
                         wid.classList.add('ey-add-item');
+                        t.scrollToBottom()
                       }
                     }
                   }
@@ -1540,7 +1542,9 @@ window.menu = null;
                       var ty = feedbackType();
                       switch(ty) {
                         case 'five-scale':
-                          t.updateFeedbackWidget(ty);
+                          setTimeout(function() {
+                            t.updateFeedbackWidget(ty);
+                          }, 1000);
                           break;
                         case 'binary':
                           setTimeout(function() {
@@ -1608,7 +1612,7 @@ window.menu = null;
                     originalWsResText = '';
                     t.renderSources(window.eySocket.lastInteraction);
                     window.eySocket.isCancelled = false;
-                    t.removeStopStreamingButton();
+                    t.concludeStream();
                   }
                 }, this.renderText = function(msg) {
                   return new Promise(function(resolve) {
@@ -1748,9 +1752,7 @@ window.menu = null;
                             window.eySocket.lastInteraction = wsRes;
                             saveInteraction(wsRes);
 
-                            if (!window.isOpen) {
-                              window.parent.postMessage("alert-update", "*");
-                            }
+                            window.parent.postMessage("alert-update", "*");
 
                             if (!window.eySocket.queuedMessages.length) {
                               window.eySocket.queuedMessages.push(wsRes);
@@ -2174,7 +2176,7 @@ window.menu = null;
                   if (!eySend.classList.contains('icon-stop')) {
                     eySend.classList.add('icon-stop');
                   }
-                }, this.removeStopStreamingButton = function() {
+                }, this.concludeStream = function() {
                   var eySend = t.domHelper.workplace.getElementById("ey-send");
                   if (eySend.classList.contains('icon-stop')) {
                     eySend.classList.remove('icon-stop');
@@ -2222,7 +2224,7 @@ window.menu = null;
                   }
                 }, this.stopStreaming = function(n) {
                     var ty = "cancel streaming text"; 
-                    t.removeStopStreamingButton();
+                    t.concludeStream();
                     t.removeFeedbackWidget();
                     window.eySocket.isCancelled = true;
                     window.eySocket.cancelledEmpty = true;
