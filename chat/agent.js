@@ -1458,20 +1458,37 @@ window.menu = null;
                         var star = t.domHelper.workplace.getElementById(`ai-feedback-prompt`);
                         star.innerHTML = 'Thanks!';
                         t.scrollToBottom();
-                      })
+                        setTimeout(function() {
+                          t.removeFromParent(wid);
+                          t.scrollToBottom();
+                        }, 3000);
+                      });
                       break;
                     default:
                       var wid = t.domHelper.workplace.getElementById('ai-feedback');
                       while (wid.childNodes.length) {
                         t.removeFromParent(wid.childNodes[0]);
                       }
-                      var prompt = t.createElement('div');
-                      prompt.classList.add('ai-feedback-prompt');
-                      prompt.innerHTML = 'Thanks!';
-                      wid.appendChild(prompt);
-                      setTimeout(function() {
-                        t.removeFromParent(wid);
-                      }, 3000);
+                      if (response == 1) {
+                        response = 5;
+                      } else {
+                        response = 1;
+                      }
+                      t.scrollToBottom();
+                      reportFeedback({
+                        rating: response,
+                        turnUUID: turnUUID,
+                      }, function() {
+                        var prompt = t.createElement('div');
+                        prompt.classList.add('ai-feedback-prompt');
+                        prompt.innerHTML = 'Thanks!';
+                        wid.appendChild(prompt);
+                        t.scrollToBottom();
+                        setTimeout(function() {
+                          t.removeFromParent(wid);
+                          t.scrollToBottom();
+                        }, 3000);
+                      });
                   }
                 }, this.removeFeedbackWidget = function() {
                   var wid = t.domHelper.workplace.getElementById('ai-feedback');
@@ -1544,12 +1561,12 @@ window.menu = null;
                         case 'five-scale':
                           setTimeout(function() {
                             t.updateFeedbackWidget(ty);
-                          }, 1000);
+                          }, 2000);
                           break;
                         case 'binary':
                           setTimeout(function() {
                             t.updateFeedbackWidget(ty);
-                          }, 5000);
+                          }, 2000);
                       }
                     }
 
@@ -1748,6 +1765,13 @@ window.menu = null;
                             setTransfer(false);
                           } else if (wsRes.action === 'heartbeat') {
                           } else {
+                            if (wsRes.payload) {
+                              var wdata = JSON.parse(wsRes.payload);
+                              if (wdata && wdata.text && wdata.sender === 'user') {
+                                t.saveUserMessage(wdata.text, wsRes.typing);
+                                return;
+                              }
+                            }
                             wsRes.sender = "server";
                             window.eySocket.lastInteraction = wsRes;
                             saveInteraction(wsRes);
@@ -2240,6 +2264,20 @@ window.menu = null;
                     window.eySocket.send(JSON.stringify(t.buildPayLoad("", ty)));
                     window.parent.postMessage(ty, "*");
                     window.isChatting = false;
+              }, this.saveUserMessage = function(n, typing) {
+                  t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
+                  if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
+                    window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
+                    saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
+                  }
+                  delete window.eySocket.turnType;
+                  delete window.eySocket.turnID;
+                  if (typing) {
+                    window.eySocket.typingElement = t.empty();
+                    window.isChatting = true;
+                  }
+                  t.removeFeedbackWidget();
+                  t.scrollToBottom();
               }, this.handleInput = function(n) {
                   if (window.eySocket.isStreaming || window.eySocket.renderingStream) {
                     t.stopStreaming(n);
@@ -2291,16 +2329,7 @@ window.menu = null;
                       t.domHelper.setInputValue("");
                       t.scrollToBottom();
                     } else {
-                      t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
-                      if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
-                        window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
-                        saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
-                      }
-                      delete window.eySocket.turnType;
-                      delete window.eySocket.turnID;
-                      window.eySocket.typingElement = t.empty();
-                      window.isChatting = true;
-                      t.removeFeedbackWidget();
+                      t.saveUserMessage(n, true);
                       window.eySocket.send(JSON.stringify(t.buildPayLoad(n)));
                       t.domHelper.setInputValue("");
                       t.domHelper.handleStopSend();
@@ -3236,10 +3265,12 @@ window.menu = null;
                       sess = JSON.stringify(sess);
                     }
                     var ben = {
+                        cref: window.eyref && window.eyref,
                         data: inputVal,
                         email: window.eyemail,
                         fullName: window.eyname,
                         guid: window.eyid && window.eyid,
+                        modelId: window.modelId,
                         origin: window.origin || 'web',
                         path: window.location.pathname,
                         phone: window.eyphone,
