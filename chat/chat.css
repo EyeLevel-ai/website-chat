@@ -897,6 +897,9 @@ noscript h1 {
   box-shadow: none;
   margin: 4px 0;
 }
+.ey-disabled {
+  opacity: 50%;
+}
 .ai-feedback-container {
   display: flex;
   align-items: center;

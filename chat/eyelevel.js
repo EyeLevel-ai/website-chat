@@ -39,7 +39,7 @@ try {
   window.cacheBust = '';
   window.shouldTrack = false;
 
-  function getQueryVar(vn, isIframe) {
+  function getQueryVars(isIframe) {
     var qq = window.location.search.substring(1);
     if (isIframe) {
       if (document.referrer && document.referrer.indexOf('?') > -1) {
@@ -48,12 +48,21 @@ try {
       }
     }
     var vr = qq.split('&');
+    var qParams = {};
     for (var i = 0; i < vr.length; i++) {
       var pr = vr[i].split('=');
-      if (decodeURIComponent(pr[0]) == vn) {
-        return decodeURIComponent(pr[1]);
+      if (pr.length === 2) {
+        qParams[decodeURIComponent(pr[0])] = decodeURIComponent(pr[1]);
       }
     }
+
+    return qParams;
+  }
+
+  function getQueryVar(vn, isIframe) {
+    var qParams = getQueryVars(isIframe);
+
+    return qParams[vn];
   }
 
   clearAll = function() {
@@ -414,42 +423,31 @@ try {
     return;
   }
 
-  function parseParams(params, dependencies) {
-    if (dependencies) {
-      if (dependencies.getQueryVar) {
-        getQueryVar = dependencies.getQueryVar;
-      }
-      if (dependencies.clearAll) {
-        clearAll = dependencies.clearAll;
-      }
-      if (dependencies.loadEnv) {
-        loadEnv = dependencies.loadEnv;
-      }
-      if (dependencies.shouldResetChat) {
-        shouldResetChat = dependencies.shouldResetChat;
-      }
-    }
-
-    var channel = params.channel;
-    var ch = getQueryVar("eychannel", params.isIframe);
+  function parseVariables(params, qParams) {
+    var channel = params.channel || params.eychannel;
+    var ch = qParams["eychannel"];
     if (ch) {
       channel = ch;
+      delete qParams["eychannel"];
     }
     if (channel) {
       window.eychannel = channel;
     }
 
-    var origin = params.origin;
-    var og = getQueryVar("eyorigin", params.isIframe);
+    var origin = params.origin || params.eyorigin;
+    var og = qParams["eyorigin"];
     if (og) {
       origin = og;
+      delete qParams["eyorigin"];
     }
     if (origin) {
       window.eyorigin = origin;
-    } else if (window.eychannel) {
-      window.eyorigin = window.eychannel;
-    } else {
-      window.eyorigin = "web";
+    } else if (!window.eyorigin) {
+      if (window.eychannel) {
+        window.eyorigin = window.eychannel;
+      } else {
+        window.eyorigin = "web";
+      }
     }
 
     var refParams = {};
@@ -459,25 +457,30 @@ try {
 
       switch(key) {
         case 'alerts':
-          var al = getQueryVar("eyalerts", params.isIframe);
+        case 'eyalerts':
+          var al = qParams["eyalerts"];
           if (al) {
             val = al;
+            delete qParams["eyalerts"];
           }
           if (val) {
             window.alerts = val;
           }
           break;
         case 'alertSound':
-          var enAlertSound = getQueryVar("alertSound", params.isIframe);
+          var enAlertSound = qParams["alertSound"];
           if (enAlertSound) {
             val = enAlertSound;
+            delete qParams["alertSound"];
           }
           window.eyAlertSound = val;
           break;
         case 'attention':
-          var attn = getQueryVar("eyattn", params.isIframe);
+        case 'eyattn':
+          var attn = qParams["eyattn"];
           if (attn) {
             val = attn;
+            delete qParams["eyattn"];
           }
           val = parseBool(val);
           if (val) {
@@ -489,9 +492,11 @@ try {
           }
           break;
         case 'bubble':
-          var bb = getQueryVar("eybubble", params.isIframe);
+        case 'eybubble':
+          var bb = qParams["eybubble"];
           if (bb) {
             val = bb;
+            delete qParams["eybubble"];
           }
           val = parseBool(val);
           if (val) {
@@ -499,11 +504,13 @@ try {
           }
           break;
         case 'channel':
+        case 'eychannel':
           break;
         case 'clearcache':
-          var cc = getQueryVar("clearcache", params.isIframe);
+          var cc = qParams["clearcache"];
           if (cc) {
             val = cc;
+            delete qParams["clearcache"];
           }
           if (val) {
             var now = Date.now();
@@ -513,51 +520,60 @@ try {
           }
           break;
         case 'email':
-          var em = getQueryVar("email", params.isIframe);
+          var em = qParams["email"];
           if (em) {
-            val = em
+            val = em;
+            delete qParams["email"];
           }
           if (val) {
             window.eyemail = val;
           }
           break;
         case 'embed':
-          var emb = getQueryVar("embed", params.isIframe);
+          var emb = qParams["embed"];
           if (emb) {
             val = emb;
+            delete qParams["embed"];
           }
           window.eyembed = val;
           break;
         case 'env':
-          var en = getQueryVar("eyenv", params.isIframe);
+        case 'eyenv':
+          var en = qParams["eyenv"];
           if (en) {
             val = en;
+            delete qParams["eyenv"];
           }
           window.eyEnv = val;
           loadEnv(val);
           break;
         case 'eyid':
-          eyid = getQueryVar("eyid", params.isIframe);
+          eyid = qParams["eyid"];
           if (eyid) {
             val = eyid;
+            delete qParams["eyid"];
           }
           if (val) {
             window.eyid = val;
           }
           break;
         case 'feedback':
-          var fbq = getQueryVar("eyfeedback", params.isIframe);
+        case 'eyfeedback':
+          var fbq = qParams["eyfeedback"];
           if (fbq) {
             val = fbq;
+            delete qParams["eyfeedback"];
           }
           if (val) {
             window.eyfeedback = val;
           }
           break;
         case 'flowname':
-          var fn = getQueryVar("fn", params.isIframe);
+        case 'fn':
+          var fn = qParams["fn"];
           if (fn) {
             val = fn;
+            delete qParams["fn"];
           }
           if (val !== undefined && val) {
             window.eyfnset = true;
@@ -565,9 +581,11 @@ try {
           window.eyflowname = val;
           break;
         case 'forceReset':
-          var rs = getQueryVar("eyforcereset", params.isIframe);
+        case 'eyforcereset':
+          var rs = qParams["eyforcereset"];
           if (rs) {
             val = rs;
+            delete qParams["eyforcereset"];
           }
           val = parseBool(val);
           if (val) {
@@ -575,9 +593,10 @@ try {
           }
           break;
         case 'fullName':
-          var nm = getQueryVar("fullName", params.isIframe);
+          var nm = qParams["fullName"];
           if (nm) {
             val = nm;
+            delete qParams["fullName"];
           }
           if (val) {
             window.eyname = val;
@@ -589,9 +608,11 @@ try {
           }
           break;
         case 'invert':
-          var ins = getQueryVar("eyinvert", params.isIframe);
+        case 'eyinvert':
+          var ins = qParams["eyinvert"];
           if (ins) {
             val = ins;
+            delete qParams["eyinvert"];
           }
           val = parseBool(val);
           if (val) {
@@ -601,18 +622,21 @@ try {
         case 'isIframe':
           break;
         case 'menu':
-          var ch = getQueryVar("eymenu", params.isIframe);
+        case 'eymenu':
+          var ch = qParams["eymenu"];
           if (ch) {
             val = ch;
+            delete qParams["eymenu"];
           }
           if (val) {
             window.eymenu = val;
           }
           break;
         case 'modelId':
-          var mId = getQueryVar("modelId", params.isIframe);
+          var mId = qParams["modelId"];
           if (mId) {
             val = mId;
+            delete qParams["modelId"];
           }
           val = parseNumber(val);
           if (val) {
@@ -620,9 +644,11 @@ try {
           }
           break;
         case 'noclose':
-          var nc = getQueryVar("eynoclose", params.isIframe);
+        case 'eynoclose':
+          var nc = qParams["eynoclose"];
           if (nc) {
             val = nc;
+            delete qParams["eynoclose"];
           }
           val = parseBool(val);
           if (val) {
@@ -631,29 +657,34 @@ try {
           window.eynoclose = val;
           break;
         case 'origin':
+        case 'eyorigin':
           break;
         case 'phone':
-          var ph = getQueryVar("phone", params.isIframe);
+          var ph = qParams["phone"];
           if (ph) {
             val = ph;
+            delete qParams["phone"];
           }
           if (val) {
             window.eyphone = val;
           }
           break;
         case 'ref':
-          var qref = getQueryVar("ref", params.isIframe);
+          var qref = qParams["ref"];
           if (qref) {
             val = qref;
+            delete qParams["ref"];
           }
           if (val) {
             window.eyref = val;
           }
           break;
         case 'reset':
-          var rs = getQueryVar("eyreset", params.isIframe);
+        case 'eyreset':
+          var rs = qParams["eyreset"];
           if (rs) {
             val = rs;
+            delete qParams["eyreset"];
           }
           val = parseBool(val);
           if (val) {
@@ -667,9 +698,10 @@ try {
           }
           break;
         case 'resetSession':
-          var rs = getQueryVar("resetSession", params.isIframe);
+          var rs = qParams["resetSession"];
           if (rs) {
             val = rs;
+            delete qParams["resetSession"];
           }
           val = parseBool(val);
           if (val) {
@@ -677,9 +709,10 @@ try {
           }
           break;
         case 'resetTime':
-          var ssn = getQueryVar("resetTime", params.isIframe);
+          var ssn = qParams["resetTime"];
           if (ssn) {
             val = ssn;
+            delete qParams["resetTime"];
           }
           val = parseNumber(val);
           if (val) {
@@ -690,17 +723,20 @@ try {
           }
           break;
         case 'sources':
-          var srcs = getQueryVar("sources", params.isIframe);
+          var srcs = qParams["sources"];
           if (srcs) {
             val = srcs;
+            delete qParams["sources"];
           }
           window.eysources = val;
           break;
         case 'state':
+        case 'eystate':
           val = val && val === "open";
-          var op = getQueryVar("eystate", params.isIframe);
+          var op = qParams["eystate"];
           if (op) {
             val = op === "open";
+            delete qParams["eystate"];
           }
           window.eyshouldopen = val;
           if (!window.eyshouldopen) {
@@ -710,9 +746,11 @@ try {
         case 'subscriptionId':
           break;
         case 'username':
-          var un = getQueryVar("un", params.isIframe);
+        case 'un':
+          var un = qParams["un"];
           if (un) {
             val = un;
+            delete qParams["un"];
           }
           window.eyusername = val;
           break;
@@ -720,10 +758,35 @@ try {
           refParams[key] = params[key];
       }
     }
+  
+    return {
+      refParams: refParams,
+      qParams: qParams,
+    };
+  }
+
+  function parseParams(params, dependencies) {
+    if (dependencies) {
+      if (dependencies.getQueryVars) {
+        getQueryVars = dependencies.getQueryVars;
+      }
+      if (dependencies.clearAll) {
+        clearAll = dependencies.clearAll;
+      }
+      if (dependencies.loadEnv) {
+        loadEnv = dependencies.loadEnv;
+      }
+      if (dependencies.shouldResetChat) {
+        shouldResetChat = dependencies.shouldResetChat;
+      }
+    }
+
+    var pResult = parseVariables(params, getQueryVars(params.isIframe));
+    parseVariables(pResult.qParams, {});
 
     var queryString = [];
-    for (var key in refParams) {
-      if (refParams.hasOwnProperty(key)) {
+    for (var key in pResult.refParams) {
+      if (pResult.refParams.hasOwnProperty(key)) {
         var value = params[key];
 
         if (Array.isArray(value)) {
@@ -1087,15 +1150,26 @@ try {
       document.body.appendChild(sn);
     }
 
-    var hasMenu = false;
+    var menuTR = '';
+    var menuBR = '';
+    var menuClose = '';
     if (typeof window.eymenu === 'object') {
-      hasMenu = true;
+      var label = 'VET CHAT';
+      if (window.eymenu.label) {
+        label = window.eymenu.label;
+      }
+      if (window.eymenu.position && window.eymenu.position === 'top-right') {
+        menuTR = '<div id="eyMenu" class="ey_input-menu ey-menu active ey-menu-right ey-disabled"><span class="ey_input-menu-text ey-disabled" id="ey-menu-tr">' + label + '</span></div>';
+        menuClose = ' ey-close-left';
+      } else {
+        menuBR = '<div id="eyMenu" class="ey_input-menu ey-menu active ey-disabled"><span class="ey_input-menu-text ey-disabled" id="ey-menu-br">' + label + '</span></div></div>';
+      }
     }
 
     var is = document.getElementById("eyFrame");
     is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
     is.document.open();
-    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.eyemail = '+(window.eyemail ? '"'+window.eyemail+'"' : 'null')+';window.eyname = '+(window.eyname ? '"'+window.eyname+'"' : 'null')+';window.eyphone = '+(window.eyphone ? '"'+window.eyphone+'"' : 'null')+';window.eysources = '+(window.eysources ? '"'+window.eysources+'"' : 'null')+';window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof window.modelId !== 'undefined' ? 'window.modelId = '+window.modelId+';' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(window.eyref ? 'window.eyref = "'+window.eyref+'";' : '')+(window.eyfeedback ? 'window.eyfeedback = "'+window.eyfeedback+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div><div class="ey_input-menu ey-menu' + (hasMenu && window.eymenu.position && window.eymenu.position === 'top-right' ? ' active ey-menu-right' : '') + '"><span class="ey_input-menu-text" id="ey-menu-tr">' + (hasMenu && window.eymenu.label ? window.eymenu.label : 'VET CHAT >') + '</span></div></div><div id="eyMobileChatClose" class="ey-close-btn' + (hasMenu && window.eymenu.position && window.eymenu.position === 'top-right' ? ' ey-close-left' : '') + '" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form><div class="ey_input-menu ey-menu' + (hasMenu && (!window.eymenu.position || window.eymenu.position === 'lower-right') ? ' active' : '') + '"><span class="ey_input-menu-text" id="ey-menu-br">' + (hasMenu && window.eymenu.label ? window.eymenu.label : 'VET CHAT >') + '</span></div></div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
+    is.document.write('<!DOCTYPE html><html><head><base target="_parent"></base><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><script>window.eyemail = '+(window.eyemail ? '"'+window.eyemail+'"' : 'null')+';window.eyname = '+(window.eyname ? '"'+window.eyname+'"' : 'null')+';window.eyphone = '+(window.eyphone ? '"'+window.eyphone+'"' : 'null')+';window.eysources = '+(window.eysources ? '"'+window.eysources+'"' : 'null')+';window.Consent = '+(window.Consent ? window.Consent : false)+';'+(window.ConsentContent ? "window.ConsentContent = "+JSON.stringify(window.ConsentContent)+ ";" : "")+'window.username = "'+username+'";'+(typeof window.eyEnv !== 'undefined' ? 'window.eyEnv = "'+window.eyEnv+'";' : '')+(typeof window.modelId !== 'undefined' ? 'window.modelId = '+window.modelId+';' : '')+(typeof flowname !== 'undefined' ? 'window.flowname = "'+flowname+'";' : '')+(typeof window.eyreset !== 'undefined' && window.eyreset ? 'window.eyreset = true;' : '')+'window.shouldOpen = '+(shouldOpen || false)+';window.attn = '+(attn || false)+';window.origin = "'+origin+'";'+(window.eyid ? 'window.eyid = "'+window.eyid+'";' : '')+(window.eymenu ? 'window.eymenu = '+JSON.stringify(window.eymenu)+';' : '')+(window.eyref ? 'window.eyref = "'+window.eyref+'";' : '')+(window.eyfeedback ? 'window.eyfeedback = "'+window.eyfeedback+'";' : '')+(isVideo(window.eyvideo) ? 'window.eyvideo = '+JSON.stringify(window.eyvideo)+';' : '')+'if(typeof Promise !== "function"){ var firstScript = document.getElementsByTagName("script")[0]; var esb = document.createElement("script"); esb.src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"; firstScript.parentNode.insertBefore(esb, firstScript); }</script><script src="' + remoteURL + '/3rdparty.js"></script><script src="' + remoteURL + '/phone.min.js"></script><link href="https://fonts.googleapis.com/css?family=Roboto:500,400,300&subset=latin,cyrillic" rel="stylesheet" type="text/css"><link href="' + chatURL + '/chat.css' + (window.cacheBust ? window.cacheBust + '&' : '?') + 'v=' + cssV + '" rel="stylesheet" type="text/css">' + (username ? '<link href="' + cssURL + '/' + username + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + (flowname ? '<link href="' + cssURL + '/' + flowname + '/chat.css' + window.cacheBust + '" rel="stylesheet" type="text/css">' : '') + '<style>' + (width < 800 ? '.ey-chat .chat-button { padding: 6px; font-size: 0.875em; } .ey-chat .user-request,.ey-chat .server-response { padding: 12px 18px; font-size: 1.0rem; }' : '') + '</style></head><body><div class="ey-chat-only ey-chat" id="eyChat"><div class="ey-chat-nav"><div class="ey-chat-logo-container"><div class="ey-chat-logo"></div><div id="eyChatName" class="ey-chat-name"></div>' + menuTR + '</div><div id="eyMobileChatClose" class="ey-close-btn' + menuClose + '" '+((origin === 'linkedin' || origin === 'pdf' || width > 799) && 'style="display:none;"')+'>&#10006;</div></div><div class="ey_result" id="resultWrapper"><table class="ey_result-table"><tr><td id="result"></td></tr></table></div><div class="clearfix"></div><div class="ey_input"><form class="menu" id="agentDemoForm"><div class="menu-icon" id="menuBtn"></div><div class="main-menu" id="mainMenu"><div class="close-icon"></div><ul class="menu-list" id="menuList"></ul></div><div class="menu-input"><input type="text" name="q" id="query" placeholder="Send a message..."><div class="ey_input-send icon-send" id="ey-send"></div></div></form>' + menuBR + '</div></div><script>window.onload = function() { var as = document.createElement("script"); as.src = "' + chatURL + '/agent.js?v=' + agentV +'"; document.body.appendChild(as); }</script></body></html>');
     is.document.close();
 
     if (!window.eynoclose) {

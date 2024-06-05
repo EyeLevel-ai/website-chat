@@ -12,6 +12,7 @@ try {
   });
 
   var hasInit = false;
+  var hasInitMenu = false;
   var isModal = false;
 
   function initModal() {
@@ -1813,8 +1814,28 @@ window.menu = null;
                   } else {
                     t.handleInput(t.domHelper.getInputValue());
                   }
+                }, this.enableMenu = function() {
+                  var menuTR = t.domHelper.getMenuInputTR();
+                  if (menuTR && menuTR.classList.contains('ey-disabled')) {
+                    menuTR.classList.remove('ey-disabled');
+                    if (menuTR.parentNode && menuTR.parentNode.classList.contains('ey-disabled')) {
+                      menuTR.parentNode.classList.remove('ey-disabled');
+                    }
+                  }
+                  var menuBR = t.domHelper.getMenuInputBR();
+                  if (menuBR && menuBR.classList.contains('ey-disabled')) {
+                    menuBR.classList.remove('ey-disabled');
+                    if (menuBR.parentNode && menuBR.parentNode.classList.contains('ey-disabled')) {
+                      menuBR.parentNode.classList.remove('ey-disabled');
+                    }
+                  }
                 }, this.handleMenuClick = function(n) {
-                  n.preventDefault(), n.stopPropagation(), window.eymenu && window.eymenu.pos ?  t.handleEvent('chat', 'chat', null, window.eymenu.pos) : ''
+                  n.preventDefault();
+                  n.stopPropagation();
+                  if (!window.eymenu || !window.eymenu.pos || n.target.classList.contains('ey-disabled')) {
+                    return;
+                  }
+                  t.handleEvent('chat', 'chat', null, window.eymenu.pos);
                 }, this.handleSendClick = function(n) {
                   n.preventDefault();
                   n.stopPropagation();
@@ -2850,6 +2871,18 @@ window.menu = null;
                         } else {
                           return resolve();
                         }
+                        if (!hasInitMenu) {
+                          if (window.eymenu && window.eymenu.activate) {
+                            if (msg.position && msg.position.turnID && window.eymenu.activate == msg.position.turnID) {
+                              hasInitMenu = true;
+                              t.enableMenu();
+                            }
+                          } else {
+                            t.enableMenu();
+                            hasInitMenu = true;
+                          }
+                        }
+                        console.log(hasInitMenu);
 
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
