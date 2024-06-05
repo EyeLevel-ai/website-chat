@@ -1,3 +1,27 @@
+
+function trackEvent(name, options) {
+  if (window.shouldTrack) {
+    var attrs = {
+        name: name,
+        feedback: window.eyfeedback,
+        hostname: window.location.hostname,
+        menu: window.eymenu,
+        uid: window.eyuserid,
+        username: window.eyusername,
+        flowname: window.eyflowname,
+        origin: window.eyorigin,
+        shouldOpen: window.eyshouldopen,
+        version: chatV
+    }
+
+    if (options) {
+      for (var k in options) {
+        attrs[k] = options[k];
+      }
+    }
+  }
+}
+
 try {
   var chatV = '3.0';
   var agentV = '3.0';
@@ -65,7 +89,7 @@ try {
     }
   }
 
-  function sortInteractions( a, b ) {
+  function sortInteractions(a, b) {
     if ( a.time < b.time ){
       return -1;
     }
@@ -258,29 +282,6 @@ try {
     );
   }
 
-  function trackEvent(name, options) {
-    if (window.shouldTrack) {
-      var attrs = {
-          name: name,
-          feedback: window.eyfeedback,
-          hostname: window.location.hostname,
-          menu: window.eymenu,
-          uid: window.eyuserid,
-          username: window.eyusername,
-          flowname: window.eyflowname,
-          origin: window.eyorigin,
-          shouldOpen: window.eyshouldopen,
-          version: chatV
-      }
-
-      if (options) {
-        for (var k in options) {
-          attrs[k] = options[k];
-        }
-      }
-    }
-  }
-
   function notifyConsent(consent) {
     window.Consent = consent;
 
@@ -391,6 +392,361 @@ try {
         }
       }
     }
+  }
+
+  function parseBool(val) {
+    return val === 'true' || val === true;
+  }
+
+  function parseNumber(val) {
+    if (val && (typeof val === 'string' || typeof val === 'number')) {
+      if (typeof val === 'string') {
+        val = val.trim();
+        var parsed = parseInt(val, 10);
+        if (!isNaN(parsed) && String(parsed) === val) {
+          return parsed;
+        }
+        return;
+      }
+      return val;
+    }
+
+    return;
+  }
+
+  function parseParams(params, dependencies) {
+    if (dependencies) {
+      if (dependencies.getQueryVar) {
+        getQueryVar = dependencies.getQueryVar;
+      }
+      if (dependencies.clearAll) {
+        clearAll = dependencies.clearAll;
+      }
+      if (dependencies.loadEnv) {
+        loadEnv = dependencies.loadEnv;
+      }
+      if (dependencies.shouldResetChat) {
+        shouldResetChat = dependencies.shouldResetChat;
+      }
+    }
+
+    var channel = params.channel;
+    var ch = getQueryVar("eychannel", params.isIframe);
+    if (ch) {
+      channel = ch;
+    }
+    if (channel) {
+      window.eychannel = channel;
+    }
+
+    var origin = params.origin;
+    var og = getQueryVar("eyorigin", params.isIframe);
+    if (og) {
+      origin = og;
+    }
+    if (origin) {
+      window.eyorigin = origin;
+    } else if (window.eychannel) {
+      window.eyorigin = window.eychannel;
+    } else {
+      window.eyorigin = "web";
+    }
+
+    var refParams = {};
+
+    for (var key in params) {
+      var val = params[key];
+
+      switch(key) {
+        case 'alerts':
+          var al = getQueryVar("eyalerts", params.isIframe);
+          if (al) {
+            val = al;
+          }
+          if (val) {
+            window.alerts = val;
+          }
+          break;
+        case 'alertSound':
+          var enAlertSound = getQueryVar("alertSound", params.isIframe);
+          if (enAlertSound) {
+            val = enAlertSound;
+          }
+          window.eyAlertSound = val;
+          break;
+        case 'attention':
+          var attn = getQueryVar("eyattn", params.isIframe);
+          if (attn) {
+            val = attn;
+          }
+          val = parseBool(val);
+          if (val) {
+            window.eyattn = val;
+          } else if (window.eyorigin === 'linkedin') {
+            window.eyattn = true;
+          } else {
+            window.eyattn = false;
+          }
+          break;
+        case 'bubble':
+          var bb = getQueryVar("eybubble", params.isIframe);
+          if (bb) {
+            val = bb;
+          }
+          val = parseBool(val);
+          if (val) {
+            window.eybubble = val;
+          }
+          break;
+        case 'channel':
+          break;
+        case 'clearcache':
+          var cc = getQueryVar("clearcache", params.isIframe);
+          if (cc) {
+            val = cc;
+          }
+          if (val) {
+            var now = Date.now();
+            window.cacheBust = '?clear=' + now;
+            window.eyreset = true;
+            clearAll();
+          }
+          break;
+        case 'email':
+          var em = getQueryVar("email", params.isIframe);
+          if (em) {
+            val = em
+          }
+          if (val) {
+            window.eyemail = val;
+          }
+          break;
+        case 'embed':
+          var emb = getQueryVar("embed", params.isIframe);
+          if (emb) {
+            val = emb;
+          }
+          window.eyembed = val;
+          break;
+        case 'env':
+          var en = getQueryVar("eyenv", params.isIframe);
+          if (en) {
+            val = en;
+          }
+          window.eyEnv = val;
+          loadEnv(val);
+          break;
+        case 'eyid':
+          eyid = getQueryVar("eyid", params.isIframe);
+          if (eyid) {
+            val = eyid;
+          }
+          if (val) {
+            window.eyid = val;
+          }
+          break;
+        case 'feedback':
+          var fbq = getQueryVar("eyfeedback", params.isIframe);
+          if (fbq) {
+            val = fbq;
+          }
+          if (val) {
+            window.eyfeedback = val;
+          }
+          break;
+        case 'flowname':
+          var fn = getQueryVar("fn", params.isIframe);
+          if (fn) {
+            val = fn;
+          }
+          if (val !== undefined && val) {
+            window.eyfnset = true;
+          }
+          window.eyflowname = val;
+          break;
+        case 'forceReset':
+          var rs = getQueryVar("eyforcereset", params.isIframe);
+          if (rs) {
+            val = rs;
+          }
+          val = parseBool(val);
+          if (val) {
+            window.eyreset = true;
+          }
+          break;
+        case 'fullName':
+          var nm = getQueryVar("fullName", params.isIframe);
+          if (nm) {
+            val = nm;
+          }
+          if (val) {
+            window.eyname = val;
+          }
+          break;
+        case 'gaid':
+          if (val) {
+            window.gaid = val;
+          }
+          break;
+        case 'invert':
+          var ins = getQueryVar("eyinvert", params.isIframe);
+          if (ins) {
+            val = ins;
+          }
+          val = parseBool(val);
+          if (val) {
+            window.eyinvert = val;
+          }
+          break;
+        case 'isIframe':
+          break;
+        case 'menu':
+          var ch = getQueryVar("eymenu", params.isIframe);
+          if (ch) {
+            val = ch;
+          }
+          if (val) {
+            window.eymenu = val;
+          }
+          break;
+        case 'modelId':
+          var mId = getQueryVar("modelId", params.isIframe);
+          if (mId) {
+            val = mId;
+          }
+          val = parseNumber(val);
+          if (val) {
+            window.modelId = val;
+          }
+          break;
+        case 'noclose':
+          var nc = getQueryVar("eynoclose", params.isIframe);
+          if (nc) {
+            val = nc;
+          }
+          val = parseBool(val);
+          if (val) {
+            width = 900;
+          }
+          window.eynoclose = val;
+          break;
+        case 'origin':
+          break;
+        case 'phone':
+          var ph = getQueryVar("phone", params.isIframe);
+          if (ph) {
+            val = ph;
+          }
+          if (val) {
+            window.eyphone = val;
+          }
+          break;
+        case 'ref':
+          var qref = getQueryVar("ref", params.isIframe);
+          if (qref) {
+            val = qref;
+          }
+          if (val) {
+            window.eyref = val;
+          }
+          break;
+        case 'reset':
+          var rs = getQueryVar("eyreset", params.isIframe);
+          if (rs) {
+            val = rs;
+          }
+          val = parseBool(val);
+          if (val) {
+            if (shouldResetChat()) {
+              window.eyreset = true;
+            } else {
+              window.eyreset = false;
+            }
+          } else {
+            window.eyreset = val;
+          }
+          break;
+        case 'resetSession':
+          var rs = getQueryVar("resetSession", params.isIframe);
+          if (rs) {
+            val = rs;
+          }
+          val = parseBool(val);
+          if (val) {
+            window.eyresetsession = true;
+          }
+          break;
+        case 'resetTime':
+          var ssn = getQueryVar("resetTime", params.isIframe);
+          if (ssn) {
+            val = ssn;
+          }
+          val = parseNumber(val);
+          if (val) {
+            resetSessionTime = parseInt(val) * 1000;
+            if (shouldResetChat()) {
+              window.eyreset = true;
+            }
+          }
+          break;
+        case 'sources':
+          var srcs = getQueryVar("sources", params.isIframe);
+          if (srcs) {
+            val = srcs;
+          }
+          window.eysources = val;
+          break;
+        case 'state':
+          val = val && val === "open";
+          var op = getQueryVar("eystate", params.isIframe);
+          if (op) {
+            val = op === "open";
+          }
+          window.eyshouldopen = val;
+          if (!window.eyshouldopen) {
+            window.eyshouldopen = loadChatOpen();
+          }
+          break;
+        case 'subscriptionId':
+          break;
+        case 'username':
+          var un = getQueryVar("un", params.isIframe);
+          if (un) {
+            val = un;
+          }
+          window.eyusername = val;
+          break;
+        default:
+          refParams[key] = params[key];
+      }
+    }
+
+    var queryString = [];
+    for (var key in refParams) {
+      if (refParams.hasOwnProperty(key)) {
+        var value = params[key];
+
+        if (Array.isArray(value)) {
+          for (var i = 0; i < value.length; i++) {
+            queryString.push(encodeURIComponent(key) + "=" + encodeURIComponent(value[i]));
+          }
+        } else {
+          queryString.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
+        }
+      }
+    }
+
+    if (queryString.length > 0) {
+      if (window.eyref) {
+        window.eyref = window.eyref + '&' + queryString.join("&");
+      } else {
+        window.eyref = queryString.join("&");
+      }
+    }
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { parseParams };
   }
 
   window.loadAlert = function(chatBehavior, config, override) {
@@ -997,297 +1353,14 @@ try {
       }
 
       window.hasLoaded = true;
-      var clearCache = params.clearcache;
-      var cc = getQueryVar("clearcache", params.isIframe);
-      if (cc) {
-        clearCache = cc;
-      }
-      if (clearCache) {
-        var now = Date.now();
-        window.cacheBust = '?clear=' + now;
-        params.reset = true;
-        clearAll();
-      }
-
-      var modelId = params.modelId
-      var mId = getQueryVar("modelId", params.isIframe);
-      if (mId) {
-        modelId = mId;
-      }
-      if (modelId && (typeof modelId === 'string' || typeof modelId === 'number')) {
-        if (typeof modelId === 'string') {
-          modelId = modelId.trim();
-          var parsed = parseInt(modelId, 10);
-          if (!isNaN(parsed) && String(parsed) === modelId) {
-            modelId = modelId;
-          } else {
-            modelId = undefined;
-          }
-        }
-        if (typeof modelId !== 'number') {
-          modelId = undefined;
-        }
-      } else {
-        modelId = undefined;
-      }
-      window.modelId = modelId;
-
-      var sources = params.sources;
-      var srcs = getQueryVar("sources", params.isIframe);
-      if (srcs) {
-        sources = srcs;
-      }
-      window.eysources = sources;
-
-      var embed = params.embed;
-      var emb = getQueryVar("embed", params.isIframe);
-      if (emb) {
-        embed = emb;
-      }
-      window.eyembed = embed;
-
-      var username = params.username;
-      var un = getQueryVar("un", params.isIframe);
-      if (un) {
-        username = un;
-      }
-      window.eyusername = username;
-
-      var flowname = params.flowname;
-      if (flowname !== undefined && flowname) {
-        window.eyfnset = true;
-      }
-      var fn = getQueryVar("fn", params.isIframe);
-      if (fn) {
-        flowname = fn;
-      }
-      window.eyflowname = flowname;
-
-      var reset = params.reset;
-      var rs = getQueryVar("eyreset", params.isIframe);
-      if (rs) {
-        if (rs === 'true') {
-          reset = true;
-        } else {
-          reset = false;
-        }
-      }
-      window.eyreset = false;
-
-      var sn = params.resetTime;
-      var ssn = getQueryVar("resetTime", params.isIframe);
-      if (ssn) {
-        sn = ssn;
-      }
-      if (!isNaN(sn)) {
-        resetSessionTime = parseInt(sn) * 1000;
-        reset = true;
-      }
-
-      if (reset) {
-        if (shouldResetChat()) {
-          window.eyreset = true;
-        }
-      }
-
-      var forceReset = params.forceReset;
-      var rs = getQueryVar("eyforcereset", params.isIframe);
-      if (rs) {
-        if (rs === 'true') {
-          forceReset = true;
-        } else {
-          forceReset = false;
-        }
-      }
-      if (forceReset) {
-        window.eyreset = true;
-      }
-
-      var resetSession = params.resetSession;
-      var rss = getQueryVar("resetSession", params.isIframe);
-      if (rss) {
-        if (rss === 'true') {
-          resetSession = true;
-        } else {
-          resetSession = false;
-        }
-      }
-      if (resetSession) {
-        window.eyresetsession = true;
-      }
-
-      var email = params.email;
-      var em = getQueryVar("email", params.isIframe);
-      if (em) {
-        email = em
-      }
-      if (email) {
-        window.eyemail = email;
-      }
-
-      var name = params.fullName;
-      var nm = getQueryVar("fullName", params.isIframe);
-      if (nm) {
-        name = nm
-      }
-      if (name) {
-        window.eyname = name;
-      }
-
-      var phone = params.phone;
-      var ph = getQueryVar("phone", params.isIframe);
-      if (ph) {
-        phone = ph
-      }
-      if (phone) {
-        window.eyphone = phone;
-      }
-
-      var ref = params.ref;
-      var qref = getQueryVar("ref", params.isIframe);
-      if (qref) {
-        ref = qref
-      }
-      if (ref) {
-        window.eyref = ref;
-      }
-
-      var invert = params.invert;
-      var ins = getQueryVar("eyinvert", params.isIframe);
-      if (ins) {
-        if (ins === 'true') {
-          invert = true;
-        } else {
-          invert = false;
-        }
-      }
-      window.eyinvert = invert;
-
-      var channel = params.channel;
-      var ch = getQueryVar("eychannel", params.isIframe);
-      if (ch) {
-        channel = ch;
-      }
-      if (channel) {
-        window.eychannel = channel;
-      }
-
-      var menu = params.menu;
-      var ch = getQueryVar("eymenu", params.isIframe);
-      if (ch) {
-        menu = ch;
-      }
-      if (menu) {
-        window.eymenu = menu;
-      }
-
-      var fb = params.feedback;
-      var fbq = getQueryVar("eyfeedback", params.isIframe);
-      if (fbq) {
-        fb = fbq;
-      }
-      if (fb) {
-        window.eyfeedback = fb;
-      }
-
-      var origin = params.origin;
-      var og = getQueryVar("eyorigin", params.isIframe);
-      if (og) {
-        origin = og;
-      }
-      if (origin) {
-        window.eyorigin = origin;
-      } else if (window.eychannel) {
-        window.eyorigin = window.eychannel;
-      } else {
-        window.eyorigin = "web";
-      }
-
-      var shouldOpen = params.state && params.state === "open";
-      var op = getQueryVar("eystate", params.isIframe);
-      if (op) {
-        shouldOpen = op === "open";
-      }
-      window.eyshouldopen = shouldOpen;
-      if (!window.eyshouldopen) {
-        window.eyshouldopen = loadChatOpen();
-      }
 
       var user = getUser();
       var userId = user.userId;
       window.eyuserid = userId;
 
-      window.gaid = params.gaid || "UA-173447538-1";
+      window.gaid = "UA-173447538-1";
 
-      var eyid = params.eyid;
-      eyid = getQueryVar("eyid", params.isIframe);
-      if (eyid) {
-        window.eyid = eyid;
-      }
-
-      var attention = params.attention;
-      var attn = getQueryVar("eyattn", params.isIframe);
-      if (attn) {
-        attention = attn;
-      }
-      if (attention) {
-        window.eyattn = attention;
-      } else if (window.eyorigin === 'linkedin') {
-        window.eyattn = true;
-      } else {
-        window.eyattn = false;
-      }
-
-      var noClose = params.noclose;
-      var nc = getQueryVar("eynoclose", params.isIframe);
-      if (nc) {
-        if (nc === 'true') {
-          noClose = true;
-        } else {
-          noClose = false;
-        }
-      }
-      if (noClose) {
-        width = 900;
-      }
-      window.eynoclose = noClose;
-
-      var bubble = params.bubble;
-      var bb = getQueryVar("eybubble", params.isIframe);
-      if (bb) {
-        if (bb === 'true') {
-          bubble = true;
-        } else {
-          bubble = false;
-        }
-      }
-      if (bubble) {
-        window.eybubble = bubble;
-      }
-
-      var alerts = params.alerts;
-      var al = getQueryVar("eyalerts", params.isIframe);
-      if (al) {
-        alerts = al;
-      }
-      if (alerts) {
-        window.alerts = alerts;
-      }
-
-      var alertSound = params.alertSound;
-      var enAlertSound = getQueryVar("alertSound", params.isIframe);
-      if (enAlertSound) {
-        alertSound = enAlertSound;
-      }
-      window.eyAlertSound = alertSound;
-
-      var eyEnv = params.env;
-      var en = getQueryVar("eyenv", params.isIframe);
-      if (en) {
-        eyEnv = en;
-      }
-      window.eyEnv = eyEnv;
-      loadEnv(eyEnv);
+      parseParams(params);
 
       if (document && document.body) {
         window.initEYScripts();
@@ -1380,13 +1453,15 @@ try {
     },
   };
   var execute = function() {
-    var command = window.eyelevel.shift();
-    var func = command[0];
-    var parameters = command[1];
-    if (typeof eyelevel[func] === 'function') {
-      eyelevel[func].call(window, parameters);
-    } else {
-      console.error("Invalid function specified: " + func);
+    if (window.eyelevel) {
+      var command = window.eyelevel.shift();
+      var func = command[0];
+      var parameters = command[1];
+      if (typeof eyelevel[func] === 'function') {
+        eyelevel[func].call(window, parameters);
+      } else {
+        console.error("Invalid function specified: " + func);
+      }
     }
   };
   execute();
