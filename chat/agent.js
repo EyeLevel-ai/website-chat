@@ -933,7 +933,7 @@ window.menu = null;
         a = t.n(i),
         u = function() {
             function e() {
-                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.qMenuBtnTR = this.workplace.getElementById(e.QUERY_MENU_ID_TR), this.qMenuBtnBR = this.workplace.getElementById(e.QUERY_MENU_ID_BR), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
+                o()(this, e), this.workplace = document, this.body = document.body, this.queryInput = this.workplace.getElementById(e.QUERY_INPUT_ID), this.chatWindow = this.workplace.getElementById(e.CHAT_WINDOW_ID), this.closeWindow = this.workplace.getElementById(e.CLOSE_WINDOW_ID),  this.queryResult = this.workplace.getElementById(e.QUERY_RESULT_ID), this.queryResultWrapper = this.workplace.getElementById(e.QUERY_RESULT_WRAPPER_ID), this.fileUpCnt = this.workplace.getElementById(e.FILE_UP_CNT_ID), this.fileUpInput = this.workplace.getElementById(e.FILE_UP_INPUT_ID), this.fileUpButton = this.workplace.getElementById(e.FILE_UP_BUTTON_ID), this.sendBtn = this.workplace.getElementById(e.QUERY_SEND_ID), this.qMenuBtnTR = this.workplace.getElementById(e.QUERY_MENU_ID_TR), this.qMenuBtnBR = this.workplace.getElementById(e.QUERY_MENU_ID_BR), this.chatForm = this.workplace.getElementById(e.CHAT_FORM_ID), this.menuList = this.workplace.getElementById(e.MENU_LIST_ID), this.menuButton = this.workplace.getElementById(e.MENU_BUTTON_ID), this.mainMenu = this.workplace.getElementById(e.MAIN_MENU_ID), this.menuHeight = void 0
             }
             return a()(e, [{
                 key: "startWelcome",
@@ -969,6 +969,21 @@ window.menu = null;
                 key: "getMenuInputBR",
                 value: function() {
                     return this.qMenuBtnBR
+                }
+            }, {
+                key: "getFileCnt",
+                value: function() {
+                    return this.fileUpCnt
+                }
+            }, {
+                key: "getFileInput",
+                value: function() {
+                    return this.fileUpInput
+                }
+              }, {
+                key: "getFileButton",
+                value: function() {
+                    return this.fileUpButton
                 }
             }, {
                 key: "getSendInput",
@@ -1112,7 +1127,7 @@ window.menu = null;
                 }
             }]), e
         }();
-    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.QUERY_SEND_ID = "ey-send", u.QUERY_MENU_ID_TR = "ey-menu-tr", u.QUERY_MENU_ID_BR = "ey-menu-br",u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
+    n.a = u, u.QUERY_INPUT_ID = "query", u.QUERY_RESULT_ID = "result", u.QUERY_RESULT_WRAPPER_ID = "resultWrapper", u.MENU_LIST_ID = "menuList", u.CHAT_WINDOW_ID = "eyChat", u.CLOSE_WINDOW_ID = "eyMobileChatClose", u.MENU_BUTTON_ID = "menuBtn", u.MAIN_MENU_ID = "mainMenu", u.CHAT_FORM_ID = "agentDemoForm", u.FILE_UP_CNT_ID = "fileUploadContainer", u.FILE_UP_INPUT_ID = "fileUploader", u.FILE_UP_BUTTON_ID = "uploadButton", u.QUERY_SEND_ID = "ey-send", u.QUERY_MENU_ID_TR = "ey-menu-tr", u.QUERY_MENU_ID_BR = "ey-menu-br",u.CLASS_SEND_ACTIVE = "active", u.CLASS_USER_REQUEST = "user-request", u.CLASS_SERVER_RESPONSE_ERROR = "server-response-error"
 }, function(e, n, t) {
     var r = t(8),
         o = t(0)("toStringTag"),
@@ -1836,6 +1851,10 @@ window.menu = null;
                     return;
                   }
                   t.handleEvent('chat', 'chat', null, window.eymenu.pos);
+                }, this.handleFileUpClick = function(n) {
+                  n.preventDefault();
+                  n.stopPropagation();
+console.log('upload');
                 }, this.handleSendClick = function(n) {
                   n.preventDefault();
                   n.stopPropagation();
@@ -2882,7 +2901,6 @@ window.menu = null;
                             hasInitMenu = true;
                           }
                         }
-                        console.log(hasInitMenu);
 
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
@@ -2992,6 +3010,7 @@ window.menu = null;
                             }
                             if (data.attachment.payload.template_type === 'generic') {
                               html = t.chat.card(t, ttt, data.attachment.payload.elements, isConsent);
+                              needsReset = true;
                             }
                           }
                           if (data.quick_replies) {
@@ -3006,7 +3025,6 @@ window.menu = null;
                             }
                           }
                         }
-
                         t.renderSources(msg);
                         t.updateResponses();
                         if (msg && msg.typing && msg.isDone) {
@@ -3040,6 +3058,12 @@ window.menu = null;
                     this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getQueryResultWrapper().addEventListener("scroll", this.handleScrollEvents, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getFileCnt().addEventListener("click", this.handleFileUpClick, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getFileCnt().addEventListener("touchstart", this.handleFileUpClick, supportsPassive() ? {passive : false} : false), 
+                    this.domHelper.getFileInput().addEventListener("click", this.handleFileUpClick, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getFileInput().addEventListener("touchstart", this.handleFileUpClick, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getFileButton().addEventListener("click", this.handleFileUpClick, supportsPassive() ? {passive : false} : false),
+                    this.domHelper.getFileButton().addEventListener("touchstart", this.handleFileUpClick, supportsPassive() ? {passive : false} : false), 
                     this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
                     this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
                     this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
