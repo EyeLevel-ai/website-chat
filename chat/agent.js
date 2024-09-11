@@ -6,10 +6,13 @@ try {
   var userScrolledUp = false;
   var originalWsResText = "";
 
-  var mdConverter = new parent.window.showdown.Converter({
-    tables: true,
-    simpleLineBreaks: true, 
-  });
+  var mdConverter;
+  if (parent && parent.window && parent.window.showdown) {
+    mdConverter = new parent.window.showdown.Converter({
+      tables: true,
+      simpleLineBreaks: true, 
+    });
+  }
 
   var hasInit = false;
   var hasInitMenu = false;
@@ -50,7 +53,9 @@ try {
     modalContainer.appendChild(modalContent)
     
     var eyChat = document.getElementById('eyChat');
-    eyChat.appendChild(modalContainer);
+    if (eyChat) {
+      eyChat.appendChild(modalContainer);
+    }
   };
   initModal();
 
@@ -63,6 +68,68 @@ try {
         <path d="M 40.960938 4.9804688 A 2.0002 2.0002 0 0 0 40.740234 5 L 28 5 A 2.0002 2.0002 0 1 0 28 9 L 36.171875 9 L 22.585938 22.585938 A 2.0002 2.0002 0 1 0 25.414062 25.414062 L 39 11.828125 L 39 20 A 2.0002 2.0002 0 1 0 43 20 L 43 7.2460938 A 2.0002 2.0002 0 0 0 40.960938 4.9804688 z M 12.5 8 C 8.3826878 8 5 11.382688 5 15.5 L 5 35.5 C 5 39.617312 8.3826878 43 12.5 43 L 32.5 43 C 36.617312 43 40 39.617312 40 35.5 L 40 26 A 2.0002 2.0002 0 1 0 36 26 L 36 35.5 C 36 37.446688 34.446688 39 32.5 39 L 12.5 39 C 10.553312 39 9 37.446688 9 35.5 L 9 15.5 C 9 13.553312 10.553312 12 12.5 12 L 22 12 A 2.0002 2.0002 0 1 0 22 8 L 12.5 8 z">
       </path>
   </svg>`;
+
+  var urlRegex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-zA-Z0-9-]{2,})+\b([\-a-zA-Z0-9()@:%_\+.~#?&//=]*)(?<![()\]\.]|\.\.\.)/g);
+
+  function escapeAndDecorateString(txt, isStreaming) {
+    if (isStreaming) {
+      return escapeAndDecorateStreamingString(txt);
+    }
+
+    var match = ''; var splitText = ''; var startIndex = 0;
+    while ((match = urlRegex.exec(txt)) != null) {
+      var rawTxt = txt.substr(startIndex, (match.index - startIndex));
+      rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;
+      splitText += rawTxt;
+      var cleanedLink = txt.substr(match.index, (match[0].length));
+      splitText += '<a href="' + cleanedLink + '" target="_blank">' + cleanedLink + '</a>';
+      startIndex = match.index + (match[0].length);
+    }
+    if (startIndex < txt.length) {
+      var rawTxt = txt.substr(startIndex);
+      if (!isStreaming) {
+        rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt; 
+      }                   
+      splitText += rawTxt;
+    }
+    return splitText;
+  }
+  
+  function escapeAndDecorateStreamingString(txt) {
+    var markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+    var match = '';
+    var startIndex = 0;
+    var splitText = '';
+    var isInsideMarkdownLink = false;
+    
+    while ((match = urlRegex.exec(txt)) != null) {
+        var rawTxt = txt.substr(startIndex, (match.index - startIndex));
+
+        var markdownMatch = markdownLinkRegex.exec(txt);
+        if (markdownMatch && markdownMatch.index < match.index && markdownMatch.index + markdownMatch[0].length >= match.index + match[0].length) {
+            isInsideMarkdownLink = true;
+        } else {
+            isInsideMarkdownLink = false;
+        }
+
+        if (!isInsideMarkdownLink) {
+            splitText += rawTxt;
+            var cleanedLink = txt.substr(match.index, (match[0].length));
+            splitText += '<a href="' + cleanedLink + '" target="_blank">' + cleanedLink + '</a>';
+        } else {
+            splitText += txt.substr(startIndex, match.index + match[0].length - startIndex);
+        }
+
+        startIndex = match.index + (match[0].length);
+    }
+
+    splitText += txt.substr(startIndex);
+    return splitText;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { escapeAndDecorateString };
+  }
 
   function externalLinkIcon() {
       var d = document.createElement("div");
@@ -1962,27 +2029,6 @@ window.menu = null;
                     return
                 }, this.escapeString = function(txt) {
                   return txt && txt.toString() ? txt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : txt;
-                }, this.escapeAndDecorateString = function(txt, isStreaming) {
-                  var regex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-z0-9-]{2,})+\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g);
-                  var match = ''; var splitText = ''; var startIndex = 0;
-                  while ((match = regex.exec(txt)) != null) {
-                    var rawTxt = txt.substr(startIndex, (match.index - startIndex));
-                    if (!isStreaming) {
-                      rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt;
-                    }
-                    splitText += rawTxt;
-                    var cleanedLink = txt.substr(match.index, (match[0].length));
-                    splitText += '<a href="' + cleanedLink + '" target="_blank">' + cleanedLink + '</a>';
-                    startIndex = match.index + (match[0].length);
-                  }
-                  if (startIndex < txt.length) {
-                    var rawTxt = txt.substr(startIndex);
-                    if (!isStreaming) {
-                      rawTxt = rawTxt && rawTxt.toString() ? rawTxt.toString().replace(/&/g, "&amp").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/\//g, "&#x2F;") : rawTxt; 
-                    }                   
-                    splitText += rawTxt;
-                  }
-                  return splitText;
                 }, this.loadConsent = function() {
                   var gd = getConsent();
                   if (window.consentLoaded || gd === 'true') {
@@ -2286,10 +2332,10 @@ window.menu = null;
                     window.parent.postMessage(ty, "*");
                     window.isChatting = false;
               }, this.saveUserMessage = function(n, typing) {
-                  t.domHelper.addUserRequestNode({text: t.escapeAndDecorateString(n)}, t);
+                  t.domHelper.addUserRequestNode({text: escapeAndDecorateString(n)}, t);
                   if (n !== 'startWelcome' && n !== 'restartWelcome' && n !== 'reconnect') {
                     window.eySocket.lastInteraction = { action: "message", payload: JSON.stringify({ text: t.escapeString(n) }), typing: false, sender: "user" };
-                    saveInteraction({ action: "message", payload: JSON.stringify({ text: t.escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
+                    saveInteraction({ action: "message", payload: JSON.stringify({ text: escapeAndDecorateString(n), rawText: n, type: "handleInput" }), typing: false, sender: "user" });
                   }
                   delete window.eySocket.turnType;
                   delete window.eySocket.turnID;
@@ -2405,7 +2451,7 @@ window.menu = null;
                     text: function(data, isStreaming) {
                         var html = data;
                         if (!isStreaming) {
-                          html = t.escapeAndDecorateString(data);
+                          html = escapeAndDecorateString(data);
                         }
                         html = html.replaceAll("\\n", "<br />");
                         return html.replaceAll("\n", "<br />");
@@ -2861,8 +2907,12 @@ window.menu = null;
                     }, 500);
                   }
                 }, this.markdownConverter = function(messageText){
+                  messageText = escapeAndDecorateString(messageText, true);
+                  if (mdConverter) {
                     var html = mdConverter.makeHtml(messageText);
                     return html;
+                  }
+                  return messageText;
                 }, this.createMessage = function(msg, obj, isConsent) {
                     return new Promise(function(resolve) {
                         var data = {};
@@ -3034,17 +3084,19 @@ window.menu = null;
                     if (this.domHelper.getMenuInputBR()) {
                       this.domHelper.getMenuInputBR().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
                     }
-                    this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, supportsPassive() ? {passive : false} : false),
-                    window.addEventListener("message", this.handleChatWindow, !1),
-                    this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
-                    this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
-                    this.domHelper.getQueryResultWrapper().addEventListener("scroll", this.handleScrollEvents, supportsPassive() ? {passive : false} : false),
-                    this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
-                    this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
-                    this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
-                    this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
-                    this.loadVideo(),
-                    this.handleLoad()
+                    if (this.domHelper.getQueryInput()) {
+                      this.domHelper.getQueryInput().addEventListener("keydown", this.handleInputKeyDown, supportsPassive() ? {passive : false} : false),
+                      window.addEventListener("message", this.handleChatWindow, !1),
+                      this.domHelper.getCloseWindow().addEventListener("click", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
+                      this.domHelper.getCloseWindow().addEventListener("touchstart", this.handleCloseWindow, supportsPassive() ? {passive : false} : false),
+                      this.domHelper.getQueryResultWrapper().addEventListener("scroll", this.handleScrollEvents, supportsPassive() ? {passive : false} : false),
+                      this.domHelper.getQueryInput().addEventListener("input", this.handleInputChange, supportsPassive() ? {passive : false} : false),
+                      this.domHelper.getSendInput().addEventListener("click", this.handleSendClick, supportsPassive() ? {passive : false} : false),
+                      this.domHelper.getSendInput().addEventListener("touchstart", this.handleSendClick, supportsPassive() ? {passive : false} : false), window.shouldOpen && this.handleChatWindow(),
+                      this.domHelper.getQueryInput().addEventListener("focus", this.handleInputFocus, supportsPassive() ? {passive : false} : false),
+                      this.loadVideo(),
+                      this.handleLoad()
+                    }
                 }
             }, {
                 key: "handleMenuItemClick",
