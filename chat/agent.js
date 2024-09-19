@@ -7,10 +7,13 @@ try {
   var originalWsResText = "";
 
   var mdConverter;
-  if (parent && parent.window && parent.window.showdown) {
+  if (parent && parent.window && parent.window.showdown && parent.window.showdown.Converter) {
     mdConverter = new parent.window.showdown.Converter({
+      disableForced4SpacesIndentedSublists: true,
+      openLinksInNewWindow: true,
       tables: true,
-      simpleLineBreaks: true, 
+      simpleLineBreaks: true,
+      smartIndentationFix: true,
     });
   }
 
@@ -94,6 +97,85 @@ try {
     }
     return splitText;
   }
+
+  function reformatMarkdownLists(markdownText) {
+    var lines = markdownText.split('\n');
+    var hasIndents = false
+    var reformattedLines = [];
+    var indentStack = [];
+
+    for (var idx = 0; idx < lines.length; idx++) {
+        if (hasIndents) {
+            break;
+        }
+
+        var line = lines[idx];
+        var trimmedLine = line.trim();
+
+        var listMatch = trimmedLine.match(/^(\d+\.|\*|\-) /);
+        if (!listMatch) {
+            reformattedLines.push(line);
+            continue;
+        }
+
+        var currentIndent = line.search(/\S|$/);
+        if (currentIndent > 0) {
+            hasIndents = true;
+            break;
+        }
+
+        var listItem = listMatch[0];
+
+        var listChar = "";
+        if (/^\d+\./.test(listItem)) {
+            listChar = "n";
+        } else if (/^\*/.test(listItem)) {
+            listChar = "*";
+        } else if (/^\-/.test(listItem)) {
+            listChar = "-";
+        }
+
+        if (listChar === "") {
+            reformattedLines.push(line);
+            continue;
+        }
+
+        var foundChar = false;
+        var indents = 0;
+        for (var j = 0; j < indentStack.length; j++) {
+            if (listChar === indentStack[j]) {
+                foundChar = true;
+                indents = j;
+                var total = indentStack.length;
+                for (var k = j+1; k < total; k++) {
+                    indentStack.pop();
+                }
+                break;
+            }
+        }
+
+        if (!foundChar) {
+            indentStack.push(listChar);
+            indents = indentStack.length - 1;
+        }
+
+        if (indents > 0) {
+            var indent = "";
+            for (var j = 0; j < indents; j++) {
+                indent += "    ";
+            }
+            reformattedLines.push(indent + line);
+        } else {
+            reformattedLines.push(line);
+        }
+    }
+
+    if (hasIndents) {
+        return markdownText;
+    }
+
+    return reformattedLines.join('\n');
+}
   
   function escapeAndDecorateStreamingString(txt) {
     var markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
@@ -124,7 +206,8 @@ try {
     }
 
     splitText += txt.substr(startIndex);
-    return splitText;
+
+    return reformatMarkdownLists(splitText);
   }
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -2932,7 +3015,6 @@ window.menu = null;
                             hasInitMenu = true;
                           }
                         }
-                        console.log(hasInitMenu);
 
                         delete window.eySocket.turnType;
                         delete window.eySocket.turnID;
