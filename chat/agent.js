@@ -2249,18 +2249,16 @@ window.menu = null;
                         searchResultsTempText = aiMetadata.searchResults[i].text;
                       }
 
-                      if (aiMetadata.searchResults[i].fileNameD) {
-                        fileName = aiMetadata.searchResults[i].fileNameD;
+                      if (aiMetadata.searchResults[i].fileName) {
+                        fileName = aiMetadata.searchResults[i].fileName;
                       }
 
-                      if (aiMetadata.searchResults[i].metadata) {
-                        if (aiMetadata.searchResults[i].metadata.url) {
-                          urls.push({
-                            fileName: fileName,
-                            text: searchResultsTempText,
-                            url: aiMetadata.searchResults[i].metadata.url,
-                          });
-                        }
+                      if (aiMetadata.searchResults[i].sourceUrl) {
+                        urls.push({
+                          fileName: fileName,
+                          text: searchResultsTempText,
+                          url: aiMetadata.searchResults[i].sourceUrl,
+                        });
                       }
                     }
                   }
