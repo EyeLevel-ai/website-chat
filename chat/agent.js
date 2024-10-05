@@ -347,7 +347,21 @@ try {
 
   };
 
-  function createClickableSourceURLs(urls, messageContainerId) {
+  function removeDuplicateUrls(arr) {
+    var seenUrls = {};
+    return arr.filter(function(item) {
+        if (seenUrls[item.url]) {
+            return false;
+        } else {
+            seenUrls[item.url] = true;
+            return true;
+        }
+    });
+  }
+
+  function createClickableSourceURLs(arr, messageContainerId) {
+    var urls = removeDuplicateUrls(arr);
+
     var container = createDivElement({ id: "source-links", className: "source-links" })
     var header = createHeaderElement({ h: "h4", innerText: "Sources", className: "source-header" })
     container.appendChild(header);
@@ -2162,7 +2176,7 @@ window.menu = null;
                       break;
                   }
                 }, this.addAIMetadata = function(ttt, sess, aiMetadata) {
-                  if (aiMetadata) {
+                  if (sess) {
                     if (!ttt.classList.contains('ai-response')) {
                       ttt.classList.add('ai-response');
                     }
@@ -2171,7 +2185,7 @@ window.menu = null;
                     if (tid) {
                       ttt.setAttribute('data-turn-uuid', tid);
                     }
-                    if (aiMetadata.showSource && aiMetadata.type) {
+                    if (aiMetadata && aiMetadata.showSource && aiMetadata.type) {
                       ttt.setAttribute('data-type', aiMetadata.type);
                     }
                   } else if (ttt.classList.contains('ai-response')) {
