@@ -445,8 +445,17 @@ try {
   }
   // my code
   function xrayLinkButton(documentId) {
-    // HARD CODED URL
-    var url = 'https://devdashboard.groundx.ai/xray/' + documentId;
+    var url = 'https://dashboard.groundx.ai/xray/' + documentId;
+
+    switch (window.eyEnv) {
+      case 'dev':
+      case 'local':
+      case 'local-chat-dev':
+      case 'local-css-dev':
+      case 'local-dev':
+        url = 'https://devdashboard.groundx.ai/xray/' + documentId;
+        break;
+    }
 
     // Create the text link
     var linkText = document.createElement('a');
