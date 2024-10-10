@@ -14,7 +14,7 @@ try {
   var hasInit = false;
   var hasInitMenu = false;
   var isModal = false;
-  let xrayIsOpen = false;
+  var xrayIsOpen = false;
 
   window.eysources = 'thumbnails'; // sidebar | modal | thumbnails
   window.selectedFiles = []; // {file: File, status:  "pending" | "uploading" | "uploaded", uploadedFileURL: string }[]
