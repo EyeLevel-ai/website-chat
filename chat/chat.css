@@ -135,8 +135,8 @@ noscript h1 {
 /* ------------------ xray ------------------- */
 .image-container {
   position: relative;
-  max-width: 520px;
-  overflow: hidden; 
+  max-width: 510px;
+  overflow: auto; 
   margin: 0 auto; 
   margin-top: 10px;
 }
@@ -257,13 +257,21 @@ noscript h1 {
 }
 
 
-.xray-text-link {
-  color: #e26f4b;
-  text-decoration: underline;
-  font-size: 1rem;
-  font-weight: 600;
+.xray-header-button {
   display: flex;
   align-items: center;
+  font-size: 1rem;
+  font-weight: 400;
+  padding: 5px 15px;
+  color: #FFF;
+  margin-right: 5px;
+  background-color:#e26f4b;
+  border: 1px solid #e26f4b;
+  border-radius: 15px;
+}
+
+.xray-header-button:hover {
+  cursor: pointer;
 }
 
 .xray_document {
@@ -289,12 +297,12 @@ noscript h1 {
   flex-shrink: 0;
 }
 
-.divider {
+/* .divider {
   border-left: 1px solid #2c3359;
   height: 16px;
   margin: 0 5px;
   color: #2c3359;
-}
+} */
 
 .xray-document-name {
   flex: 1;
@@ -302,21 +310,28 @@ noscript h1 {
   color: var(--xray-dark);
   font-size: 1rem;
   font-weight: 600;
-  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.xray-content-header .close-icon {
-  cursor: pointer;
-  font-size: 1.5rem;
+.xray-content-header > .right-content > .close-icon {
+  display: flex;       
+  flex-direction: column;          
+  align-items: center;            
+  justify-content: center;        
+  background-color: #e26f4b;     
+  border-radius: 50%;             
+  width: 24px;                    
+  height: 24px;                  
+  cursor: pointer;                
+  font-size: 1.2rem;               
+  color: white; 
+  padding-bottom: 1px;                 
 }
 
 .xray-content-header .close-icon:hover {
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: red;
+  color: white;                 
 }
 
 .thumbnail-item {

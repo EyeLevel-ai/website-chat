@@ -15,6 +15,7 @@ try {
   var hasInitMenu = false;
   var isModal = false;
   var xrayIsOpen = false;
+  var previousMessageContainerId = null;
 
   window.eysources = 'thumbnails'; // sidebar | modal | thumbnails
   window.selectedFiles = []; // {file: File, status:  "pending" | "uploading" | "uploaded", uploadedFileURL: string }[]
@@ -309,6 +310,7 @@ try {
     var h = document.createElement(config.h);
     h.innerText = config.innerText;
     h.className = config.className;
+    h.id = config.id;
     return h;
   }
 
@@ -443,6 +445,7 @@ try {
       return linkItemComponent(num, item.url, name);
     }
   }
+
   // my code
   function xrayLinkButton(documentId) {
     var url = 'https://dashboard.groundx.ai/xray/' + documentId;
@@ -458,23 +461,25 @@ try {
     }
 
     // Create the text link
-    var linkText = document.createElement('a');
-    linkText.classList.add('xray-text-link');
-    linkText.textContent = 'X-Ray';
-    linkText.href = url;
-    linkText.target = '_blank';
+    var button = document.createElement('button');
+    button.classList.add('xray-header-button');
+    button.textContent = 'X-Ray';
+    button.onclick = function () {
+      window.open(url, '_blank');
+    };
 
-    return linkText;
+    return button;
   }
   // my code
   function xraySourceLinkButton(url) {
-    var linkText = document.createElement('a');
-    linkText.classList.add('xray-text-link');
-    linkText.textContent = 'Source';
-    linkText.href = url;
-    linkText.target = '_blank';
+    var button = document.createElement('button');
+    button.classList.add('xray-header-button');
+    button.textContent = 'Source';
+    button.onclick = function () {
+      window.open(url, '_blank');
+    };
 
-    return linkText;
+    return button;
   }
   // Movable modal window
   function openXrayModal(searchResultsItem) {
@@ -703,17 +708,13 @@ try {
     var sourceLink = xraySourceLinkButton(url);
     var fullXrayLink = xrayLinkButton(documentId);
 
-    var divider = document.createElement('span');
-    divider.className = 'divider';
-
     leftSide.appendChild(sourceLink);
-    leftSide.appendChild(divider);
     leftSide.appendChild(fullXrayLink);
 
     // Middle (Document Name)
     var middle = document.createElement('div');
     middle.className = 'xray-document-name';
-    middle.innerHTML = fileName;
+    middle.innerHTML = 'File: ' + fileName;
 
     // Right Side (Close Icon)
     var rightSide = document.createElement('div');
@@ -735,6 +736,7 @@ try {
         xrayDiv.appendChild(centerDiv);
       }
       removeActiveThumbnail();
+      removeSourceHeaderContent();
     };
 
     rightSide.appendChild(closeIcon);
@@ -768,6 +770,7 @@ try {
 
       if (eyChatWidth < 900) {
         removeActiveThumbnail();
+        removeSourceHeaderContent();
         eyChatDiv.style.width = '100%';
 
         if (resultWrapperDiv) {
@@ -828,6 +831,7 @@ try {
             const centerDiv = emptyXraySideBar();
             xrayDiv.appendChild(centerDiv);
             removeActiveThumbnail();
+            removeSourceHeaderContent();
 
             if (!eyChatDiv.contains(xrayDiv)) {
               eyChatDiv.appendChild(xrayDiv);
@@ -928,6 +932,7 @@ try {
             xrayDiv.remove();
             xrayIsOpen = false;
             removeActiveThumbnail();
+            removeSourceHeaderContent();
           };
         }
 
@@ -1047,8 +1052,51 @@ try {
     }
   }
   // my code
-  function toggleThumbnailsActive(component) {
+  function removeSourceHeaderContent() {
+    if (previousMessageContainerId) {
+      const previousDiv = document.querySelector(
+        `div.server-response[id^="static-${previousMessageContainerId}"]`,
+      );
+      if (previousDiv) {
+        const sourceHeader = previousDiv.querySelector('h4.source-header');
+        if (sourceHeader) {
+          debugger;
+          sourceHeader.innerHTML = 'Sources';
+        }
+      }
+    }
+  }
+  // my code
+  function toggleThumbnailsActive(component, selectedSource, messageContainerId) {
     if (window.eysources !== 'thumbnails') return;
+
+    if (previousMessageContainerId !== messageContainerId) {
+      removeSourceHeaderContent();
+    }
+
+    const serverResponseDiv = document.querySelector(
+      `div.server-response[id^="static-${messageContainerId}"]`,
+    );
+
+    if (serverResponseDiv) {
+      const sourceHeader = serverResponseDiv.querySelector('h4.source-header');
+      if (sourceHeader) {
+        var fileName;
+        if (selectedSource.fileName.length > 25) {
+          fileName = selectedSource.fileName.substring(0, 25) + '...';
+        } else {
+          fileName = selectedSource.fileName;
+        }
+        var s = document.createElement('span');
+        s.style.color = '#e26f4b';
+        s.innerText = fileName;
+
+        sourceHeader.innerHTML = 'Sources: ';
+        sourceHeader.appendChild(s);
+        previousMessageContainerId = messageContainerId;
+      }
+    }
+
     var thumbnails = document.querySelectorAll('.thumbnail-item.active');
     thumbnails.forEach(thumb => {
       thumb.classList.remove('active');
@@ -1075,7 +1123,12 @@ try {
 
   function createClickableSourceURLs(searchResults, messageContainerId) {
     var container = createDivElement({ id: 'source-links', className: 'source-links' });
-    var header = createHeaderElement({ h: 'h4', innerText: 'Sources', className: 'source-header' });
+    var header = createHeaderElement({
+      id: 'sourceHeader',
+      h: 'h4',
+      innerText: 'Sources',
+      className: 'source-header',
+    });
     container.appendChild(header);
 
     var sourceLinksContainer = createDivElement({
@@ -1088,7 +1141,7 @@ try {
 
       component.onclick = function () {
         handleClickSourceUrl(item, item.text, index + 1, messageContainerId);
-        toggleThumbnailsActive(component);
+        toggleThumbnailsActive(component, item, messageContainerId);
       };
 
       sourceLinksContainer.appendChild(component);
