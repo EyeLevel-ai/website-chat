@@ -22,7 +22,7 @@ try {
   var xrayIsOpen = false;
   var previousMessageContainerId = null;
 
-  window.eysources = 'thumbnails'; // sidebar | modal | thumbnails
+  // window.eysources = 'thumbnails'; // sidebar | modal | thumbnails
   window.selectedFiles = []; // {file: File, status:  "pending" | "uploading" | "uploaded", uploadedFileURL: string }[]
 
   var uploadButton = document.getElementById('uploadButton');
