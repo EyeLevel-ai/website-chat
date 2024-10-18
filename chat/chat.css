@@ -1361,11 +1361,11 @@ noscript h1 {
 }
 @font-face {
   font-family: 'icomoon';
-  src: url('icomoon.eot?o8kcso');
-  src: url('icomoon.eot?o8kcso#iefix') format('embedded-opentype'),
-       url('icomoon.ttf?o8kcso') format('truetype'),
-       url('icomoon.woff?o8kcso') format('woff'),
-       url('icomoon.svg?o8kcso#icomoon') format('svg');
+  src: url(https://cdn.eyelevel.ai/chat/icomoon.eot?o8kcso);
+  src: url(https://cdn.eyelevel.ai/chat/icomoon.eot?o8kcso#iefix) format('embedded-opentype'),
+       url(https://cdn.eyelevel.ai/chat/icomoon.ttf?o8kcso) format('truetype'),
+       url(https://cdn.eyelevel.ai/chat/icomoon.woff?o8kcso) format('woff'),
+       url(https://cdn.eyelevel.ai/chat/icomoon.svg?o8kcso#icomoon) format('svg');
   font-weight: normal;
   font-style: normal;
 }

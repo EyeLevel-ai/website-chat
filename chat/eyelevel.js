@@ -81,6 +81,10 @@ try {
         chatURL = devChatURL;
         window.chatURL = chatURL;
         break;
+      case 'staging':
+        chatURL = devChatURL;
+        window.chatURL = chatURL;
+        break;
       case 'local':
       case 'local-dev':
         cssURL = localCssURL;
