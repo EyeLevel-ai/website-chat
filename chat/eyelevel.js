@@ -29,6 +29,7 @@ try {
   var resetSessionTime = 2 * 60 * 60 * 1000; // 2 hours
   var remoteURL = 'https://cdn.eyelevel.ai/chat';
   var chatURL = 'https://cdn.eyelevel.ai/chat';
+  var devChatURL = 'https://cdn.eyelevel.ai/dev'
   var localChatURL = '/chat';
   var cssURL = 'https://css.eyelevel.ai';
   var localCssURL = '/css';
@@ -76,6 +77,10 @@ try {
 
   function loadEnv(eyEnv) {
     switch(eyEnv) {
+      case 'dev':
+        chatURL = devChatURL;
+        window.chatURL = chatURL;
+        break;
       case 'local':
       case 'local-dev':
         cssURL = localCssURL;
@@ -1074,7 +1079,7 @@ try {
     if (window.eyAlertSound) {
       var ad = document.createElement('audio');
       ad.id = 'eyAlertSound';
-      ad.src = 'https://cdn.eyelevel.ai/chat/alert.mp3';
+      ad.src = remoteURL + '/alert.mp3';
       ad.preload = 'auto';
       document.body.appendChild(ad);
     }
