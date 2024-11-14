@@ -756,7 +756,6 @@ function updateAIMessages(intr) {
   if (intr
     && intr.sender
     && intr.sender === 'server'
-    && intr.metadata
     && intr.session
     && intr.session.Trace
     && intr.session.Trace.turnUUID) {
@@ -1518,6 +1517,7 @@ window.menu = null;
                       window.eyreset = false;
                     } else {
                       var inter = retrieveInteractions(true);
+                      setSeen();
                       if (inter && inter.length) {
                         t.loadInteractions(0, inter);
                       } else {
@@ -2034,8 +2034,6 @@ window.menu = null;
                         if (!window.eySocket) {
                           t.initializeWS();
                         }
-                        setSeen();
-                        window.parent.postMessage("alert-update", "*");
                       } else if (n.data.indexOf && n.data.indexOf("Consent||") === 0) {
                         window.Consent = true;
                         window.ConsentContent = JSON.parse(n.data.replace('Consent||', ''));
