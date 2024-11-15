@@ -122,7 +122,7 @@ noscript h1 {
 /* ------------------ xray ------------------- */
 .image-container {
   position: relative;
-  max-width: 510px;
+  width: 100%;
   overflow: auto; 
   margin: 0 auto; 
   margin-top: 10px;
@@ -140,9 +140,7 @@ noscript h1 {
 }
 .bounding-box {
   position: absolute;
-  border: 1px solid #b1ea8f;
   box-sizing: border-box;
-  background-color: rgba(177, 234, 143, 0.5); 
 }
 .bounding-box:hover {
   cursor: pointer;
@@ -246,6 +244,8 @@ noscript h1 {
   padding-top: 48px;
   height: 100%;
   background-color: #FBFBF7;
+  overflow: auto;
+
 }
 .xray-content-header {
   display: flex;
@@ -1361,11 +1361,11 @@ noscript h1 {
 }
 @font-face {
   font-family: 'icomoon';
-  src: url(https://cdn.eyelevel.ai/chat/icomoon.eot?o8kcso);
-  src: url(https://cdn.eyelevel.ai/chat/icomoon.eot?o8kcso#iefix) format('embedded-opentype'),
-       url(https://cdn.eyelevel.ai/chat/icomoon.ttf?o8kcso) format('truetype'),
-       url(https://cdn.eyelevel.ai/chat/icomoon.woff?o8kcso) format('woff'),
-       url(https://cdn.eyelevel.ai/chat/icomoon.svg?o8kcso#icomoon) format('svg');
+  src: url('icomoon.eot?o8kcso');
+  src: url('icomoon.eot?o8kcso#iefix') format('embedded-opentype'),
+       url('icomoon.ttf?o8kcso') format('truetype'),
+       url('icomoon.woff?o8kcso') format('woff'),
+       url('icomoon.svg?o8kcso#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
 }
