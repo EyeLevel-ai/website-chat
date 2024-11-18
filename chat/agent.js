@@ -1047,10 +1047,24 @@ try {
   }
 
   function loadFilesPreviewInIframe(fileUrl) {
+    var container = document.createElement('div');
+    container.style.position = 'relative';
+
+    // Create the loading message
+    var loadingText = document.createElement('div');
+    loadingText.textContent = 'Loading...';
+    loadingText.style.position = 'absolute';
+    loadingText.style.top = '25px';
+    loadingText.style.left = '50%';
+    loadingText.style.transform = 'translate(-50%, -50%)';
+    loadingText.style.fontSize = '16px';
+    loadingText.style.color = '#555';
+    container.appendChild(loadingText);
+
     var iframe = document.createElement('iframe');
     iframe.width = '100%';
     iframe.height = '650px';
-    iframe.style.border = 0;
+    iframe.style.border = '0';
     iframe.style.marginTop = '12px';
 
     var decodedUrl = decodeURIComponent(fileUrl);
@@ -1058,12 +1072,20 @@ try {
     var encodedUrl = encodeURI(decodedUrl);
     iframe.src = 'https://docs.google.com/gview?embedded=true&url=' + encodedUrl;
 
+    iframe.onload = function () {
+      // Remove the loading message when the iframe has loaded
+      container.removeChild(loadingText);
+    };
+
     iframe.onerror = function (e) {
       console.error(e);
       console.error('Failed to load the file in the iframe.');
+      // Optionally display an error message to the user
+      loadingText.textContent = 'Failed to load the document.';
     };
 
-    return iframe;
+    container.appendChild(iframe);
+    return container;
   }
  
   function openSourceLinkInThumbnailsSideBar(searchResultsItem) {
