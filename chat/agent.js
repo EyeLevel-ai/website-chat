@@ -1312,7 +1312,6 @@ try {
       if (previousDiv) {
         const sourceHeader = previousDiv.querySelector('h4.source-header');
         if (sourceHeader) {
-          debugger;
           sourceHeader.innerHTML = 'Sources';
         }
       }
@@ -1330,14 +1329,16 @@ try {
       `div.server-response[id^="static-${messageContainerId}"]`,
     );
 
+    var file = selectedSource.items[0];
+
     if (serverResponseDiv) {
       const sourceHeader = serverResponseDiv.querySelector('h4.source-header');
       if (sourceHeader) {
         var fileName;
-        if (selectedSource.fileName.length > 25) {
-          fileName = selectedSource.fileName.substring(0, 25) + '...';
+        if (file.fileName.length > 25) {
+          fileName = file.fileName.substring(0, 25) + '...';
         } else {
-          fileName = selectedSource.fileName;
+          fileName = file.fileName;
         }
         var s = document.createElement('span');
         s.style.color = '#e26f4b';
