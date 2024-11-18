@@ -564,12 +564,17 @@ try {
   function removeActiveThumbnail() {
     const thumbnails = document.querySelectorAll('.thumbnail-item.active');
     const nonPdfThumbnails = document.querySelectorAll('.thumbnail-non-pdf-item.active');
-    thumbnails.forEach(thumb => {
-      thumb.classList.remove('active');
-    });
-    nonPdfThumbnails.forEach(thumb => {
-      thumb.classList.remove('active');
-    });
+    if (thumbnails && thumbnails.length > 0) {
+      thumbnails.forEach(thumb => {
+        thumb.classList.remove('active');
+      });
+    }
+
+    if (nonPdfThumbnails && nonPdfThumbnails.length > 0) {
+      nonPdfThumbnails.forEach(thumb => {
+        thumb.classList.remove('active');
+      });
+    }
   }
 
   function thumbnailsItemComponent(link) {
