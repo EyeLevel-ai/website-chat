@@ -562,8 +562,12 @@ try {
   }
 
   function removeActiveThumbnail() {
-    const thumbnails = document.querySelectorAll(".thumbnail-item.active");
+    const thumbnails = document.querySelectorAll('.thumbnail-item.active');
+    const nonPdfThumbnails = document.querySelectorAll('.thumbnail-non-pdf-item.active');
     thumbnails.forEach(thumb => {
+      thumb.classList.remove('active');
+    });
+    nonPdfThumbnails.forEach(thumb => {
       thumb.classList.remove('active');
     });
   }
@@ -629,119 +633,102 @@ try {
     return button;
   }
 
-  // Movable modal window
-  function openXrayModal(searchResultsItem) {
-    // Create modal overlay
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'modal-overlay';
+ // Movable modal window
+ function openXrayModal(searchResultsItem) {
+  var modalOverlay = document.createElement('div');
+  modalOverlay.className = 'modal-overlay';
 
-    // Create modal container
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.position = 'absolute'; // Make modal position absolute
+  var modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.position = 'absolute'; // Make modal position absolute
 
-    // Set initial position of the modal
-    modal.style.left = '50%';
-    modal.style.top = '50%';
-    modal.style.transform = 'translate(-50%, -50%)';
+  modal.style.left = '50%';
+  modal.style.top = '50%';
+  modal.style.transform = 'translate(-50%, -50%)';
 
-    // Create modal content wrapper
-    const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content';
+  var modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
 
-    // Create modal header
-    const modalHeader = document.createElement('div');
-    modalHeader.className = 'modal-header';
+  var modalHeader = document.createElement('div');
+  modalHeader.className = 'modal-header';
 
-    const modalTitle = document.createElement('h3');
-    modalTitle.textContent = 'Semantic Object Detail';
+  var modalTitle = document.createElement('h3');
+  modalTitle.textContent = 'Semantic Object Detail';
 
-    const closeIcon = document.createElement('span');
-    closeIcon.className = 'close-icon';
-    closeIcon.innerHTML = '&times;';
+  var closeIcon = document.createElement('span');
+  closeIcon.className = 'close-icon';
+  closeIcon.innerHTML = '&times;';
 
-    // Append title and close icon to header
-    modalHeader.appendChild(modalTitle);
-    modalHeader.appendChild(closeIcon);
+  modalHeader.appendChild(modalTitle);
+  modalHeader.appendChild(closeIcon);
 
-    // Create accordion container
-    const accordionContainer = document.createElement('div');
-    accordionContainer.className = 'accordion-container';
+  var accordionContainer = document.createElement('div');
+  accordionContainer.className = 'accordion-container';
 
-    // Create Suggested Text Accordion
-    const suggestedTextAccordion = createAccordion(
-      'Suggested Text',
-      searchResultsItem.suggestedText,
-    );
+  var suggestedTextAccordion = createAccordion(
+    'Suggested Text',
+    searchResultsItem.suggestedText,
+  );
+  var extractedTextAccordion = createAccordion('Extracted Text', searchResultsItem.text);
+  var fileKeywordsAccordion = createAccordion('File Keywords', searchResultsItem.fileKeywords);
 
-    // Create Extracted Text Accordion
-    const extractedTextAccordion = createAccordion('Extracted Text', searchResultsItem.text);
+  accordionContainer.appendChild(suggestedTextAccordion);
+  accordionContainer.appendChild(extractedTextAccordion);
+  accordionContainer.appendChild(fileKeywordsAccordion);
 
-    // Append accordions to container
-    accordionContainer.appendChild(suggestedTextAccordion);
-    accordionContainer.appendChild(extractedTextAccordion);
+  modalContent.appendChild(modalHeader);
+  modalContent.appendChild(accordionContainer);
 
-    // Append header and accordion container to modal content
-    modalContent.appendChild(modalHeader);
-    modalContent.appendChild(accordionContainer);
+  modal.appendChild(modalContent);
+  modalOverlay.appendChild(modal);
+  document.body.appendChild(modalOverlay);
 
-    // Append modal content to modal
-    modal.appendChild(modalContent);
+  closeIcon.addEventListener('click', function () {
+    document.body.removeChild(modalOverlay);
+  });
 
-    // Append modal to overlay
-    modalOverlay.appendChild(modal);
-
-    // Append overlay to body
-    document.body.appendChild(modalOverlay);
-
-    // Close modal on close icon click
-    closeIcon.addEventListener('click', function () {
+  modalOverlay.addEventListener('click', function (e) {
+    if (e.target === modalOverlay) {
       document.body.removeChild(modalOverlay);
-    });
-
-    // Close modal when clicking outside of modal
-    modalOverlay.addEventListener('click', function (e) {
-      if (e.target === modalOverlay) {
-        document.body.removeChild(modalOverlay);
-      }
-    });
-
-    // Make modal draggable by the header
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    modalHeader.addEventListener('mousedown', function (e) {
-      isDragging = true;
-      // Calculate offset between mouse position and modal's top-left corner
-      const rect = modal.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-
-      // Add event listeners for mousemove and mouseup
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-
-      // Prevent default behavior to avoid text selection
-      e.preventDefault();
-    });
-
-    function onMouseMove(e) {
-      if (isDragging) {
-        // Update modal position
-        modal.style.left = e.clientX - offsetX + 'px';
-        modal.style.top = e.clientY - offsetY + 'px';
-        modal.style.transform = ''; // Remove transform to prevent conflicts
-      }
     }
+  });
 
-    function onMouseUp() {
-      isDragging = false;
-      // Remove event listeners
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+  // Make modal draggable by the header
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  modalHeader.addEventListener('mousedown', function (e) {
+    isDragging = true;
+    // Calculate offset between mouse position and modal's top-left corner
+    const rect = modal.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    // Add event listeners for mousemove and mouseup
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    // Prevent default behavior to avoid text selection
+    e.preventDefault();
+  });
+
+  function onMouseMove(e) {
+    if (isDragging) {
+      // Update modal position
+      modal.style.left = e.clientX - offsetX + 'px';
+      modal.style.top = e.clientY - offsetY + 'px';
+      modal.style.transform = ''; // Remove transform to prevent conflicts
     }
   }
+
+  function onMouseUp() {
+    isDragging = false;
+    // Remove event listeners
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+}
    
   function createAccordion(title, content) {
     var accordionItem = document.createElement('div');
@@ -790,8 +777,28 @@ try {
 
     return accordionItem;
   }
+
+  function hexToRgba(hex, alpha) {
+    hex = hex.replace('#', '');
+
+    if (hex.length === 3) {
+      hex = hex
+        .split('')
+        .map(function (h) {
+          return h + h;
+        })
+        .join('');
+    }
+
+    var bigint = parseInt(hex, 16);
+    var r = (bigint >> 16) & 255;
+    var g = (bigint >> 8) & 255;
+    var b = bigint & 255;
+
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
     
-  function createXrayImageWithBoxes(searchResultsItem) {
+  function createXrayImageWithBoxes(imgData) {
     var imageContainer = document.createElement('div');
     imageContainer.className = 'image-container';
 
@@ -801,7 +808,7 @@ try {
     imageContainer.appendChild(loadingText);
 
     var img = document.createElement('img');
-    img.src = searchResultsItem.pageImagesUrl;
+    img.src = imgData.pageImagesUrl;
     img.crossOrigin = 'Anonymous';
 
     imageContainer.appendChild(img);
@@ -814,7 +821,7 @@ try {
       var imgHeight = img.naturalHeight;
       var padding = 5;
 
-      searchResultsItem.boundingBoxes.forEach(function (box) {
+      imgData.boundingBoxes.forEach(function (box) {
         var topLeftX = Math.max(0, box.topLeftX - padding);
         var topLeftY = Math.max(0, box.topLeftY - padding);
         var bottomRightX = Math.min(imgWidth, box.bottomRightX + padding);
@@ -831,10 +838,14 @@ try {
         div.style.top = yPercent + '%';
         div.style.width = widthPercent + '%';
         div.style.height = heightPercent + '%';
+        div.style.backgroundColor = hexToRgba(box.color, 0.3);
+        div.style.borderColor = box.color;
+
+        var item = imgData.items[box.itemIndex];
 
         div.addEventListener('click', function (e) {
           e.stopPropagation();
-          openXrayModal(searchResultsItem);
+          openXrayModal(item);
         });
 
         imageContainer.appendChild(div);
@@ -844,7 +855,7 @@ try {
     return imageContainer;
   }
   
-  function createXrayContentHeader(url, documentId, fileName) {
+  function createXrayContentHeader(url, documentId, fileName, pageNumber, isNonXrayDocument) {
     var xrayContentHeaderDiv = document.createElement('div');
     xrayContentHeaderDiv.id = 'xray-content-header';
     xrayContentHeaderDiv.className = 'xray-content-header';
