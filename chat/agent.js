@@ -1370,10 +1370,6 @@ try {
       return openSourceLinkInSideBar(searchResultsItem.url, text, index, messageContainerId);
     }
 
-    if (window.eysources === 'thumbnails') {
-      return openSourceLinkInThumbnailsSideBar(searchResultsItem);
-    }
-
     window.open(url, '_blank');
   }
 
