@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Building Controls & Solutions</title>
+    <meta name="description" content="Building Controls &amp; Solutions is a Honeywell building automation systems diamond distributor">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style type="text/css">
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: start;
+      }
+      .ey-app {
+        display: none !important;
+      }
+      .ey-app-open {
+        display: block !important;
+        top: 780px !important;
+        left: calc(50% + 522px);
+      }
+      .ey-badge-frame {
+        display: none !important;
+      }
+      .ey-alert-frame {
+        display: none !important;
+      }
+      .image-container {
+        text-align: center; /* Center the image */
+        padding: 0; /* Add some padding around the image */
+        max-width: 100%; /* Ensure the container doesn't exceed the width of the viewport */
+      }
+      .responsive-image {
+        max-width: 100%; /* Make the image responsive */
+        height: auto; /* Maintain aspect ratio */
+      }
+      .fixed-image {
+        width: 2406px;
+        height: 1207px;
+      }
+      .clickable-box {
+        position: absolute;
+        top: 36px;
+        right: 8%;
+        height: 100px;
+        width: 38%;
+        background: transparent;
+        cursor: pointer;
+        z-index: 2147483003;
+      }
+      .ey-section {
+        position: fixed !important;
+        top: 64px !important;
+        left: calc(50% - 160px) !important;
+        width: 768px !important;
+        pointer-events: none !important;
+      }
+      @media(max-width:1400px) {
+        .clickable-box {
+          position: absolute;
+          top: 1%;
+          right: 20%;
+          height: 8%;
+          width: 27%;
+          background: transparent;
+          cursor: pointer;
+        }
+        .ey-app-open {
+          display: block !important;
+          top: 780px !important;
+          left: calc(50% + 454px);
+        }
+        .ey-section {
+          position: fixed !important;
+          top: 64px !important;
+          left: calc(50% - 160px) !important;
+          width: 700px !important;
+          pointer-events: none !important;
+        }
+	      .fixed-image {
+          width: 1200px;
+          height: auto;
+        }
+      }
+    </style>
+    <!-- EyeLevel Chat -->
+    <script>
+      !function(){
+        if(window.eyelevel)return;window.eyelevel = [];
+        window.eyusername = 'f23d79d9-e312-4c15-8677-51e41c2a2723';
+        window.eyflowname = '01JC6KKBMQAAMNRTVJCH46WDMC';
+        window.eyelevel.push(['init', {
+          username: window.eyusername,
+          flowname: window.eyflowname,
+          forceReset: true,
+          origin: 'web',
+          reset: true
+        }]);
+        var t=document.createElement('script');t.type='text/javascript',t.async=!0,t.src='https://cdn.eyelevel.ai/chat/eyelevel.js?v=1.3';var e=document.getElementsByTagName('script')[0];e.parentNode.insertBefore(t,e)}();
+    </script>
+    <!-- End EyeLevel Chat -->
+</head>
+<body>
+
+  <img src="/bcs/fake-bcs.png" alt="Landing Page Image" class="fixed-image">
+  <div class="clickable-box" onclick="handleClick()"></div>
+  <script>
+    function handleClick() {
+      window.toggleChat();
+    }
+  </script>
+
+</body>
+</html>

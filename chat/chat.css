@@ -317,6 +317,9 @@ noscript h1 {
   }
 }
 /* ------------------ xray ------------------- */
+#result {
+  border: 0;
+}
 .ey-chat-nav {
   height: 60px;
   position: absolute;

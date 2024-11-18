@@ -118,6 +118,10 @@ try {
   }
 
   function shouldResetChat(requireUser) {
+    if (window.eyforcereset) {
+      return true;
+    }
+
     var now = Date.now();
     var ah = window.localStorage.getItem('eyelevel.conversation.history');
     if (!ah) {
@@ -599,6 +603,7 @@ try {
           val = parseBool(val);
           if (val) {
             window.eyreset = true;
+            window.eyforcereset = true;
           }
           break;
         case 'fullName':
