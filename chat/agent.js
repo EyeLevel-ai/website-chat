@@ -569,23 +569,27 @@ try {
   }
 
   function thumbnailsItemComponent(link) {
-    const img = document.createElement('img');
-    img.src = link;
-    img.width = 80;
-    img.height = 100;
-    img.className = 'thumbnail-item';
-    return img;
-  }
-
-  function renderSourcesComponent(num, item, name) {
-    if (window.eysources === 'thumbnails') {
-      return thumbnailsItemComponent(item.pageImagesUrl);
+    if (link) {
+      const img = document.createElement('img');
+      img.src = link;
+      img.width = 80;
+      img.height = 100;
+      img.className = 'thumbnail-item';
+      return img;
     } else {
-      return linkItemComponent(num, item.url, name);
+      const fileIcon = document.createElement('div');
+      fileIcon.innerHTML = '<span class="non-pdf-fileIcon">📄</span>';
+      fileIcon.className = 'thumbnail-non-pdf-item';
+      return fileIcon;
     }
   }
 
-  function xrayLinkButton(documentId) {
+  function xrayLinkButton(documentId, isNonXrayDocument) {
+    if (isNonXrayDocument) {
+      var span = document.createElement('span');
+      return span;
+    }
+
     var url = 'https://dashboard.groundx.ai/xray/' + documentId;
 
     switch (window.eyEnv) {
@@ -609,20 +613,17 @@ try {
     return button;
   }
 
-  function renderSourcesComponent(num, item, name) {
-    if (window.eysources === 'thumbnails') {
-      return thumbnailsItemComponent(item.pageImagesUrl);
-    } else {
-      return linkItemComponent(num, item.url, name);
-    }
-  }
 
-  function xraySourceLinkButton(url) {
+  function xraySourceLinkButton(url, pageNumber) {
     var button = document.createElement('button');
     button.classList.add('xray-header-button');
     button.textContent = 'Source';
     button.onclick = function () {
-      window.open(url, '_blank');
+      var decodedUrl = decodeURIComponent(url);
+      decodedUrl = decodedUrl.replace(/\+/g, encodeURIComponent('+'));
+      decodedUrl += '#page=' + pageNumber;
+      var encodedUrl = encodeURI(decodedUrl);
+      window.open(encodedUrl, '_blank');
     };
 
     return button;
@@ -852,8 +853,8 @@ try {
     var leftSide = document.createElement('div');
     leftSide.className = 'left-content';
 
-    var sourceLink = xraySourceLinkButton(url);
-    var fullXrayLink = xrayLinkButton(documentId);
+    var sourceLink = xraySourceLinkButton(url, pageNumber);
+    var fullXrayLink = xrayLinkButton(documentId, isNonXrayDocument);
 
     leftSide.appendChild(sourceLink);
     leftSide.appendChild(fullXrayLink);
@@ -1017,8 +1018,40 @@ try {
 
     return centerDiv;
   }
+
+  function getPageNumberFromPageImagesUrl(pageImagesUrl) {
+    if (pageImagesUrl) {
+      var parts = pageImagesUrl.split('/');
+      var lastPart = parts[parts.length - 1];
+      var pageNumberStr = lastPart.split('.')[0];
+      return parseInt(pageNumberStr);
+    } else {
+      return null;
+    }
+  }
+
+  function loadFilesPreviewInIframe(fileUrl) {
+    var iframe = document.createElement('iframe');
+    iframe.width = '100%';
+    iframe.height = '650px';
+    iframe.style.border = 0;
+    iframe.style.marginTop = '12px';
+
+    var decodedUrl = decodeURIComponent(fileUrl);
+    decodedUrl = decodedUrl.replace(/\+/g, encodeURIComponent('+'));
+    var encodedUrl = encodeURI(decodedUrl);
+    iframe.src = 'https://docs.google.com/gview?embedded=true&url=' + encodedUrl;
+
+    iframe.onerror = function (e) {
+      console.error(e);
+      console.error('Failed to load the file in the iframe.');
+    };
+
+    return iframe;
+  }
  
   function openSourceLinkInThumbnailsSideBar(searchResultsItem) {
+    var isNonXrayDocument = !searchResultsItem.pageImagesUrl;
     var eyChatDiv = document.getElementById('eyChat');
     if (eyChatDiv) {
       var xrayDiv = document.getElementById('xray');
@@ -1037,15 +1070,49 @@ try {
       xrayContentDiv.className = 'xray_document_content';
       xrayContentDiv.id = 'xray-content';
       xrayContentDiv.style.padding = '20px';
+      xrayContentDiv.style.marginBottom = '50px';
 
+      var firstItem = searchResultsItem.items[0];
+      var pageNumber = getPageNumberFromPageImagesUrl(searchResultsItem.pageImagesUrl);
       var xrayContentHeaderDiv = createXrayContentHeader(
-        searchResultsItem.pageImagesUrl,
-        searchResultsItem.documentId,
-        searchResultsItem.fileName,
+        firstItem.url,
+        firstItem.documentId,
+        firstItem.fileName,
+        pageNumber,
+        isNonXrayDocument,
       );
 
       xrayContentDiv.appendChild(xrayContentHeaderDiv);
-      var imgContainer = createXrayImageWithBoxes(searchResultsItem);
+
+      var allBoundingBoxes = [];
+      var colors = ['#63EF0F', '#613AD1', '#EAEE30', '#FF8A40'];
+
+      searchResultsItem.items.forEach(function (item, index) {
+        var color = colors[index % colors.length];
+        if (item.boundingBoxes) {
+          item.boundingBoxes.forEach(function (box) {
+            box.color = color;
+            box.itemIndex = index;
+            allBoundingBoxes.push(box);
+          });
+        }
+      });
+
+      var imgData = {
+        pageImagesUrl: searchResultsItem.pageImagesUrl,
+        boundingBoxes: allBoundingBoxes,
+        items: searchResultsItem.items,
+      };
+
+      var imgContainer;
+
+      if (imgData.pageImagesUrl) {
+        imgContainer = createXrayImageWithBoxes(imgData);
+      } else {
+        var url = imgData.items[0].url;
+        imgContainer = loadFilesPreviewInIframe(url);
+      }
+
       xrayContentDiv.appendChild(imgContainer);
       xrayDiv.appendChild(xrayContentDiv);
 
@@ -1245,7 +1312,11 @@ try {
     }
 
     var thumbnails = document.querySelectorAll('.thumbnail-item.active');
+    var nonPdfThumbnails = document.querySelectorAll('.thumbnail-non-pdf-item.active');
     thumbnails.forEach(thumb => {
+      thumb.classList.remove('active');
+    });
+    nonPdfThumbnails.forEach(thumb => {
       thumb.classList.remove('active');
     });
     component.classList.add('active');
@@ -1279,10 +1350,31 @@ try {
     });
   }
 
+  function prepareDataForBoxDrawing(res) {
+    var groupedArray = [];
+    var groupMap = {};
+
+    res.forEach(function (item) {
+      var key = item.pageImagesUrl;
+
+      if (!groupMap[key]) {
+        groupMap[key] = {
+          pageImagesUrl: key,
+          items: [],
+        };
+        groupedArray.push(groupMap[key]);
+      }
+
+      groupMap[key].items.push(item);
+    });
+
+    return groupedArray;
+  }
+
   function createClickableSourceURLs(searchRes, messageContainerId) {
     var searchResults;
     if (window.eysources === "thumbnails") {
-      searchResults = searchRes;
+      searchResults = prepareDataForBoxDrawing(searchRes);
     } else {
       searchResults = removeDuplicateUrls(searchRes); 
     }
@@ -1301,16 +1393,26 @@ try {
       className: 'source-links-container',
     });
 
-    searchResults.forEach(function (item, index) {
-      var component = renderSourcesComponent(index + 1, item, item.fileName);
+    if (window.eysources === 'thumbnails') {
+      searchResults.forEach(function (item) {
+        var component = thumbnailsItemComponent(item.pageImagesUrl);
 
-      component.onclick = function () {
-        handleClickSourceUrl(item, item.text, index + 1, messageContainerId);
-        toggleThumbnailsActive(component, item, messageContainerId);
-      };
+        component.onclick = function () {
+          openSourceLinkInThumbnailsSideBar(item);
+          toggleThumbnailsActive(component, item, messageContainerId);
+        };
 
-      sourceLinksContainer.appendChild(component);
-    });
+        sourceLinksContainer.appendChild(component);
+      });
+    } else {
+      searchResults.forEach(function (item, index) {
+        var component = linkItemComponent(index + 1, item, item.fileName);
+        component.onclick = function () {
+          handleClickSourceUrl(item, item.text, index + 1, messageContainerId);
+        };
+        sourceLinksContainer.appendChild(component);
+      });
+    }
 
     container.appendChild(sourceLinksContainer);
     return container;
@@ -3191,47 +3293,80 @@ window.menu = null;
                   var tid = turnUUIDInvert(message.session, true);
                  
                   if (aiMetadata.searchResults) {
-                    for (var i = 0; i < aiMetadata.searchResults.length; i++) {
+                    const aiMetadataSearchResults = [];
+  
+                    aiMetadata.searchResults.forEach(obj => {
+                      if (!obj.boundingBoxes) {
+                        aiMetadataSearchResults.push(obj);
+                      } else if (obj.pageImages.length === 1) {
+                        aiMetadataSearchResults.push(obj);
+                      } else {
+                        obj.pageImages.forEach(imageUrl => {
+                          const newObj = { ...obj, pageImages: [imageUrl] };
+                          aiMetadataSearchResults.push(newObj);
+                        });
+                      }
+                    });
+  
+                    for (var i = 0; i < aiMetadataSearchResults.length; i++) {
                       var searchResultsTempText = '';
                       var fileName = '';
                       var pageImagesUrl = '';
                       var boundingBoxes = [];
                       var suggestedText = '';
                       var documentId = '';
+                      var fileKeywords = '';
+                      var pageNumberFromUrl = null;
   
-                      if (aiMetadata.searchResults[i].documentId) {
-                        documentId = aiMetadata.searchResults[i].documentId;
+                      if (aiMetadataSearchResults[i].documentId) {
+                        documentId = aiMetadataSearchResults[i].documentId;
                       }
   
-                      if (aiMetadata.searchResults[i].text) {
-                        searchResultsTempText = aiMetadata.searchResults[i].text;
+                      if (aiMetadataSearchResults[i].text) {
+                        searchResultsTempText = aiMetadataSearchResults[i].text;
                       }
   
-                      if (aiMetadata.searchResults[i].suggestedText) {
-                        suggestedText = aiMetadata.searchResults[i].suggestedText;
+                      if (aiMetadataSearchResults[i].suggestedText) {
+                        suggestedText = aiMetadataSearchResults[i].suggestedText;
                       }
   
-                      if (aiMetadata.searchResults[i].fileName) {
-                        fileName = aiMetadata.searchResults[i].fileName;
+                      if (aiMetadataSearchResults[i].fileKeywords) {
+                        fileKeywords = aiMetadataSearchResults[i].fileKeywords;
                       }
   
-                      if (aiMetadata.searchResults[i].pageImages) {
-                        pageImagesUrl = aiMetadata.searchResults[i].pageImages[0];
+                      if (aiMetadataSearchResults[i].fileName) {
+                        fileName = aiMetadataSearchResults[i].fileName;
                       }
   
-                      if (aiMetadata.searchResults[i].boundingBoxes) {
-                        boundingBoxes = aiMetadata.searchResults[i].boundingBoxes;
+                      if (aiMetadataSearchResults[i].pageImages) {
+                        pageImagesUrl = aiMetadataSearchResults[i].pageImages[0];
+  
+                        if (pageImagesUrl) {
+                          var parts = pageImagesUrl.split('/');
+                          var lastPart = parts[parts.length - 1];
+                          var pageNumberStr = lastPart.split('.')[0];
+                          pageNumberFromUrl = parseInt(pageNumberStr);
+                        }
                       }
   
-                      if (aiMetadata.searchResults[i].sourceUrl) {
-                        if (aiMetadata.searchResults[i].sourceUrl) {
+                      if (aiMetadataSearchResults[i].boundingBoxes) {
+                        boundingBoxes = aiMetadataSearchResults[i].boundingBoxes.filter(function (
+                          box,
+                        ) {
+                          return box.pageNumber === pageNumberFromUrl;
+                        });
+                      }
+  
+                      if (aiMetadataSearchResults[i].sourceUrl) {
+                        if (aiMetadataSearchResults[i].sourceUrl) {
                           urls.push({
                             fileName: fileName,
                             text: searchResultsTempText,
-                            url: aiMetadata.searchResults[i].sourceUrl,
+                            url: aiMetadataSearchResults[i].sourceUrl,
                             pageImagesUrl: pageImagesUrl,
                             boundingBoxes: boundingBoxes,
                             suggestedText: suggestedText,
+                            fileKeywords: fileKeywords,
                             documentId: documentId,
                           });
                         }
