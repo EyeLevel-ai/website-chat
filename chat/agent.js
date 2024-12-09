@@ -3273,7 +3273,7 @@ window.menu = null;
                         break;
                       case 'hidden':
                       case 'custom':
-                          if (inputVal.length > 2) {
+                          if (inputVal.length > 0) {
                             ee.target.classList.remove('icon-send');
                             ee.target.classList.add('icon-success');
                             var ae = this;
