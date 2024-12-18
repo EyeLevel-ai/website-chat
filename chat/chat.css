@@ -1197,6 +1197,7 @@ noscript h1 {
 }
 .ey-chat #agentDemoForm {
   display: block;
+  margin-left: 24px;
   margin-left: 0;
   margin-right: 0;
   flex-grow: 1;
