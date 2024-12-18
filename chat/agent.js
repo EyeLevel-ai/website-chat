@@ -3711,7 +3711,7 @@ window.menu = null;
                           }
                         }
                         if (ytPre) {
-                          cnt.innerHTML = '<iframe class="youtube-video" src="https://www.youtube.com/embed/' + ytPre + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+                          cnt.innerHTML = '<iframe class="youtube-video" src="https://www.youtube.com/embed/' + ytPre + '" aria-label="Embedded YouTube video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
                           return cnt;
                         }
                       }
@@ -3989,6 +3989,7 @@ window.menu = null;
                       input.classList.add('user-input');
                       input.id = idPrefix + '-input';
                       input.required = true;
+                      input.setAttribute('aria-label', payload.text);
                       input.addEventListener("keydown", t.handleInputKeyDown, !1);
                       holder.appendChild(input);
                       var status = t.createElement('div');
@@ -4417,7 +4418,7 @@ window.menu = null;
                         break;
                       case 'hidden':
                       case 'custom':
-                          if (inputVal.length > 2) {
+                          if (inputVal.length > 0) {
                             ee.target.classList.remove('icon-send');
                             ee.target.classList.add('icon-success');
                             var ae = this;
