@@ -21,8 +21,10 @@ try {
   var hasInitMenu = false;
   var xrayIsOpen = false;
   var previousMessageContainerId = null;
-  // window.eysources = 'thumbnails'; // sidebar | modal | thumbnails
-  window.selectedFiles = []; // {file: File, status:  "pending" | "uploading" | "uploaded", uploadedFileURL: string }[]
+
+  // FILE UPLOADER CODE
+  // {file: File, status:  "pending" | "uploading" | "uploaded", uploadedFileURL: string }[]
+  window.selectedFiles = []; 
 
   var uploadButton = document.getElementById('uploadButton');
   var fileUploader = document.getElementById('fileUploader');
@@ -30,7 +32,6 @@ try {
   var eyInputContainer = document.getElementById('ey_input_container');
   var fileErrorMessage = document.getElementById('fileErrorMessage');
 
-  // FILE UPLOADER CODE
   uploadButton.addEventListener('click', function () {
     fileUploader.click();
   });
@@ -41,20 +42,20 @@ try {
   });
 
   eyInputContainer.addEventListener('dragover', function (event) {
-    if (window.eysources === 'thumbnails') return;
+    if (window.eysources.includes("xray-thumbnails")) return;
 
     event.preventDefault();
     eyInputContainer.classList.add('dragover');
   });
 
   eyInputContainer.addEventListener('dragleave', function (event) {
-    if (window.eysources === 'thumbnails') return;
+    if (window.eysources.includes("xray-thumbnails")) return;
 
     eyInputContainer.classList.remove('dragover');
   });
 
   eyInputContainer.addEventListener('drop', function (event) {
-    if (window.eysources === 'thumbnails') return;
+    if (window.eysources.includes("xray-thumbnails")) return;
 
     event.preventDefault();
     eyInputContainer.classList.remove('dragover');
@@ -298,6 +299,29 @@ try {
         <path d="M 40.960938 4.9804688 A 2.0002 2.0002 0 0 0 40.740234 5 L 28 5 A 2.0002 2.0002 0 1 0 28 9 L 36.171875 9 L 22.585938 22.585938 A 2.0002 2.0002 0 1 0 25.414062 25.414062 L 39 11.828125 L 39 20 A 2.0002 2.0002 0 1 0 43 20 L 43 7.2460938 A 2.0002 2.0002 0 0 0 40.960938 4.9804688 z M 12.5 8 C 8.3826878 8 5 11.382688 5 15.5 L 5 35.5 C 5 39.617312 8.3826878 43 12.5 43 L 32.5 43 C 36.617312 43 40 39.617312 40 35.5 L 40 26 A 2.0002 2.0002 0 1 0 36 26 L 36 35.5 C 36 37.446688 34.446688 39 32.5 39 L 12.5 39 C 10.553312 39 9 37.446688 9 35.5 L 9 15.5 C 9 13.553312 10.553312 12 12.5 12 L 22 12 A 2.0002 2.0002 0 1 0 22 8 L 12.5 8 z">
       </path>
   </svg>`;
+
+  var zoomOutBtn = document.createElement('button');
+  zoomOutBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="7" y1="11" x2="15" y2="11"></line>
+      <line x1="16.5" y1="16.5" x2="22" y2="22"></line>
+    </svg>`;
+  var resetZoomBtn = document.createElement('button');
+  resetZoomBtn.innerHTML = `
+    <svg  fill="none" stroke="#fff" width="22" height="22" viewBox="0 0 24 24">
+      <path fill="#fff" d="M5 15H3v4c0 1.1.9 2 2 2h4v-2H5zM5 5h4V3H5c-1.1 0-2 .9-2 2v4h2zm14-2h-4v2h4v4h2V5c0-1.1-.9-2-2-2m0 16h-4v2h4c1.1 0 2-.9 2-2v-4h-2zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4m0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2">
+      </path>
+    </svg>
+  `;
+  var zoomInBtn = document.createElement('button');
+  zoomInBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="11" y1="7" x2="11" y2="15"></line>
+      <line x1="7" y1="11" x2="15" y2="11"></line>
+      <line x1="16.5" y1="16.5" x2="22" y2="22"></line>
+    </svg>`;
 
   var urlRegex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-zA-Z0-9-]{2,})+\b([\-a-zA-Z0-9()@:%_\+.~#?&//=]*)(?<![()\]\.]|\.\.\.)/g);
 
@@ -562,237 +586,503 @@ try {
   }
 
   function removeActiveThumbnail() {
-    const thumbnails = document.querySelectorAll('.thumbnail-item.active');
-    const nonPdfThumbnails = document.querySelectorAll('.thumbnail-non-pdf-item.active');
+    var thumbnails = document.querySelectorAll(".thumbnail-item.active");
+    var nonPdfThumbnails = document.querySelectorAll(".thumbnail-non-pdf-item.active");
     if (thumbnails && thumbnails.length > 0) {
       thumbnails.forEach(thumb => {
-        thumb.classList.remove('active');
+        thumb.classList.remove("active");
       });
     }
 
     if (nonPdfThumbnails && nonPdfThumbnails.length > 0) {
       nonPdfThumbnails.forEach(thumb => {
-        thumb.classList.remove('active');
+        thumb.classList.remove("active");
       });
     }
   }
 
-  function thumbnailsItemComponent(link) {
+  function thumbnailsItemComponent(link, fileName) {
+    var tooltip = document.createElement("div");
+    tooltip.className = "custom-tooltip";
+    tooltip.textContent = fileName;
+
+    var container = document.createElement("div");
+    container.className = "thumbnail-container";
+    container.style.position = "relative";
+    container.style.display = "inline-block";
+
     if (link) {
-      const img = document.createElement('img');
+      var img = document.createElement("img");
       img.src = link;
       img.width = 80;
       img.height = 100;
-      img.className = 'thumbnail-item';
-      return img;
+      img.className = "thumbnail-item";
+      container.appendChild(img);
     } else {
-      const fileIcon = document.createElement('div');
-      fileIcon.innerHTML = '<span class="non-pdf-fileIcon">📄</span>';
-      fileIcon.className = 'thumbnail-non-pdf-item';
-      return fileIcon;
+      var fileType = getFileType(fileName);
+      var fileIcon = document.createElement("div");
+      fileIcon.innerHTML = MAP_FILE_TYPE_TO_SVG[fileType];
+      fileIcon.className = "thumbnail-non-pdf-item";
+      container.appendChild(fileIcon);
     }
+
+    // Append the tooltip to the container
+    container.appendChild(tooltip);
+
+    // Show/hide tooltip on hover
+    container.addEventListener("mouseenter", () => {
+      tooltip.style.display = "block";
+    });
+    container.addEventListener("mouseleave", () => {
+      tooltip.style.display = "none";
+    });
+
+    return container;
   }
 
   function xrayLinkButton(documentId, isNonXrayDocument) {
     if (isNonXrayDocument) {
-      var span = document.createElement('span');
+      var span = document.createElement("span");
       return span;
     }
 
-    var url = 'https://dashboard.groundx.ai/xray/' + documentId;
+    var url = "https://dashboard.groundx.ai/xray/" + documentId;
 
     switch (window.eyEnv) {
-      case 'dev':
-      case 'local':
-      case 'local-chat-dev':
-      case 'local-css-dev':
-      case 'local-dev':
-        url = 'https://devdashboard.groundx.ai/xray/' + documentId;
+      case "dev":
+      case "local":
+      case "local-chat-dev":
+      case "local-css-dev":
+      case "local-dev":
+        url = "https://devdashboard.groundx.ai/xray/" + documentId;
         break;
     }
 
     // Create the text link
-    var button = document.createElement('button');
-    button.classList.add('xray-header-button');
-    button.textContent = 'X-Ray';
+    var button = document.createElement("button");
+    button.classList.add("xray-header-button");
+    button.textContent = "FULL X-RAY";
     button.onclick = function () {
-      window.open(url, '_blank');
+      window.open(url, "_blank");
     };
 
     return button;
   }
 
+  function xraySourceLinkButton(fileUrl, pageNumber) {
+    var button = document.createElement("button");
+    button.classList.add("xray-header-button");
+    button.textContent = "SOURCE FILE";
 
-  function xraySourceLinkButton(url, pageNumber) {
-    var button = document.createElement('button');
-    button.classList.add('xray-header-button');
-    button.textContent = 'Source';
     button.onclick = function () {
-      var decodedUrl = decodeURIComponent(url);
-      decodedUrl = decodedUrl.replace(/\+/g, encodeURIComponent('+'));
-      decodedUrl += '#page=' + pageNumber;
-      var encodedUrl = encodeURI(decodedUrl);
-      window.open(encodedUrl, '_blank');
+      var url = new URL(fileUrl);
+      var pathSegments = url.pathname.split("/");
+      var fileName = pathSegments[pathSegments.length - 1];
+
+      var fileExtension = fileName.split(".").pop().toLowerCase();
+      var viewableFileTypes = ["pdf", "png", "jpeg", "jpg", "txt", "json"];
+      var newWindow = null;
+
+      if (viewableFileTypes.includes(fileExtension)) {
+        newWindow = window.open("", "_blank");
+      }
+
+      var steps = [
+        function () {
+          // Step 1: Try file URL as is
+          return url.href;
+        },
+        function () {
+          // Step 2: Encode the file name and use it with the original URL
+          var encodedFileName = encodeURIComponent(fileName);
+          var newUrl = new URL(url.href);
+          var pathSegments = newUrl.pathname.split("/");
+          pathSegments[pathSegments.length - 1] = encodedFileName;
+          newUrl.pathname = pathSegments.join("/");
+          return newUrl.href;
+        },
+        function () {
+          // Step 3: Double-encode the file name and use it with the URL
+          var doubleEncodedFileName = encodeURIComponent(encodeURIComponent(fileName));
+          var newUrl = new URL(url.href);
+          var pathSegments = newUrl.pathname.split("/");
+          pathSegments[pathSegments.length - 1] = doubleEncodedFileName;
+          newUrl.pathname = pathSegments.join("/");
+          return newUrl.href;
+        },
+        function () {
+          // Step 4: Decode the original file name and use it with the URL
+          var decodedFileName = decodeURIComponent(fileName);
+          var newUrl = new URL(url.href);
+          var pathSegments = newUrl.pathname.split("/");
+          pathSegments[pathSegments.length - 1] = decodedFileName;
+          newUrl.pathname = pathSegments.join("/");
+          return newUrl.href;
+        },
+        function () {
+          // Step 5: Double-decode the file name and use it with the URL
+          var doubleDecodedFileName = decodeURIComponent(decodeURIComponent(fileName));
+          var newUrl = new URL(url.href);
+          var pathSegments = newUrl.pathname.split("/");
+          pathSegments[pathSegments.length - 1] = doubleDecodedFileName;
+          newUrl.pathname = pathSegments.join("/");
+          return newUrl.href;
+        },
+      ];
+
+      var stepIndex = 0;
+      var originalText = button.textContent;
+
+      button.textContent = "Loading...";
+      button.disabled = true;
+
+      function tryNextStep() {
+        if (stepIndex >= steps.length) {
+          button.textContent = "Failed to open";
+          button.disabled = false;
+
+          if (newWindow) {
+            newWindow.close();
+          }
+
+          setTimeout(function () {
+            button.textContent = originalText;
+          }, 2000);
+          return;
+        }
+
+        var modifiedUrl = steps[stepIndex]();
+
+        fetch(modifiedUrl, { method: "HEAD" })
+          .then(function (response) {
+            if (response.ok) {
+              if (viewableFileTypes.includes(fileExtension)) {
+                if (fileExtension === "pdf") {
+                  newWindow.location.href = modifiedUrl + "#page=" + pageNumber;
+                } else {
+                  newWindow.location.href = modifiedUrl;
+                }
+              } else {
+                var anchor = document.createElement("a");
+                anchor.href = modifiedUrl;
+                anchor.download = fileName;
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+              }
+
+              button.textContent = originalText;
+              button.disabled = false;
+            } else {
+              stepIndex++;
+              tryNextStep();
+            }
+          })
+          .catch(function (error) {
+            stepIndex++;
+            tryNextStep();
+          });
+      }
+
+      // Start the process
+      tryNextStep();
     };
 
     return button;
   }
 
- // Movable modal window
- function openXrayModal(searchResultsItem) {
-  var modalOverlay = document.createElement('div');
-  modalOverlay.className = 'modal-overlay';
+  function processString(input) {
+    const lines = input.split("\n");
 
-  var modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.position = 'absolute'; // Make modal position absolute
+    const processedLines = lines.map(line => {
+      const cleanedLine = line.replace(/\t\|\t/g, "  ").replace(/\t\|\t\t\|\t/g, " ");
+      const finalLine = cleanedLine.replace(/\t+/g, " ").trim();
+      return finalLine;
+    });
 
-  modal.style.left = '50%';
-  modal.style.top = '50%';
-  modal.style.transform = 'translate(-50%, -50%)';
+    const outputString = processedLines.join("\n\n");
+    return outputString;
+  }
 
-  var modalContent = document.createElement('div');
-  modalContent.className = 'modal-content';
+  function makeResponseReadable(response) {
+    const regex = /\{[^}]*\}/g;
+    let match;
+    let lastIndex = 0;
+    let result = "";
 
-  var modalHeader = document.createElement('div');
-  modalHeader.className = 'modal-header';
+    while ((match = regex.exec(response)) !== null) {
+      result += response.slice(lastIndex, match.index);
+      result += match[0] + "\n\n";
+      lastIndex = regex.lastIndex;
+    }
+    result += response.slice(lastIndex);
+    return result;
+  }
 
-  var modalTitle = document.createElement('h3');
-  modalTitle.textContent = 'Semantic Object Detail';
+  function formatNarrative(narr) {
+    return narr.map(subPart => {
+      if (subPart.startsWith('"') && subPart.endsWith('"')) {
+        return subPart.substring(1, subPart.length - 1);
+      }
+      return subPart;
+    });
+  }
 
-  var closeIcon = document.createElement('span');
-  closeIcon.className = 'close-icon';
-  closeIcon.innerHTML = '&times;';
+  function openXrayModal(searchResultsItem) {
+    if (window.eysources.includes("--customers")) return;
 
-  modalHeader.appendChild(modalTitle);
-  modalHeader.appendChild(closeIcon);
+    var modalOverlay = document.createElement("div");
+    modalOverlay.className = "modal-overlay";
 
-  var accordionContainer = document.createElement('div');
-  accordionContainer.className = 'accordion-container';
+    var modal = document.createElement("div");
+    modal.className = "modal";
+    modal.style.position = "absolute";
+    modal.style.left = "50%";
+    modal.style.top = "50%";
+    modal.style.transform = "translate(-50%, -50%)";
 
-  var suggestedTextAccordion = createAccordion(
-    'Suggested Text',
-    searchResultsItem.suggestedText,
-  );
-  var extractedTextAccordion = createAccordion('Extracted Text', searchResultsItem.text);
-  var fileKeywordsAccordion = createAccordion('File Keywords', searchResultsItem.fileKeywords);
+    var modalContent = document.createElement("div");
+    modalContent.className = "modal-content";
 
-  accordionContainer.appendChild(suggestedTextAccordion);
-  accordionContainer.appendChild(extractedTextAccordion);
-  accordionContainer.appendChild(fileKeywordsAccordion);
+    var modalHeader = document.createElement("div");
+    modalHeader.className = "modal-header";
+    modalHeader.style.position = "sticky";
+    modalHeader.style.top = "0";
+    modalHeader.style.zIndex = "1";
 
-  modalContent.appendChild(modalHeader);
-  modalContent.appendChild(accordionContainer);
+    var modalTitle = document.createElement("h3");
+    modalTitle.textContent = "Object Detail";
 
-  modal.appendChild(modalContent);
-  modalOverlay.appendChild(modal);
-  document.body.appendChild(modalOverlay);
+    var closeIcon = document.createElement("span");
+    closeIcon.className = "close-icon";
+    closeIcon.innerHTML = "&times;";
 
-  closeIcon.addEventListener('click', function () {
-    document.body.removeChild(modalOverlay);
-  });
+    modalHeader.appendChild(modalTitle);
+    modalHeader.appendChild(closeIcon);
 
-  modalOverlay.addEventListener('click', function (e) {
-    if (e.target === modalOverlay) {
+    var accordionContainer = document.createElement("div");
+    accordionContainer.className = "accordion-container";
+
+    var jsonAccordion = null;
+    var narrativeAccordion = null;
+
+    if (searchResultsItem.json) {
+      jsonAccordion = createAccordion("JSON Formatted", searchResultsItem.json, true);
+    }
+
+    if (searchResultsItem.narrative) {
+      var narrativeText = formatNarrative(searchResultsItem.narrative).join("\n\n");
+      narrativeAccordion = createAccordion("Narrative", narrativeText);
+    }
+
+    var suggestedTextAccordion = createAccordion(
+      "Suggested Text",
+      makeResponseReadable(searchResultsItem.suggestedText),
+    );
+    var extractedTextAccordion = createAccordion(
+      "Extracted Text",
+      processString(searchResultsItem.text),
+    );
+    var fileKeywordsAccordion = createAccordion(
+      "File Keywords",
+      makeResponseReadable(searchResultsItem.fileKeywords),
+    );
+
+    if (jsonAccordion) {
+      accordionContainer.appendChild(jsonAccordion);
+    }
+
+    if (narrativeAccordion) {
+      accordionContainer.appendChild(narrativeAccordion);
+    }
+
+    accordionContainer.appendChild(suggestedTextAccordion);
+    accordionContainer.appendChild(extractedTextAccordion);
+    accordionContainer.appendChild(fileKeywordsAccordion);
+
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(accordionContainer);
+
+    modal.appendChild(modalContent);
+    modalOverlay.appendChild(modal);
+    document.body.appendChild(modalOverlay);
+
+    closeIcon.addEventListener("click", function () {
       document.body.removeChild(modalOverlay);
+    });
+
+    closeIcon.addEventListener("pointerup", function () {
+      document.body.removeChild(modalOverlay);
+    });
+
+    modalOverlay.addEventListener("click", function (e) {
+      if (e.target === modalOverlay) {
+        document.body.removeChild(modalOverlay);
+      }
+    });
+
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // Mouse events
+    modalHeader.addEventListener("mousedown", function (e) {
+      isDragging = true;
+      const rect = modal.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+      e.preventDefault();
+    });
+
+    // Touch events
+    modalHeader.addEventListener("touchstart", function (e) {
+      isDragging = true;
+      const rect = modal.getBoundingClientRect();
+      const touch = e.touches[0];
+      offsetX = touch.clientX - rect.left;
+      offsetY = touch.clientY - rect.top;
+
+      document.addEventListener("touchmove", onTouchMove);
+      document.addEventListener("touchend", onTouchEnd);
+      e.preventDefault();
+    });
+
+    function onMouseMove(e) {
+      if (isDragging) {
+        modal.style.left = e.clientX - offsetX + "px";
+        modal.style.top = e.clientY - offsetY + "px";
+        modal.style.transform = "";
+      }
     }
-  });
 
-  // Make modal draggable by the header
-  let isDragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
+    function onMouseUp() {
+      isDragging = false;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
 
-  modalHeader.addEventListener('mousedown', function (e) {
-    isDragging = true;
-    // Calculate offset between mouse position and modal's top-left corner
-    const rect = modal.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
+    function onTouchMove(e) {
+      if (isDragging) {
+        const touch = e.touches[0];
+        modal.style.left = touch.clientX - offsetX + "px";
+        modal.style.top = touch.clientY - offsetY + "px";
+        modal.style.transform = "";
+      }
+    }
 
-    // Add event listeners for mousemove and mouseup
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-
-    // Prevent default behavior to avoid text selection
-    e.preventDefault();
-  });
-
-  function onMouseMove(e) {
-    if (isDragging) {
-      // Update modal position
-      modal.style.left = e.clientX - offsetX + 'px';
-      modal.style.top = e.clientY - offsetY + 'px';
-      modal.style.transform = ''; // Remove transform to prevent conflicts
+    function onTouchEnd() {
+      isDragging = false;
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
     }
   }
 
-  function onMouseUp() {
-    isDragging = false;
-    // Remove event listeners
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
+  function syntaxHighlight(json) {
+    if (typeof json != "string") {
+      json = JSON.stringify(json, undefined, 2);
+    }
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return json.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\\s*:)?)|(\b(true|false|null)\b|-?\d+(\.\d*)?([eE][+\-]?\d+)?)/g,
+      function (match) {
+        let cls = "number";
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "key";
+          } else {
+            cls = "string";
+          }
+        } else if (/true|false/.test(match)) {
+          cls = "boolean";
+        } else if (/null/.test(match)) {
+          cls = "null";
+        }
+        return '<span class="' + cls + '">' + match + "</span>";
+      },
+    );
   }
-}
    
-  function createAccordion(title, content) {
-    var accordionItem = document.createElement('div');
-    accordionItem.className = 'accordion-item';
+  function createAccordion(title, content, isJSON = false, isOpen = false) {
+    var accordionItem = document.createElement("div");
+    accordionItem.className = "accordion-item";
 
-    var accordionHeader = document.createElement('div');
-    accordionHeader.className = 'accordion-header';
+    var accordionHeader = document.createElement("div");
+    accordionHeader.className = "accordion-header";
 
-    var headerTitle = document.createElement('span');
+    var headerTitle = document.createElement("span");
     headerTitle.textContent = title;
 
-    var arrowIcon = document.createElement('span');
-    arrowIcon.className = 'arrow-icon';
-    arrowIcon.innerHTML = '&#9650;';
+    var arrowIcon = document.createElement("span");
+    arrowIcon.className = "arrow-icon";
+    arrowIcon.innerHTML = "&#9650;";
 
     accordionHeader.appendChild(headerTitle);
     accordionHeader.appendChild(arrowIcon);
 
-    var accordionBody = document.createElement('div');
-    accordionBody.className = 'accordion-body';
+    var accordionBody = document.createElement("div");
+    accordionBody.className = "accordion-body";
 
-    var accordionContent = document.createElement('div');
-    accordionContent.className = 'accordion-content';
-    var contentText = content.replace(/<br \/>/g, '\n');
-    accordionContent.innerHTML = mdConverter.makeHtml(contentText);
+    var accordionContent = document.createElement("div");
+    accordionContent.className = "accordion-content";
+
+    if (isJSON) {
+      var pre = document.createElement("pre");
+      pre.className = "json";
+      pre.innerHTML = syntaxHighlight(content);
+
+      pre.style.whiteSpace = "pre-wrap";
+      pre.style.wordBreak = "break-word";
+      pre.style.width = "100%";
+      pre.style.overflowX = "hidden";
+
+      accordionContent.appendChild(pre);
+    } else {
+      var contentText = content.replace(/<br \/>/g, "\n");
+      contentText = contentText.replace(/^(\s*)\*(\s+)/gm, "$1\\*$2");
+      accordionContent.innerHTML = mdConverter.makeHtml(contentText);
+    }
 
     accordionBody.appendChild(accordionContent);
-
     accordionItem.appendChild(accordionHeader);
     accordionItem.appendChild(accordionBody);
 
-    accordionBody.style.maxHeight = '0';
+    accordionBody.style.maxHeight = "0";
 
-    // Toggle body display on header click
-    accordionHeader.addEventListener('click', function () {
-      var isActive = accordionItem.classList.toggle('active');
-
+    accordionHeader.addEventListener("click", function () {
+      var isActive = accordionItem.classList.toggle("active");
       if (isActive) {
-        accordionBody.style.maxHeight = accordionBody.scrollHeight + 'px';
-        arrowIcon.style.transform = 'rotate(180deg)';
+        accordionBody.style.maxHeight = accordionBody.scrollHeight + "px";
+        arrowIcon.style.transform = "rotate(180deg)";
       } else {
-        accordionBody.style.maxHeight = '0';
-        arrowIcon.style.transform = 'rotate(0deg)';
+        accordionBody.style.maxHeight = "0";
+        arrowIcon.style.transform = "rotate(0deg)";
       }
     });
+
+    if (isOpen) {
+      requestAnimationFrame(function () {
+        accordionItem.classList.add("active");
+        accordionBody.style.maxHeight = accordionBody.scrollHeight + "px";
+        arrowIcon.style.transform = "rotate(180deg)";
+      });
+    }
 
     return accordionItem;
   }
 
   function hexToRgba(hex, alpha) {
-    hex = hex.replace('#', '');
+    hex = hex.replace("#", "");
 
     if (hex.length === 3) {
       hex = hex
-        .split('')
+        .split("")
         .map(function (h) {
           return h + h;
         })
-        .join('');
+        .join("");
     }
 
     var bigint = parseInt(hex, 16);
@@ -800,98 +1090,45 @@ try {
     var g = (bigint >> 8) & 255;
     var b = bigint & 255;
 
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
-  }
-    
-  function createXrayImageWithBoxes(imgData) {
-    var imageContainer = document.createElement('div');
-    imageContainer.className = 'image-container';
-
-    var loadingText = document.createElement('div');
-    loadingText.className = 'loading-text';
-    loadingText.textContent = 'Loading...';
-    imageContainer.appendChild(loadingText);
-
-    var img = document.createElement('img');
-    img.src = imgData.pageImagesUrl;
-    img.crossOrigin = 'Anonymous';
-
-    imageContainer.appendChild(img);
-
-    img.onload = function () {
-      imageContainer.removeChild(loadingText);
-      imageContainer.style.border = '1px solid #ccc';
-
-      var imgWidth = img.naturalWidth;
-      var imgHeight = img.naturalHeight;
-      var padding = 5;
-
-      imgData.boundingBoxes.forEach(function (box) {
-        var topLeftX = Math.max(0, box.topLeftX - padding);
-        var topLeftY = Math.max(0, box.topLeftY - padding);
-        var bottomRightX = Math.min(imgWidth, box.bottomRightX + padding);
-        var bottomRightY = Math.min(imgHeight, box.bottomRightY + padding);
-
-        var xPercent = (topLeftX / imgWidth) * 100;
-        var yPercent = (topLeftY / imgHeight) * 100;
-        var widthPercent = ((bottomRightX - topLeftX) / imgWidth) * 100;
-        var heightPercent = ((bottomRightY - topLeftY) / imgHeight) * 100;
-
-        var div = document.createElement('div');
-        div.className = 'bounding-box';
-        div.style.left = xPercent + '%';
-        div.style.top = yPercent + '%';
-        div.style.width = widthPercent + '%';
-        div.style.height = heightPercent + '%';
-        div.style.backgroundColor = hexToRgba(box.color, 0.3);
-        div.style.borderColor = box.color;
-
-        var item = imgData.items[box.itemIndex];
-
-        div.addEventListener('click', function (e) {
-          e.stopPropagation();
-          openXrayModal(item);
-        });
-
-        imageContainer.appendChild(div);
-      });
-    };
-
-    return imageContainer;
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
   }
   
-  function createXrayContentHeader(url, documentId, fileName, pageNumber, isNonXrayDocument) {
-    var xrayContentHeaderDiv = document.createElement('div');
-    xrayContentHeaderDiv.id = 'xray-content-header';
-    xrayContentHeaderDiv.className = 'xray-content-header';
+  function createXrayContentHeader(url, fileName, pageNumber) {
+    var xrayContentHeaderDiv = document.createElement("div");
+    xrayContentHeaderDiv.id = "xray-content-header";
+    xrayContentHeaderDiv.className = "xray-content-header";
 
     // Left Side
-    var leftSide = document.createElement('div');
-    leftSide.className = 'left-content';
+    var leftSide = document.createElement("div");
+    leftSide.className = "left-content";
 
     var sourceLink = xraySourceLinkButton(url, pageNumber);
-    var fullXrayLink = xrayLinkButton(documentId, isNonXrayDocument);
-
     leftSide.appendChild(sourceLink);
-    leftSide.appendChild(fullXrayLink);
 
     // Middle (Document Name)
-    var middle = document.createElement('div');
-    middle.className = 'xray-document-name';
-    middle.innerHTML = 'File: ' + fileName;
+    var pageNumberLabel = "";
+    if (pageNumber) {
+      pageNumberLabel = " | " + "Page: " + pageNumber;
+    }
+
+    var middle = document.createElement("div");
+    middle.className = "xray-document-name";
+    middle.innerHTML = "File: " + fileName + pageNumberLabel;
 
     // Right Side (Close Icon)
-    var rightSide = document.createElement('div');
-    rightSide.className = 'right-content';
+    var rightSide = document.createElement("div");
+    rightSide.className = "right-content";
 
-    var closeIcon = document.createElement('span');
-    closeIcon.innerHTML = '&times;';
-    closeIcon.className = 'close-icon';
-    closeIcon.id = 'xray-close-icon';
+    var closeIcon = document.createElement("button");
+    closeIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    closeIcon.className = "close-icon";
+    closeIcon.id = "xray-close-icon";
 
     closeIcon.onclick = function () {
-      const xrayContent = document.getElementById('xray-content');
-      const xrayDiv = document.getElementById('xray');
+      const xrayContent = document.getElementById("xray-content");
+      const xrayDiv = document.getElementById("xray");
       if (xrayContent) {
         xrayContent.remove();
       }
@@ -913,21 +1150,14 @@ try {
     return xrayContentHeaderDiv;
   }
   
-  function removeBoxShadowForXrayTheme() {
-    if (window.eysources !== 'thumbnails') return;
-    var messageResponse = document.getElementsByClassName('server-response');
-    for (var i = 0; i < messageResponse.length; i++) {
-      messageResponse[i].style.boxShadow = 'none';
-    }
-  }
-  
-  window.addEventListener('resize', () => {
-    if (window.eysources !== 'thumbnails') return;
+  // MAIN RESIZE RIGHT SIDE BAR AND X-RAY
+  window.addEventListener("resize", () => {
+    if (!window.eysources.includes("xray-thumbnails")) return;
 
-    var eyChatDiv = document.getElementById('eyChat');
-    var resultWrapperDiv = document.getElementById('resultWrapper');
-    var eyInputContainerDiv = document.getElementById('ey_input_container');
-    var xrayDiv = document.getElementById('xray');
+    var eyChatDiv = document.getElementById("eyChat");
+    var resultWrapperDiv = document.getElementById("resultWrapper");
+    var eyInputContainerDiv = document.getElementById("ey_input_container");
+    var xrayDiv = document.getElementById("xray");
 
     if (eyChatDiv) {
       var eyChatWidth = eyChatDiv.offsetWidth;
@@ -935,30 +1165,31 @@ try {
       if (eyChatWidth < 900) {
         removeActiveThumbnail();
         removeSourceHeaderContent();
-        eyChatDiv.style.width = '100%';
+        eyChatDiv.style.width = "100%";
 
         if (resultWrapperDiv) {
-          resultWrapperDiv.style.width = '100%';
+          resultWrapperDiv.style.width = "100%";
         }
 
         if (eyInputContainerDiv) {
-          eyInputContainerDiv.style.width = '100%';
+          eyInputContainerDiv.style.width = "100%";
         }
 
         if (xrayDiv) {
-          xrayDiv.className = 'xray_document_modal';
+          xrayDiv.className = "xray_document_modal";
 
           if (xrayIsOpen) {
-            xrayDiv.style.display = 'block';
-            xrayDiv.style.position = 'fixed';
-            xrayDiv.style.top = '0';
-            xrayDiv.style.left = '0';
-            xrayDiv.style.width = '100%';
-            xrayDiv.style.height = '100%';
-            xrayDiv.style.zIndex = '10';
-            xrayDiv.style.backgroundColor = '#fff';
+            xrayDiv.style.display = "flex";
+            xrayDiv.style.flexDirection = "column";
+            xrayDiv.style.position = "fixed";
+            xrayDiv.style.top = "0";
+            xrayDiv.style.left = "0";
+            xrayDiv.style.width = "100%";
+            xrayDiv.style.height = "100vh";
+            xrayDiv.style.zIndex = "10";
+            xrayDiv.style.backgroundColor = "#fff";
 
-            var closeButton = document.getElementById('xray-close-icon');
+            var closeButton = document.getElementById("xray-close-icon");
             if (closeButton) {
               closeButton.onclick = function () {
                 xrayDiv.remove();
@@ -971,29 +1202,35 @@ try {
         }
       } else {
         // Adjust styles for large screens
-        eyChatDiv.style.width = '100%';
+        eyChatDiv.style.width = "100%";
 
         if (resultWrapperDiv) {
-          resultWrapperDiv.style.width = '50%';
+          resultWrapperDiv.style.width = "50%";
         }
 
         if (eyInputContainerDiv) {
-          eyInputContainerDiv.style.width = '50%';
+          eyInputContainerDiv.style.width = "50%";
         }
 
         if (xrayDiv) {
-          if (xrayDiv.classList.contains('xray_document_modal')) {
-            xrayDiv.className = 'xray_document';
-            xrayDiv.style = '';
+          if (xrayDiv.classList.contains("xray_document_modal")) {
+            xrayDiv.className = "xray_document";
+            xrayDiv.style = "";
+            xrayDiv.style.display = "flex";
+            xrayDiv.style.flexDirection = "column";
+            xrayDiv.style.height = "100vh";
+            xrayDiv.style.overflow = "hidden";
+            xrayDiv.style.marginBottom = "20px";
 
-            var closeButton = document.getElementById('xray-close-icon');
+            var closeButton = document.getElementById("xray-close-icon");
             closeButton.onclick = function () {
-              var xrayContent = document.getElementById('xray-content');
+              var xrayContent = document.getElementById("xray-content");
               xrayContent.remove();
+
+              const centerDiv = emptyXraySideBar();
+              xrayDiv.appendChild(centerDiv);
             };
 
-            const centerDiv = emptyXraySideBar();
-            xrayDiv.appendChild(centerDiv);
             removeActiveThumbnail();
             removeSourceHeaderContent();
 
@@ -1004,9 +1241,9 @@ try {
             xrayIsOpen = false;
           }
         } else {
-          xrayDiv = document.createElement('div');
-          xrayDiv.className = 'xray_document';
-          xrayDiv.id = 'xray';
+          xrayDiv = document.createElement("div");
+          xrayDiv.className = "xray_document";
+          xrayDiv.id = "xray";
 
           var centerDiv = emptyXraySideBar();
           xrayDiv.appendChild(centerDiv);
@@ -1017,18 +1254,25 @@ try {
   });
 
   function emptyXraySideBar() {
-    var centerDiv = document.createElement('div');
-    centerDiv.id = 'empty-source-sidebar';
+    var centerDiv = document.createElement("div");
+    centerDiv.id = "empty-source-sidebar";
     Object.assign(centerDiv.style, {
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
     });
 
-    var sourcesText = document.createElement('p');
-    sourcesText.textContent = 'Sources';
+    var sourcesText = document.createElement("p");
+    sourcesText.innerHTML = `
+    After you've sent a chat message, a list of relevant pages will appear under the chat response.
+    <br /><br />
+    You can click those pages to explore how GroundX parsed and represented your documents via X-Ray.
+    `;
     sourcesText.style.margin = 0;
+    sourcesText.style.padding = "40px";
+    sourcesText.style.textAlign = "left";
+    sourcesText.style.color = "#2c3359";
 
     centerDiv.appendChild(sourcesText);
 
@@ -1037,93 +1281,89 @@ try {
 
   function getPageNumberFromPageImagesUrl(pageImagesUrl) {
     if (pageImagesUrl) {
-      var parts = pageImagesUrl.split('/');
+      var parts = pageImagesUrl.split("/");
       var lastPart = parts[parts.length - 1];
-      var pageNumberStr = lastPart.split('.')[0];
+      var pageNumberStr = lastPart.split(".")[0];
       return parseInt(pageNumberStr);
     } else {
       return null;
     }
   }
 
-  function loadFilesPreviewInIframe(fileUrl) {
-    var container = document.createElement('div');
-    container.style.position = 'relative';
+  function loadNonXraysFiles(fileData) {
+    var container = document.createElement("div");
+    container.className = "non-xray-container";
 
-    // Create the loading message
-    var loadingText = document.createElement('div');
-    loadingText.textContent = 'Loading...';
-    loadingText.style.position = 'absolute';
-    loadingText.style.top = '25px';
-    loadingText.style.left = '50%';
-    loadingText.style.transform = 'translate(-50%, -50%)';
-    loadingText.style.fontSize = '16px';
-    loadingText.style.color = '#555';
-    container.appendChild(loadingText);
+    var suggestedTextAccordion = createAccordion(
+      "Suggested Text",
+      makeResponseReadable(fileData[0].suggestedText),
+      false,
+      true,
+    );
 
-    var iframe = document.createElement('iframe');
-    iframe.width = '100%';
-    iframe.height = '650px';
-    iframe.style.border = '0';
-    iframe.style.marginTop = '12px';
+    var extractedTextAccordion = createAccordion("Extracted Text", processString(fileData[0].text));
 
-    var decodedUrl = decodeURIComponent(fileUrl);
-    decodedUrl = decodedUrl.replace(/\+/g, encodeURIComponent('+'));
-    var encodedUrl = encodeURI(decodedUrl);
-    iframe.src = 'https://docs.google.com/gview?embedded=true&url=' + encodedUrl;
+    var fileKeywordsAccordion = createAccordion(
+      "File Keywords",
+      makeResponseReadable(fileData[0].fileKeywords),
+    );
 
-    iframe.onload = function () {
-      // Remove the loading message when the iframe has loaded
-      container.removeChild(loadingText);
-    };
+    container.appendChild(suggestedTextAccordion);
+    container.appendChild(extractedTextAccordion);
+    container.appendChild(fileKeywordsAccordion);
 
-    iframe.onerror = function (e) {
-      console.error(e);
-      console.error('Failed to load the file in the iframe.');
-      // Optionally display an error message to the user
-      loadingText.textContent = 'Failed to load the document.';
-    };
-
-    container.appendChild(iframe);
     return container;
   }
- 
+
   function openSourceLinkInThumbnailsSideBar(searchResultsItem) {
-    var isNonXrayDocument = !searchResultsItem.pageImagesUrl;
-    var eyChatDiv = document.getElementById('eyChat');
+    var eyChatDiv = document.getElementById("eyChat");
+
     if (eyChatDiv) {
-      var xrayDiv = document.getElementById('xray');
+      var xrayDiv = document.getElementById("xray");
 
       if (!xrayDiv) {
-        xrayDiv = document.createElement('div');
-        xrayDiv.className = 'xray_document';
-        xrayDiv.id = 'xray';
+        xrayDiv = document.createElement("div");
+        xrayDiv.className = "xray_document";
+        xrayDiv.id = "xray";
 
         eyChatDiv.appendChild(xrayDiv);
       } else {
-        xrayDiv.innerHTML = '';
+        xrayDiv.innerHTML = "";
       }
 
-      var xrayContentDiv = document.createElement('div');
-      xrayContentDiv.className = 'xray_document_content';
-      xrayContentDiv.id = 'xray-content';
-      xrayContentDiv.style.padding = '20px';
-      xrayContentDiv.style.marginBottom = '50px';
+      var xrayContentDiv = document.createElement("div");
+      xrayContentDiv.className = "xray_document_content";
+      xrayContentDiv.id = "xray-content";
+
+      // Remove padding and margin to prevent overflow
+      xrayContentDiv.style.padding = "20px";
+      xrayContentDiv.style.margin = "0";
+
+      // Set up flex layout to fill available space
+      xrayContentDiv.style.display = "flex";
+      xrayContentDiv.style.flexDirection = "column";
+      xrayContentDiv.style.flex = "1";
+      xrayContentDiv.style.overflow = "hidden";
+
+      // Ensure parent xrayDiv fills the available space
+      xrayDiv.style.display = "flex";
+      xrayDiv.style.flexDirection = "column";
+      xrayDiv.style.height = "100vh"; // Set height to viewport height
+      xrayDiv.style.overflow = "hidden";
+      xrayDiv.style.marginBottom = "20px";
 
       var firstItem = searchResultsItem.items[0];
       var pageNumber = getPageNumberFromPageImagesUrl(searchResultsItem.pageImagesUrl);
       var xrayContentHeaderDiv = createXrayContentHeader(
         firstItem.url,
-        firstItem.documentId,
         firstItem.fileName,
         pageNumber,
-        isNonXrayDocument,
       );
 
       xrayContentDiv.appendChild(xrayContentHeaderDiv);
 
       var allBoundingBoxes = [];
-      var colors = ['#63EF0F', '#613AD1', '#EAEE30', '#FF8A40'];
+      var colors = ["#63EF0F", "#613AD1", "#EAEE30", "#FF8A40"];
 
       searchResultsItem.items.forEach(function (item, index) {
         var color = colors[index % colors.length];
@@ -1147,38 +1387,38 @@ try {
       if (imgData.pageImagesUrl) {
         imgContainer = createXrayImageWithBoxes(imgData);
       } else {
-        var url = imgData.items[0].url;
-        imgContainer = loadFilesPreviewInIframe(url);
+        imgContainer = loadNonXraysFiles(imgData.items);
       }
 
       xrayContentDiv.appendChild(imgContainer);
       xrayDiv.appendChild(xrayContentDiv);
 
-      var resultWrapperDiv = document.getElementById('resultWrapper');
-      var eyInputContainerDiv = document.getElementById('ey_input_container');
+      var resultWrapperDiv = document.getElementById("resultWrapper");
+      var eyInputContainerDiv = document.getElementById("ey_input_container");
 
       var eyChatWidth = eyChatDiv.offsetWidth;
 
       if (eyChatWidth < 900) {
         if (resultWrapperDiv) {
-          resultWrapperDiv.style.width = '100%';
+          resultWrapperDiv.style.width = "100%";
         }
 
         if (eyInputContainerDiv) {
-          eyInputContainerDiv.style.width = '100%';
+          eyInputContainerDiv.style.width = "100%";
         }
 
-        xrayDiv.className = 'xray_document_modal';
-        xrayDiv.style.display = 'block';
-        xrayDiv.style.position = 'fixed';
-        xrayDiv.style.top = '0';
-        xrayDiv.style.left = '0';
-        xrayDiv.style.width = '100%';
-        xrayDiv.style.height = '100%';
-        xrayDiv.style.zIndex = '10';
-        xrayDiv.style.backgroundColor = '#fff';
+        xrayDiv.className = "xray_document_modal";
+        xrayDiv.style.display = "flex";
+        xrayDiv.style.flexDirection = "column";
+        xrayDiv.style.position = "fixed";
+        xrayDiv.style.top = "0";
+        xrayDiv.style.left = "0";
+        xrayDiv.style.width = "100%";
+        xrayDiv.style.height = "100vh";
+        xrayDiv.style.zIndex = "10";
+        xrayDiv.style.backgroundColor = "#fff";
 
-        var closeButton = document.getElementById('xray-close-icon');
+        var closeButton = document.getElementById("xray-close-icon");
         if (closeButton) {
           closeButton.onclick = function () {
             xrayDiv.remove();
@@ -1192,104 +1432,342 @@ try {
       } else {
         // Large screen adjustments
         if (resultWrapperDiv) {
-          resultWrapperDiv.style.width = '50%';
+          resultWrapperDiv.style.width = "50%";
         }
 
         if (eyInputContainerDiv) {
-          eyInputContainerDiv.style.width = '50%';
+          eyInputContainerDiv.style.width = "50%";
         }
 
-        xrayDiv.className = 'xray_document';
+        xrayDiv.className = "xray_document";
         xrayIsOpen = false;
       }
     }
   }
+
+  function createXrayImageWithBoxes(imgData) {
+    var isNonXrayDocument = !imgData.pageImagesUrl;
+    var documentData = imgData.items[0];
+
+    var container = document.createElement("div");
+    container.className = "xray-container";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.flex = "1";
+    container.style.overflow = "hidden";
+    container.style.paddingBottom = "40px";
+
+    var zoomControlsDiv = document.createElement("div");
+    zoomControlsDiv.style.display = "flex";
+    zoomControlsDiv.style.flexDirection = "row";
+    zoomControlsDiv.style.alignItems = "center";
+    zoomControlsDiv.style.alignContent = "center";
+    zoomControlsDiv.style.width = "100%";
+
+    if (window.eysources.includes("--devs")) {
+      zoomControlsDiv.style.marginBottom = "6px";
+
+      var fullXrayLink = xrayLinkButton(documentData.documentId, isNonXrayDocument);
+      zoomControlsDiv.appendChild(fullXrayLink);
+    }
+
+    var zoomControls = document.createElement("div");
+    zoomControls.className = "zoom-controls";
+    zoomControls.style.display = "flex";
+    zoomControls.style.justifyContent = "flex-start";
+    zoomControls.style.marginBottom = "5px";
+    zoomControls.style.marginTop = "5px";
+    zoomControls.appendChild(zoomOutBtn);
+    zoomControls.appendChild(resetZoomBtn);
+    zoomControls.appendChild(zoomInBtn);
+
+    zoomControlsDiv.appendChild(zoomControls);
+
+    // Image container
+    var imageContainer = document.createElement("div");
+    imageContainer.className = "image-container";
+    imageContainer.style.position = "relative";
+    imageContainer.style.overflow = "hidden";
+
+    var loadingText = document.createElement("div");
+    loadingText.className = "loading-text";
+    loadingText.textContent = "Loading...";
+    imageContainer.appendChild(loadingText);
+
+    var imgWrapper = document.createElement("div");
+    imgWrapper.className = "img-wrapper";
+    imgWrapper.style.position = "relative";
+    imgWrapper.style.cursor = "grab";
+    imgWrapper.style.width = "100%";
+    imgWrapper.style.height = "auto";
+    imgWrapper.style.touchAction = "none";
+
+    var img = document.createElement("img");
+    img.src = imgData.pageImagesUrl;
+    img.crossOrigin = "Anonymous";
+    img.style.display = "block";
+    img.style.userSelect = "none";
+    img.style.width = "100%";
+    img.style.height = "auto";
+    img.style.objectFit = "contain";
+
+    imgWrapper.appendChild(img);
+    imageContainer.appendChild(imgWrapper);
+
+    container.appendChild(zoomControlsDiv);
+    container.appendChild(imageContainer);
+
+    // Variables for zoom and drag
+    var scale = 1;
+    var isDragging = false;
+    var startX,
+      startY,
+      currentX = 0,
+      currentY = 0;
+    var dragStartX, dragStartY;
+    var hasDragged = false;
+    var aspectRatio;
+
+    function updateScale() {
+      imgWrapper.style.transform = "scale(" + scale + ")";
+      imgWrapper.style.transformOrigin = "center center";
+      updateZoomButtons();
+    }
+
+    function resetPosition() {
+      currentX = 0;
+      currentY = 0;
+      imgWrapper.style.left = currentX + "px";
+      imgWrapper.style.top = currentY + "px";
+    }
+
+    function updateCursor() {
+      imgWrapper.style.cursor = scale > 1 ? "grab" : "default";
+    }
+
+    function updateZoomButtons() {
+      zoomOutBtn.disabled = scale <= 1;
+      resetZoomBtn.disabled = scale <= 1;
+    }
+
+    zoomInBtn.addEventListener("click", function () {
+      scale += 0.1;
+      updateScale();
+      updateCursor();
+    });
+
+    zoomOutBtn.addEventListener("click", function () {
+      scale = Math.max(0.5, scale - 0.1);
+      updateScale();
+      resetPosition();
+      updateCursor();
+    });
+
+    resetZoomBtn.addEventListener("click", function () {
+      scale = 1;
+      updateScale();
+      resetPosition();
+      updateCursor();
+    });
+
+    updateZoomButtons();
+
+    imgWrapper.addEventListener("mousedown", function (e) {
+      if (scale <= 1) return;
+      isDragging = true;
+      hasDragged = false;
+      startX = e.clientX - currentX;
+      startY = e.clientY - currentY;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      imgWrapper.style.cursor = "grabbing";
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", function (e) {
+      if (!isDragging) return;
+      var dx = e.clientX - dragStartX;
+      var dy = e.clientY - dragStartY;
+      // Set a threshold to detect significant movement
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        hasDragged = true;
+      }
+      currentX = e.clientX - startX;
+      currentY = e.clientY - startY;
+      imgWrapper.style.left = currentX + "px";
+      imgWrapper.style.top = currentY + "px";
+    });
+
+    document.addEventListener("mouseup", function () {
+      if (!isDragging) return;
+      isDragging = false;
+      imgWrapper.style.cursor = "grab";
+    });
+
+    imgWrapper.addEventListener("touchstart", function (e) {
+      if (scale <= 1) return;
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      var touch = e.touches[0];
+      isDragging = true;
+      hasDragged = false;
+      startX = touch.clientX - currentX;
+      startY = touch.clientY - currentY;
+      dragStartX = touch.clientX;
+      dragStartY = touch.clientY;
+      imgWrapper.style.cursor = "grabbing";
+    });
+
+    imgWrapper.addEventListener("touchmove", function (e) {
+      if (!isDragging) return;
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      var touch = e.touches[0];
+      var dx = touch.clientX - dragStartX;
+      var dy = touch.clientY - dragStartY;
+      // Set a threshold to detect significant movement
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        hasDragged = true;
+      }
+      currentX = touch.clientX - startX;
+      currentY = touch.clientY - startY;
+      imgWrapper.style.left = currentX + "px";
+      imgWrapper.style.top = currentY + "px";
+    });
+
+    imgWrapper.addEventListener("touchend", function () {
+      if (!isDragging) return;
+      isDragging = false;
+      imgWrapper.style.cursor = "grab";
+    });
+
+    img.onload = function () {
+      imageContainer.removeChild(loadingText);
+      imageContainer.style.border = "1px solid #ccc";
+
+      var imgWidth = img.naturalWidth;
+      var imgHeight = img.naturalHeight;
+      var padding = 5;
+
+      aspectRatio = imgWidth / imgHeight;
+
+      handleResize();
+
+      if (imgWidth < imgHeight) {
+        imageContainer.style.maxWidth = "500px";
+        imageContainer.style.margin = "0 auto";
+      }
+
+      imgData.boundingBoxes.forEach(function (box) {
+        var topLeftX = Math.max(0, box.topLeftX - padding);
+        var topLeftY = Math.max(0, box.topLeftY - padding);
+        var bottomRightX = Math.min(imgWidth, box.bottomRightX + padding);
+        var bottomRightY = Math.min(imgHeight, box.bottomRightY + padding);
+
+        var xPercent = (topLeftX / imgWidth) * 100;
+        var yPercent = (topLeftY / imgHeight) * 100;
+        var widthPercent = ((bottomRightX - topLeftX) / imgWidth) * 100;
+        var heightPercent = ((bottomRightY - topLeftY) / imgHeight) * 100;
+
+        var div = document.createElement("div");
+        div.className = "bounding-box";
+        div.style.position = "absolute";
+        div.style.left = xPercent + "%";
+        div.style.top = yPercent + "%";
+        div.style.width = widthPercent + "%";
+        div.style.height = heightPercent + "%";
+        div.style.backgroundColor = hexToRgba(box.color, 0.3);
+        div.style.border = box.color;
+
+        var item = imgData.items[box.itemIndex];
+
+        div.addEventListener("click", function (e) {
+          if (!hasDragged) {
+            openXrayModal(item);
+          }
+        });
+
+        div.addEventListener("touchend", function (e) {
+          if (!hasDragged) {
+            openXrayModal(item);
+          }
+          e.preventDefault();
+        });
+
+        imgWrapper.appendChild(div);
+      });
+    };
+
+    function handleResize() {
+      if (typeof aspectRatio !== "undefined") {
+        var windowWidth = window.innerWidth;
+        var windowHeight = window.innerHeight;
+
+        var verticalPadding = 150;
+        var divisionFactor = windowWidth < 900 ? 1 : 2;
+        var horizontalPadding = windowWidth < 900 ? 50 : 100;
+        var availableHeight = windowHeight - verticalPadding;
+        var newWidth = availableHeight * aspectRatio;
+        var maxWidth = (windowWidth - horizontalPadding) / divisionFactor;
+        newWidth = Math.min(newWidth, maxWidth);
+
+        imageContainer.style.width = newWidth + "px";
+      }
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    return container;
+  }
  
   function initEmptyXraySourceBar() {
-    var eyChatDiv = document.getElementById('eyChat');
-    var resultWrapperDiv = document.getElementById('resultWrapper');
-    var result = document.getElementById('result');
-    var eyInputContainerDiv = document.getElementById('ey_input_container');
-    var query = document.getElementById('query');
-    var eySend = document.getElementById('ey-send');
+    var eyChatDiv = document.getElementById("eyChat");
+    var resultWrapperDiv = document.getElementById("resultWrapper");
+    var result = document.getElementById("result");
+    var eyInputContainerDiv = document.getElementById("ey_input_container");
 
     if (eyChatDiv) {
       var eyChatWidth = eyChatDiv.offsetWidth;
 
       if (eyChatWidth < 900) {
-        eyChatDiv.style.width = '100%';
+        eyChatDiv.style.width = "100%";
 
         if (resultWrapperDiv) {
-          resultWrapperDiv.style.width = '100%';
-          resultWrapperDiv.style.background = '#F1F9FB';
+          resultWrapperDiv.style.width = "100%";
         }
 
         if (eyInputContainerDiv) {
-          eyInputContainerDiv.style.width = '100%';
-          eyInputContainerDiv.style.backgroundColor = '#F1F9FB';
-          eyInputContainerDiv.style.paddingTop = '5px';
-          eyInputContainerDiv.style.paddingBottom = '5px';
+          eyInputContainerDiv.style.width = "100%";
         }
 
         if (result) {
-          result.style.border = 'none';
-        }
-
-        if (query) {
-          query.style.borderRadius = '25px';
-          query.style.textIndent = '16px';
-          query.style.marginRight = '35px';
-          query.style.marginLeft = '20px';
-          query.style.border = '1px solid #ddd';
-        }
-
-        if (eySend) {
-          eySend.style.background = '#F1F9FB';
-          eySend.style.marginBottom = '15px';
-          eySend.style.marginRight = '35px';
+          result.style.border = "none";
         }
       } else {
-        var xrayDiv = document.getElementById('xray');
+        var xrayDiv = document.getElementById("xray");
 
         if (!xrayDiv) {
-          xrayDiv = document.createElement('div');
-          xrayDiv.className = 'xray_document';
-          xrayDiv.id = 'xray';
+          xrayDiv = document.createElement("div");
+          xrayDiv.className = "xray_document";
+          xrayDiv.id = "xray";
 
           var centerDiv = emptyXraySideBar();
           xrayDiv.appendChild(centerDiv);
           eyChatDiv.appendChild(xrayDiv);
         } else {
-          xrayDiv.innerHTML = '';
+          xrayDiv.innerHTML = "";
         }
 
         if (result) {
-          result.style.border = 'none';
-        }
-
-        if (query) {
-          query.style.borderRadius = '25px';
-          query.style.textIndent = '16px';
-          query.style.marginRight = '35px';
-          query.style.marginLeft = '20px';
-          query.style.border = '1px solid #ddd';
-        }
-
-        if (eySend) {
-          eySend.style.background = '#F1F9FB';
-          eySend.style.marginRight = '35px';
+          result.style.border = "none";
         }
 
         if (resultWrapperDiv) {
-          resultWrapperDiv.style.width = '50%';
-          resultWrapperDiv.style.background = '#F1F9FB';
+          resultWrapperDiv.style.width = "50%";
         }
 
         if (eyInputContainerDiv) {
-          eyInputContainerDiv.style.width = '50%';
-          eyInputContainerDiv.style.background = '#F1F9FB';
-          eyInputContainerDiv.style.paddingTop = '5px';
-          eyInputContainerDiv.style.paddingBottom = '5px';
+          eyInputContainerDiv.style.width = "50%";
         }
       }
 
@@ -1298,7 +1776,7 @@ try {
   }
  
   function removeFileUploader() {
-    var fileUploadContainer = document.getElementById('fileUploadContainer');
+    var fileUploadContainer = document.getElementById("fileUploadContainer");
     if (fileUploadContainer) {
       fileUploadContainer.remove();
     }
@@ -1310,16 +1788,16 @@ try {
         `div.server-response[id^="static-${previousMessageContainerId}"]`,
       );
       if (previousDiv) {
-        const sourceHeader = previousDiv.querySelector('h4.source-header');
+        const sourceHeader = previousDiv.querySelector("h4.source-header");
         if (sourceHeader) {
-          sourceHeader.innerHTML = 'Sources';
+          sourceHeader.innerHTML = "Sources";
         }
       }
     }
   }
   
   function toggleThumbnailsActive(component, selectedSource, messageContainerId) {
-    if (window.eysources !== 'thumbnails') return;
+    if (!window.eysources.includes("xray-thumbnails")) return;
 
     if (previousMessageContainerId !== messageContainerId) {
       removeSourceHeaderContent();
@@ -1332,56 +1810,62 @@ try {
     var file = selectedSource.items[0];
 
     if (serverResponseDiv) {
-      const sourceHeader = serverResponseDiv.querySelector('h4.source-header');
+      const sourceHeader = serverResponseDiv.querySelector("h4.source-header");
       if (sourceHeader) {
         var fileName;
-        if (file.fileName.length > 25) {
-          fileName = file.fileName.substring(0, 25) + '...';
+        if (file.fileName.length > 45) {
+          fileName = file.fileName.substring(0, 45) + "...";
         } else {
           fileName = file.fileName;
         }
-        var s = document.createElement('span');
-        s.style.color = '#e26f4b';
+        var s = document.createElement("span");
+        s.style.color = "#fff";
+        s.style.backgroundColor = "#2c3359";
+        s.style.padding = "2px 8px";
+        s.style.borderRadius = "5px";
+        s.style.fontWeight = "400";
         s.innerText = fileName;
 
-        sourceHeader.innerHTML = 'Sources: ';
+        sourceHeader.innerHTML = "Sources: ";
         sourceHeader.appendChild(s);
         previousMessageContainerId = messageContainerId;
       }
     }
 
-    var thumbnails = document.querySelectorAll('.thumbnail-item.active');
-    var nonPdfThumbnails = document.querySelectorAll('.thumbnail-non-pdf-item.active');
+    var thumbnails = document.querySelectorAll(
+      ".thumbnail-item.active, .thumbnail-non-pdf-item.active",
+    );
     thumbnails.forEach(thumb => {
-      thumb.classList.remove('active');
+      thumb.classList.remove("active");
     });
-    nonPdfThumbnails.forEach(thumb => {
-      thumb.classList.remove('active');
-    });
-    component.classList.add('active');
+
+    var thumbnailItem = component.querySelector(".thumbnail-item, .thumbnail-non-pdf-item");
+    if (thumbnailItem) {
+      thumbnailItem.classList.add("active");
+    }
   }
 
   function handleClickSourceUrl(searchResultsItem, text, index, messageContainerId) {
-    if (window.eysources === 'modal') {
+    if (window.eysources === "modal") {
       return openSourceLinkInModal(searchResultsItem.url, text, index);
     }
 
-    if (window.eysources === 'sidebar') {
+    if (window.eysources === "sidebar") {
       return openSourceLinkInSideBar(searchResultsItem.url, text, index, messageContainerId);
     }
 
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   }
 
   function removeDuplicateUrls(arr) {
     var seenUrls = {};
-    return arr.filter(function(item) {
-        if (seenUrls[item.url]) {
-            return false;
-        } else {
-            seenUrls[item.url] = true;
-            return true;
-        }
+    return arr.filter(function (item) {
+      if (seenUrls[item.url]) {
+        return false;
+      } else {
+        seenUrls[item.url] = true;
+        return true;
+      }
     });
   }
 
@@ -1406,31 +1890,44 @@ try {
     return groupedArray;
   }
 
+  function getFileType(fileName) {
+    if (!fileName || typeof fileName !== "string") {
+      throw new Error("Invalid file name");
+    }
+
+    const parts = fileName.split(".");
+    if (parts.length < 2) {
+      throw new Error("File name does not contain a valid extension");
+    }
+
+    return parts.pop().toLowerCase();
+  }
+
   function createClickableSourceURLs(searchRes, messageContainerId) {
     var searchResults;
-    if (window.eysources === "thumbnails") {
+    if (window.eysources.includes("xray-thumbnails")) {
       searchResults = prepareDataForBoxDrawing(searchRes);
     } else {
-      searchResults = removeDuplicateUrls(searchRes); 
+      searchResults = removeDuplicateUrls(searchRes);
     }
-    
-    var container = createDivElement({ id: 'source-links', className: 'source-links' });
+
+    var container = createDivElement({ id: "source-links", className: "source-links" });
     var header = createHeaderElement({
-      id: 'sourceHeader',
-      h: 'h4',
-      innerText: 'Sources',
-      className: 'source-header',
+      id: "sourceHeader",
+      h: "h4",
+      innerText: "Sources",
+      className: "source-header",
     });
     container.appendChild(header);
 
     var sourceLinksContainer = createDivElement({
-      id: 'source-links-container',
-      className: 'source-links-container',
+      id: "source-links-container",
+      className: "source-links-container",
     });
 
-    if (window.eysources === 'thumbnails') {
+    if (window.eysources.includes("xray-thumbnails")) {
       searchResults.forEach(function (item) {
-        var component = thumbnailsItemComponent(item.pageImagesUrl);
+        var component = thumbnailsItemComponent(item.pageImagesUrl, item.items[0].fileName);
 
         component.onclick = function () {
           openSourceLinkInThumbnailsSideBar(item);
@@ -1451,7 +1948,7 @@ try {
 
     container.appendChild(sourceLinksContainer);
     return container;
-  };
+  }
 
 function randomString(length) {
   var text = "";
@@ -1855,6 +2352,7 @@ function updateAIMessages(intr) {
           msg.isDone = intr.isDone;
           msg.typing = intr.typing;
           msg.payload = JSON.stringify(mdata);
+          msg.metadata = intr.metadata;
           aiMessages[turnUUID][i] = msg;
           intr = msg;
           isSet = true;
@@ -2566,7 +3064,7 @@ window.menu = null;
                   window.eySocket.onmessage = t.handleWSMessage;
                   window.eySocket.onclose = t.handleWSClose;
 
-                  if (window.eysources === 'thumbnails') {
+                  if (window.eysources.includes("xray-thumbnails")) {
                     initEmptyXraySourceBar();
                   }
                 }, this.handleWSClose = function(n) {
@@ -2933,7 +3431,6 @@ window.menu = null;
                     processPart();
                   });
                   }, this.handleWSMessage = function (n) {
-                  removeBoxShadowForXrayTheme();
                   window.isChatting = false;
                   if (n && n.data) {
                     try {
@@ -3344,14 +3841,16 @@ window.menu = null;
                     });
   
                     for (var i = 0; i < aiMetadataSearchResults.length; i++) {
-                      var searchResultsTempText = '';
-                      var fileName = '';
-                      var pageImagesUrl = '';
+                      var searchResultsTempText = "";
+                      var fileName = "";
+                      var pageImagesUrl = "";
                       var boundingBoxes = [];
-                      var suggestedText = '';
-                      var documentId = '';
-                      var fileKeywords = '';
+                      var suggestedText = "";
+                      var documentId = "";
+                      var fileKeywords = "";
                       var pageNumberFromUrl = null;
+                      var json = null;
+                      var narrative = null;
   
                       if (aiMetadataSearchResults[i].documentId) {
                         documentId = aiMetadataSearchResults[i].documentId;
@@ -3377,9 +3876,9 @@ window.menu = null;
                         pageImagesUrl = aiMetadataSearchResults[i].pageImages[0];
   
                         if (pageImagesUrl) {
-                          var parts = pageImagesUrl.split('/');
+                          var parts = pageImagesUrl.split("/");
                           var lastPart = parts[parts.length - 1];
-                          var pageNumberStr = lastPart.split('.')[0];
+                          var pageNumberStr = lastPart.split(".")[0];
                           pageNumberFromUrl = parseInt(pageNumberStr);
                         }
                       }
@@ -3390,6 +3889,14 @@ window.menu = null;
                         ) {
                           return box.pageNumber === pageNumberFromUrl;
                         });
+                      }
+  
+                      if (aiMetadataSearchResults[i].json) {
+                        json = aiMetadataSearchResults[i].json;
+                      }
+  
+                      if (aiMetadataSearchResults[i].narrative) {
+                        narrative = aiMetadataSearchResults[i].narrative;
                       }
   
                       if (aiMetadataSearchResults[i].sourceUrl) {
@@ -3403,6 +3910,8 @@ window.menu = null;
                             suggestedText: suggestedText,
                             fileKeywords: fileKeywords,
                             documentId: documentId,
+                            json: json,
+                            narrative: narrative,
                           });
                         }
                       }
@@ -3423,12 +3932,6 @@ window.menu = null;
                   }
 
                   return;
-                }, this.openModal = function (text, link, num) {
-                  // 
-
-                }, this.createModal = function () {
-                  // 
-  
                 }, this.setText = function(ee, nn, isStreaming, sess) {
                     var sc = nn.getElementsByClassName('server-response');
                     if (!sc || !sc.length || sc.length !== 1) {
@@ -5558,3 +6061,208 @@ window.menu = null;
     gtag('event', window.location.hostname, { event_category: 'chat_agent_error', event_label: (e && e.stack) ? e.stack : e, uid: userId, username: window.username, flowname: window.flowname, origin: window.origin, shouldOpen: window.shouldOpen });
   }
 }
+
+
+var XLSX_SVG = `<svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.12336 53.6606H3.44336V0.340576H6.12336V53.6606Z" fill="#D1D8DE" />
+      <path d="M35.2023 53.6606H5.40234V0.340576H43.1223V45.7606L35.2023 53.6606Z" fill="#EFF2F4" />
+      <path d="M0.882812 21.6205V6.04053L3.44281 8.56053V24.1605L0.882812 21.6205Z" fill="#00692D" />
+      <path d="M35.2031 45.7605H43.1231L35.2031 53.6605V45.7605Z" fill="#D1D8DE" />
+      <path d="M0.882812 21.6205V6.04053H32.3428V21.6205H0.882812Z" fill="#007934" />
+      <path
+        d="M4.42383 17.3206L6.62383 13.7606L4.42383 10.3406H6.08383L7.50383 12.7806L8.92383 10.3406H10.6038L8.40383 13.7606L10.6038 17.3406H8.94383L7.52383 14.9206L6.10383 17.3406H4.44383L4.42383 17.3206ZM11.2838 17.3206V10.3206H12.7238V16.0206H16.1438V17.3206H11.2838ZM16.6038 15.1606H18.0238C18.0838 15.5406 18.2438 15.8206 18.4838 16.0206C18.7438 16.2006 19.1238 16.3006 19.6038 16.3006C20.0238 16.3006 20.3438 16.2206 20.5438 16.0806C20.7638 15.9406 20.8638 15.7206 20.8638 15.4206C20.8638 15.0006 20.2638 14.6406 19.0438 14.3606H19.0038C18.9638 14.3606 18.9238 14.3406 18.8638 14.3206C18.2038 14.1806 17.7438 14.0206 17.4638 13.8406C17.2238 13.6806 17.0238 13.4606 16.9038 13.2006C16.7838 12.9406 16.7038 12.6206 16.7038 12.2606C16.7038 11.5806 16.9438 11.0606 17.4038 10.7006C17.8638 10.3406 18.5238 10.1606 19.4038 10.1606C20.2238 10.1606 20.8638 10.3606 21.3238 10.7406C21.7838 11.1206 22.0238 11.6806 22.0438 12.3806H20.6638C20.6438 12.0406 20.5038 11.7806 20.2838 11.6006C20.0438 11.4206 19.7238 11.3406 19.2838 11.3406C18.9038 11.3406 18.6238 11.4206 18.4038 11.5606C18.2038 11.7006 18.1038 11.9206 18.1038 12.1806C18.1038 12.5606 18.5038 12.8206 19.3038 13.0206C19.5238 13.0806 19.6838 13.1006 19.8038 13.1406C20.3038 13.2606 20.6838 13.3806 20.8838 13.4406C21.1038 13.5206 21.2838 13.6006 21.4438 13.6806C21.7238 13.8406 21.9438 14.0406 22.0838 14.3006C22.2238 14.5606 22.3038 14.8806 22.3038 15.2406C22.3038 15.9606 22.0638 16.5406 21.5638 16.9406C21.0638 17.3406 20.3838 17.5406 19.4838 17.5406C18.6038 17.5406 17.9038 17.3406 17.4238 16.9206C16.9238 16.5206 16.6638 15.9406 16.6238 15.1806L16.6038 15.1606ZM22.6438 17.3206L24.8438 13.7606L22.6438 10.3406H24.3038L25.7238 12.7806L27.1438 10.3406H28.8238L26.6238 13.7606L28.8238 17.3406H27.1638L25.7438 14.9206L24.3238 17.3406H22.6638L22.6438 17.3206Z"
+        fill="white"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M28.2009 34.9404H25.2409L24.5809 35.7604L23.9209 34.9404H20.9609L23.1009 37.6004L20.9609 40.2604H28.1809L26.0409 37.6004L28.1809 34.9404H28.2009ZM22.2409 35.3204H21.8209L25.4809 39.9004H25.9009L22.2409 35.3204Z"
+        fill="#007934"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M17.7619 33.6203V41.6603L31.0019 43.8803V31.4003L17.7619 33.6203ZM16.4219 32.5003L32.3219 29.8403V45.4803L16.4219 42.8203V32.5203V32.5003Z"
+        fill="#007934"
+      />
+    </svg>`;
+
+var TXT_SVG = `<svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.12336 53.6603H3.44336V0.340332H6.12336V53.6603Z" fill="#D1D8DE" />
+      <path d="M35.2023 53.6603H5.40234V0.340332H43.1223V45.7603L35.2023 53.6603Z" fill="#EFF2F4" />
+      <path d="M0.882812 21.6203V6.04028L3.44281 8.56028V24.1603L0.882812 21.6203Z" fill="#004478" />
+      <path d="M35.2031 45.7603H43.1231L35.2031 53.6603V45.7603Z" fill="#CFD8DF" />
+      <path d="M0.882812 21.6203V6.04028H28.9828V21.6203H0.882812Z" fill="#01579B" />
+      <path
+        d="M8.34367 17.3203V11.5803H6.26367V10.3403H11.8437V11.5803H9.78367V17.3203H8.34367ZM11.9037 17.3203L14.1037 13.7603L11.9037 10.3403H13.5637L14.9837 12.7803L16.4037 10.3403H18.0837L15.8837 13.7603L18.0837 17.3403H16.4237L15.0037 14.9203L13.5837 17.3403H11.9237L11.9037 17.3203ZM20.2037 17.3203V11.5803H18.1237V10.3403H23.7037V11.5803H21.6437V17.3203H20.2037Z"
+        fill="white"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.4414 43.5803H23.1414V45.3803H16.4414V43.5803Z"
+        fill="#004478"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.4414 40.1404H30.9814V41.9404H16.4414V40.1404Z"
+        fill="#004478"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.4414 36.7202H32.3414V38.5002H16.4414V36.7202Z"
+        fill="#004478"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.4414 33.2803H27.5614V35.0603H16.4414V33.2803Z"
+        fill="#004478"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.4414 29.8403H32.3414V31.6203H16.4414V29.8403Z"
+        fill="#004478"
+      />
+    </svg>`;
+
+var PPTX_SVG = `<svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.12336 53.6603H3.44336V0.340332H6.12336V53.6603Z" fill="#D1D8DE" />
+      <path d="M35.2023 53.6603H5.40234V0.340332H43.1223V45.7603L35.2023 53.6603Z" fill="#EFF2F4" />
+      <path d="M0.882812 21.6203V6.04028L3.44281 8.56028V24.1603L0.882812 21.6203Z" fill="#F05609" />
+      <path d="M35.2031 45.7603H43.1231L35.2031 53.6603V45.7603Z" fill="#D1D8DE" />
+      <path d="M0.882812 21.6203V6.04028H28.9828V21.6203H0.882812Z" fill="#FF671B" />
+      <path
+        d="M7.06201 14.7192H5.43164V13.6909H7.06201C7.31396 13.6909 7.51904 13.6499 7.67725 13.5679C7.83545 13.4829 7.95117 13.3657 8.02441 13.2163C8.09766 13.0669 8.13428 12.8984 8.13428 12.7109C8.13428 12.5205 8.09766 12.3433 8.02441 12.1792C7.95117 12.0151 7.83545 11.8833 7.67725 11.7837C7.51904 11.6841 7.31396 11.6343 7.06201 11.6343H5.88867V17H4.57031V10.6016H7.06201C7.56299 10.6016 7.99219 10.6924 8.34961 10.874C8.70996 11.0527 8.98535 11.3003 9.17578 11.6167C9.36621 11.9331 9.46143 12.2949 9.46143 12.7021C9.46143 13.1152 9.36621 13.4727 9.17578 13.7744C8.98535 14.0762 8.70996 14.3091 8.34961 14.4731C7.99219 14.6372 7.56299 14.7192 7.06201 14.7192Z"
+        fill="white"
+      />
+      <path
+        d="M12.8628 14.7192H11.2324V13.6909H12.8628C13.1147 13.6909 13.3198 13.6499 13.478 13.5679C13.6362 13.4829 13.752 13.3657 13.8252 13.2163C13.8984 13.0669 13.9351 12.8984 13.9351 12.7109C13.9351 12.5205 13.8984 12.3433 13.8252 12.1792C13.752 12.0151 13.6362 11.8833 13.478 11.7837C13.3198 11.6841 13.1147 11.6343 12.8628 11.6343H11.6895V17H10.3711V10.6016H12.8628C13.3638 10.6016 13.793 10.6924 14.1504 10.874C14.5107 11.0527 14.7861 11.3003 14.9766 11.6167C15.167 11.9331 15.2622 12.2949 15.2622 12.7021C15.2622 13.1152 15.167 13.4727 14.9766 13.7744C14.7861 14.0762 14.5107 14.3091 14.1504 14.4731C13.793 14.6372 13.3638 14.7192 12.8628 14.7192Z"
+        fill="white"
+      />
+      <path
+        d="M19.0327 10.6016V17H17.7188V10.6016H19.0327ZM21.0015 10.6016V11.6343H15.7808V10.6016H21.0015Z"
+        fill="white"
+      />
+      <path
+        d="M22.8384 10.6016L24.0425 12.834L25.2466 10.6016H26.7539L24.895 13.7744L26.8022 17H25.2817L24.0425 14.7236L22.8032 17H21.2739L23.1855 13.7744L21.3223 10.6016H22.8384Z"
+        fill="white"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16.4414 29.8203H32.3414V45.3803H16.4414V29.8203Z"
+        fill="#FF671B"
+      />
+      <path fillRule="evenodd" clipRule="evenodd" d="M17.8223 31.1604H30.9623V44.0204H17.8223V31.1604Z" fill="white" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M19.7207 33.7603H29.0607V41.4203H19.7207V33.7603Z"
+        fill="#FF671B"
+      />
+      <path fillRule="evenodd" clipRule="evenodd" d="M20.4199 34.5603H28.3599V35.5603H20.4199V34.5603Z" fill="white" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M22.3999 36.4004C21.2999 36.4004 20.4199 37.2604 20.4199 38.3404C20.4199 39.4204 21.2999 40.2804 22.3999 40.2804C23.4999 40.2804 24.3799 39.4204 24.3799 38.3404H22.3999V36.4004Z"
+        fill="white"
+      />
+      <path fillRule="evenodd" clipRule="evenodd" d="M25.3203 36.5403H28.3603V37.1203H25.3203V36.5403Z" fill="white" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M25.3203 37.7603H28.3603V38.3403H25.3203V37.7603Z" fill="white" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M25.3203 39.0002H28.3603V39.5602H25.3203V39.0002Z" fill="white" />
+    </svg>`;
+
+var JSON_SVG = `<svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.12336 53.6603H3.44336V0.340332H6.12336V53.6603Z" fill="#D1D8DE" />
+      <path d="M34.8 53.6603H5V0.340332H42.72V45.7603L34.8 53.6603Z" fill="#EFF2F4" />
+      <path d="M0.882812 21.6205V6.04053L3.44281 8.56053V24.1605L0.882812 21.6205Z" fill="#6F587C" />
+      <path d="M35.2031 45.7603H43.1231L35.2031 53.6603V45.7603Z" fill="#CFD8DF" />
+      <path d="M1 22V6H36V22H1Z" fill="#9B73B0" />
+      <path
+        d="M30.09 10.124V17.0001H28.9821L25.7421 12.3164H25.6851V17.0001H24.4395V10.124H25.5541L28.7907 14.811H28.8511V10.124H30.09Z"
+        fill="white"
+      />
+      <path
+        d="M23.2621 13.5618C23.2621 14.3027 23.1233 14.9372 22.8457 15.4655C22.5704 15.9915 22.1944 16.3944 21.7176 16.6742C21.2431 16.9539 20.7048 17.0938 20.1027 17.0938C19.5006 17.0938 18.9612 16.9539 18.4844 16.6742C18.0099 16.3921 17.6339 15.9881 17.3563 15.4621C17.081 14.9339 16.9434 14.3004 16.9434 13.5618C16.9434 12.8209 17.081 12.1875 17.3563 11.6615C17.6339 11.1333 18.0099 10.7293 18.4844 10.4495C18.9612 10.1697 19.5006 10.0298 20.1027 10.0298C20.7048 10.0298 21.2431 10.1697 21.7176 10.4495C22.1944 10.7293 22.5704 11.1333 22.8457 11.6615C23.1233 12.1875 23.2621 12.8209 23.2621 13.5618ZM22.0097 13.5618C22.0097 13.0403 21.928 12.6005 21.7646 12.2423C21.6035 11.882 21.3797 11.61 21.0932 11.4265C20.8067 11.2407 20.4765 11.1478 20.1027 11.1478C19.7289 11.1478 19.3988 11.2407 19.1123 11.4265C18.8258 11.61 18.6008 11.882 18.4374 12.2423C18.2763 12.6005 18.1957 13.0403 18.1957 13.5618C18.1957 14.0833 18.2763 14.5243 18.4374 14.8846C18.6008 15.2428 18.8258 15.5147 19.1123 15.7005C19.3988 15.884 19.7289 15.9758 20.1027 15.9758C20.4765 15.9758 20.8067 15.884 21.0932 15.7005C21.3797 15.5147 21.6035 15.2428 21.7646 14.8846C21.928 14.5243 22.0097 14.0833 22.0097 13.5618Z"
+        fill="white"
+      />
+      <path
+        d="M14.7157 12.014C14.6844 11.7208 14.5524 11.4925 14.3196 11.3291C14.089 11.1657 13.7891 11.084 13.4198 11.084C13.1601 11.084 12.9374 11.1232 12.7516 11.2015C12.5659 11.2799 12.4237 11.3862 12.3253 11.5205C12.2268 11.6548 12.1764 11.8081 12.1742 11.9805C12.1742 12.1237 12.2066 12.2479 12.2715 12.3531C12.3387 12.4583 12.4293 12.5479 12.5435 12.6217C12.6576 12.6934 12.7841 12.7538 12.9229 12.803C13.0617 12.8523 13.2015 12.8937 13.3426 12.9273L13.9872 13.0884C14.2468 13.1488 14.4964 13.2305 14.7359 13.3335C14.9776 13.4365 15.1936 13.5663 15.3839 13.723C15.5764 13.8796 15.7286 14.0688 15.8405 14.2904C15.9524 14.512 16.0084 14.7716 16.0084 15.0693C16.0084 15.4722 15.9054 15.827 15.6995 16.1336C15.4936 16.438 15.1959 16.6764 14.8064 16.8487C14.4192 17.0189 13.9503 17.1039 13.3996 17.1039C12.8647 17.1039 12.4002 17.0211 12.0063 16.8555C11.6146 16.6898 11.3079 16.4481 11.0864 16.1303C10.867 15.8124 10.7484 15.4252 10.7305 14.9686H11.9559C11.9738 15.2081 12.0477 15.4073 12.1775 15.5662C12.3073 15.7251 12.4763 15.8437 12.6845 15.9221C12.8949 16.0004 13.1299 16.0396 13.3896 16.0396C13.6604 16.0396 13.8977 15.9993 14.1013 15.9187C14.3073 15.8359 14.4684 15.7218 14.5848 15.5763C14.7012 15.4285 14.7605 15.2562 14.7628 15.0592C14.7605 14.8802 14.7079 14.7324 14.605 14.616C14.502 14.4974 14.3576 14.3989 14.1718 14.3206C13.9883 14.24 13.7734 14.1684 13.5272 14.1057L12.7449 13.9043C12.1786 13.7588 11.731 13.5383 11.402 13.2429C11.0752 12.9452 10.9118 12.5501 10.9118 12.0577C10.9118 11.6525 11.0214 11.2978 11.2408 10.9934C11.4624 10.689 11.7634 10.4528 12.144 10.285C12.5245 10.1148 12.9553 10.0298 13.4366 10.0298C13.9245 10.0298 14.352 10.1148 14.7191 10.285C15.0884 10.4528 15.3783 10.6867 15.5887 10.9867C15.7991 11.2843 15.9076 11.6268 15.9144 12.014H14.7157Z"
+        fill="white"
+      />
+      <path
+        d="M8.39109 10.124H9.62663V14.9587C9.62439 15.4019 9.53038 15.7835 9.34461 16.1036C9.15883 16.4215 8.89919 16.6666 8.56568 16.8389C8.23441 17.009 7.84831 17.0941 7.40736 17.0941C7.00447 17.0941 6.64187 17.0224 6.31955 16.8792C5.99948 16.7337 5.74543 16.5188 5.55742 16.2346C5.3694 15.9503 5.27539 15.5966 5.27539 15.1736H6.51429C6.51652 15.3594 6.55681 15.5194 6.63515 15.6537C6.71573 15.788 6.82653 15.891 6.96754 15.9626C7.10855 16.0342 7.27083 16.07 7.45437 16.07C7.65358 16.07 7.82257 16.0286 7.96134 15.9458C8.10012 15.8608 8.20532 15.7354 8.27694 15.5698C8.3508 15.4042 8.38885 15.2005 8.39109 14.9587V10.124Z"
+        fill="white"
+      />
+      <path
+        d="M17.75 34.25V31.25C17.75 30.8368 18.086 30.5 18.5 30.5C18.9148 30.5 19.25 30.164 19.25 29.75C19.25 29.336 18.9148 29 18.5 29C17.2595 29 16.25 30.0095 16.25 31.25V34.25C16.25 35.0773 15.5773 35.75 14.75 35.75C14.3353 35.75 14 36.086 14 36.5C14 36.914 14.3353 37.25 14.75 37.25C15.5773 37.25 16.25 37.9227 16.25 38.75V41.75C16.25 42.9905 17.2595 44 18.5 44C18.9148 44 19.25 43.664 19.25 43.25C19.25 42.836 18.9148 42.5 18.5 42.5C18.086 42.5 17.75 42.1632 17.75 41.75V38.75C17.75 37.85 17.3435 37.0505 16.7135 36.5C17.3435 35.9495 17.75 35.15 17.75 34.25Z"
+        fill="#9777A8"
+      />
+      <path
+        d="M23.75 35C24.3713 35 24.875 34.4963 24.875 33.875C24.875 33.2537 24.3713 32.75 23.75 32.75C23.1287 32.75 22.625 33.2537 22.625 33.875C22.625 34.4963 23.1287 35 23.75 35Z"
+        fill="#9777A8"
+      />
+      <path
+        d="M32.75 35.75C31.9227 35.75 31.25 35.0773 31.25 34.25V31.25C31.25 30.0095 30.2405 29 29 29C28.5853 29 28.25 29.336 28.25 29.75C28.25 30.164 28.5853 30.5 29 30.5C29.414 30.5 29.75 30.8368 29.75 31.25V34.25C29.75 35.15 30.1565 35.9495 30.7865 36.5C30.1565 37.0505 29.75 37.85 29.75 38.75V41.75C29.75 42.1632 29.414 42.5 29 42.5C28.5853 42.5 28.25 42.836 28.25 43.25C28.25 43.664 28.5853 44 29 44C30.2405 44 31.25 42.9905 31.25 41.75V38.75C31.25 37.9227 31.9227 37.25 32.75 37.25C33.1648 37.25 33.5 36.914 33.5 36.5C33.5 36.086 33.1648 35.75 32.75 35.75Z"
+        fill="#9777A8"
+      />
+      <path
+        d="M23.75 38C23.3353 38 23 38.336 23 38.75V41C23 41.414 23.3353 41.75 23.75 41.75C24.1647 41.75 24.5 41.414 24.5 41V38.75C24.5 38.336 24.1647 38 23.75 38Z"
+        fill="#9777A8"
+      />
+    </svg>`;
+
+var DOCX_SVG = `<svg width="44" height="54" viewBox="0 0 44 54" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <path d="M6.12336 53.6603H3.44336V0.340332H6.12336V53.6603Z" fill="#D1D8DE" />
+      <path d="M35.2023 53.6603H5.40234V0.340332H43.1223V45.7603L35.2023 53.6603Z" fill="#EFF2F4" />
+      <path d="M0.882812 21.6203V6.04028L3.44281 8.56028V24.1603L0.882812 21.6203Z" fill="#1E4387" />
+      <path d="M35.2031 45.7603H43.1231L35.2031 53.6603V45.7603Z" fill="#D1D8DE" />
+      <path d="M0.882812 21.6203V6.04028H32.3028V21.6203H0.882812Z" fill="#2654A9" />
+      <path
+        d="M6.42203 15.9203H7.50203C8.12203 15.9203 8.58203 15.7603 8.86203 15.4203C9.14203 15.1003 9.28203 14.5603 9.28203 13.8203C9.28203 13.0803 9.14203 12.5403 8.88203 12.2003C8.62203 11.8603 8.20203 11.6803 7.64203 11.6803H6.38203V15.9203H6.42203ZM5.10203 17.1203V10.5203H7.68203C8.70203 10.5203 9.44203 10.8003 9.94203 11.3403C10.442 11.8803 10.682 12.7203 10.682 13.8203C10.682 14.4203 10.582 14.9603 10.402 15.4203C10.222 15.8803 9.94203 16.2403 9.60203 16.5203C9.34203 16.7203 9.04203 16.8803 8.70203 16.9803C8.36203 17.0803 7.90203 17.1203 7.30203 17.1203H5.08203H5.10203ZM12.162 13.8203C12.162 14.5403 12.322 15.1003 12.642 15.5203C12.962 15.9203 13.422 16.1203 14.002 16.1203C14.582 16.1203 15.042 15.9203 15.362 15.5203C15.682 15.1203 15.842 14.5603 15.842 13.8203C15.842 13.1003 15.682 12.5403 15.362 12.1403C15.042 11.7403 14.582 11.5403 14.002 11.5403C13.422 11.5403 12.982 11.7403 12.642 12.1403C12.322 12.5403 12.162 13.1003 12.162 13.8403V13.8203ZM10.782 13.8203C10.782 12.7603 11.082 11.9203 11.662 11.2803C12.242 10.6603 13.022 10.3403 14.002 10.3403C14.982 10.3403 15.762 10.6603 16.362 11.2803C16.942 11.9003 17.242 12.7603 17.242 13.8203C17.242 14.8803 16.942 15.7203 16.362 16.3603C15.782 16.9803 15.002 17.3003 14.002 17.3003C13.022 17.3003 12.242 16.9803 11.662 16.3603C11.082 15.7403 10.782 14.8803 10.782 13.8203ZM23.322 14.8403C23.262 15.5803 22.982 16.1803 22.462 16.6203C21.942 17.0603 21.242 17.2803 20.402 17.2803C19.422 17.2803 18.662 16.9803 18.122 16.3603C17.582 15.7603 17.302 14.9003 17.302 13.8003C17.302 12.6803 17.582 11.8203 18.122 11.2203C18.682 10.6203 19.462 10.3203 20.502 10.3203C21.342 10.3203 22.002 10.5203 22.502 10.9403C22.982 11.3403 23.262 11.9403 23.302 12.6803H21.962C21.902 12.3003 21.762 12.0203 21.502 11.8203C21.262 11.6203 20.922 11.5203 20.502 11.5203C19.902 11.5203 19.442 11.7203 19.142 12.1003C18.822 12.4803 18.682 13.0403 18.682 13.7803C18.682 14.5003 18.842 15.0403 19.142 15.4403C19.462 15.8403 19.882 16.0203 20.462 16.0203C20.882 16.0203 21.202 15.9203 21.482 15.7003C21.742 15.4803 21.922 15.1803 22.002 14.8003H23.322V14.8403ZM22.962 17.1003L25.042 13.7403L22.962 10.5203H24.522L25.862 12.8203L27.202 10.5203H28.782L26.702 13.7403L28.782 17.1203H27.222L25.882 14.8403L24.542 17.1203H22.982L22.962 17.1003Z"
+        fill="white"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M17.7619 33.6201V41.6601L31.0019 43.8801V31.4001L17.7619 33.6201ZM16.4219 32.5001L32.3219 29.8401V45.4801L16.4219 42.8201V32.5201V32.5001Z"
+        fill="#2654A9"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M22.0413 39.3803L22.1813 39.0003L22.5213 38.1403L23.7613 35.3003H25.0013V38.2203C25.0013 38.6003 24.9613 39.0003 24.9013 39.3803C24.9213 39.3203 25.0813 38.8803 25.4013 38.1003L26.5213 35.2803H27.9413L25.6013 40.6803H23.9013V38.4003C23.9013 38.0203 23.9213 37.6203 23.9413 37.2003C23.8613 37.5203 23.7213 37.9603 23.5013 38.4803L22.5613 40.6803H20.9613L20.7812 35.2803H22.1413L22.1013 37.9803C22.0813 38.6403 22.0613 39.1003 22.0013 39.3603L22.0413 39.3803Z"
+        fill="#2654A9"
+      />
+    </svg>`;
+
+var CSV_SVG = `<svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.12336 53.6603H3.44336L3.44336 0.340332L6.12336 0.340332L6.12336 53.6603Z" fill="#D1D8DE" />
+      <path d="M35.2023 53.6603H5.40234L5.40234 0.340332L43.1223 0.340332V45.7603L35.2023 53.6603Z" fill="#EFF2F4" />
+      <path d="M0.882813 21.6203L0.882812 6.04028L3.44281 8.56028L3.44281 24.1603L0.882813 21.6203Z" fill="#0287D4" />
+      <path d="M35.2031 45.7603H43.1231L35.2031 53.6603V45.7603Z" fill="#CFD8DF" />
+      <path d="M0.882813 21.6203L0.882812 6.04028L28.9828 6.04028V21.6203H0.882813Z" fill="#009AF3" />
+      <path
+        d="M11.7218 14.9204C11.6618 15.7204 11.3618 16.3404 10.8018 16.8204C10.2418 17.2804 9.5218 17.5204 8.6218 17.5204C7.5818 17.5204 6.7818 17.2004 6.2018 16.5604C5.6218 15.9204 5.3418 15.0004 5.3418 13.8404C5.3418 12.6604 5.6418 11.7404 6.2218 11.1004C6.8018 10.4604 7.6418 10.1604 8.7418 10.1604C9.6418 10.1604 10.3418 10.3804 10.8618 10.8204C11.3818 11.2604 11.6618 11.8804 11.7218 12.6604H10.3018C10.2418 12.2604 10.0818 11.9604 9.8218 11.7604C9.5618 11.5604 9.2018 11.4404 8.7618 11.4404C8.1218 11.4404 7.6418 11.6404 7.3218 12.0604C7.0018 12.4604 6.8218 13.0604 6.8218 13.8404C6.8218 14.6004 6.9818 15.1804 7.3218 15.6004C7.6418 16.0204 8.1218 16.2204 8.7218 16.2204C9.1618 16.2204 9.5218 16.1004 9.8018 15.8804C10.0818 15.6604 10.2618 15.3404 10.3418 14.9204H11.7418H11.7218ZM12.7218 15.1604H14.1418C14.2018 15.5404 14.3618 15.8204 14.6018 16.0204C14.8618 16.2004 15.2418 16.3004 15.7218 16.3004C16.1418 16.3004 16.4618 16.2204 16.6618 16.0804C16.8818 15.9404 16.9818 15.7204 16.9818 15.4204C16.9818 15.0004 16.3818 14.6404 15.1618 14.3604H15.1218C15.0818 14.3604 15.0418 14.3404 14.9818 14.3204C14.3218 14.1804 13.8618 14.0204 13.5818 13.8404C13.3418 13.6804 13.1418 13.4604 13.0218 13.2004C12.9018 12.9404 12.8218 12.6204 12.8218 12.2604C12.8218 11.5804 13.0618 11.0604 13.5218 10.7004C13.9818 10.3404 14.6418 10.1604 15.5218 10.1604C16.3418 10.1604 16.9818 10.3604 17.4418 10.7404C17.9018 11.1204 18.1418 11.6804 18.1618 12.3804H16.7818C16.7618 12.0404 16.6218 11.7804 16.4018 11.6004C16.1618 11.4204 15.8418 11.3404 15.4018 11.3404C15.0218 11.3404 14.7418 11.4204 14.5218 11.5604C14.3218 11.7004 14.2218 11.9204 14.2218 12.1804C14.2218 12.5604 14.6218 12.8204 15.4218 13.0204C15.6418 13.0804 15.8018 13.1004 15.9218 13.1404C16.4218 13.2604 16.8018 13.3804 17.0018 13.4404C17.2218 13.5204 17.4018 13.6004 17.5618 13.6804C17.8418 13.8404 18.0618 14.0404 18.2018 14.3004C18.3418 14.5604 18.4218 14.8804 18.4218 15.2404C18.4218 15.9604 18.1818 16.5404 17.6818 16.9404C17.1818 17.3404 16.5018 17.5404 15.6018 17.5404C14.7218 17.5404 14.0218 17.3404 13.5418 16.9204C13.0418 16.5204 12.7818 15.9404 12.7418 15.1804L12.7218 15.1604ZM21.1618 17.3204L18.7418 10.3204H20.3418L21.8218 15.5604L23.3418 10.3204H24.9218L22.5418 17.3204H21.1618Z"
+        fill="white"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M22.2019 29.8401H16.4219V39.6601V41.2601V45.4001H32.3419V41.2601V39.6601V31.9201H22.2019V29.8401ZM17.3819 41.2601H21.2419V42.3001H17.3819V41.2601ZM22.2019 41.2601H31.3819V42.3001H22.2019V41.2601ZM31.3819 40.2201H22.2019V39.6601V39.2001H31.3819V39.6601V40.2201ZM21.2419 40.2201H17.3819V39.6601V39.2001H21.2419V39.6601V40.2201ZM21.2419 44.3801H17.3819V43.3401H21.2419V44.3801ZM31.3819 44.3801H22.2019V43.3401H31.3819V44.3801ZM17.3819 32.9601H21.2419V34.0001H17.3819V32.9601ZM17.3819 35.0401H21.2419V36.0801H17.3819V35.0401ZM17.3819 37.1201H21.2419V38.1601H17.3819V37.1201ZM31.3819 38.1601H22.2019V37.1201H31.3819V38.1601ZM31.3819 36.0801H22.2019V35.0401H31.3819V36.0801ZM31.3819 32.9601V34.0001H22.2019V32.9601H31.3819ZM17.3819 31.9201V30.8801H21.2419V31.9201H17.3819Z"
+        fill="#00897B"
+      />
+    </svg>`;
+
+var MAP_FILE_TYPE_TO_SVG = {
+  xlsx: XLSX_SVG,
+  txt: TXT_SVG,
+  ppts: PPTX_SVG,
+  json: JSON_SVG,
+  docx: DOCX_SVG,
+  csv: CSV_SVG,
+};
