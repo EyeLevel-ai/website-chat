@@ -15,6 +15,7 @@ const qTests = [
   {text: 'This is a [link](https://example.com)...', isStreaming: true, expect: 'This is a [link](https://example.com)...'},
   {text: 'Check this link: https://example.com/test?ok=url%20okk=ase@? !!!ok thanks.', isStreaming: false, expect: 'Check this link: <a href="https://example.com/test?ok=url%20okk=ase@?" target="_blank">https://example.com/test?ok=url%20okk=ase@?</a> !!!ok thanks.'},
   {text: 'Check this link: https://example.com/test?ok=url%20okk=ase@? !!!ok thanks.', isStreaming: true, expect: 'Check this link: <a href="https://example.com/test?ok=url%20okk=ase@?" target="_blank">https://example.com/test?ok=url%20okk=ase@?</a> !!!ok thanks.'},
+  {text: '[BLUE Delectables Tasty Chicken Topper](https://bluebuffalo.com/dog-food-toppers/delectables/tasty-chicken-topper/): This topper includes meaty morsels of real chicken in a savory broth with garden veggies. It’s grain-free and can be used as a topper, mixer, or snack.', isStreaming: true, expect: '[BLUE Delectables Tasty Chicken Topper](https://bluebuffalo.com/dog-food-toppers/delectables/tasty-chicken-topper/): This topper includes meaty morsels of real chicken in a savory broth with garden veggies. It’s grain-free and can be used as a topper, mixer, or snack.'},
 ];
 
 const queryIdx = [];

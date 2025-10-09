@@ -72,7 +72,7 @@ try {
       </path>
   </svg>`;
 
-  var urlRegex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(\.[a-zA-Z0-9-]{2,})+\b([\-a-zA-Z0-9()@:%_\+.~#?&//=]*)(?<![()\]\.]|\.\.\.)/g);
+  var urlRegex = new RegExp(/(?:https?|ftp):\/\/(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,255}(?:\.[a-zA-Z0-9-]{2,})+(?:\/[^\s()\[\]<>\"']*)?/g);
 
   function escapeAndDecorateString(txt, isStreaming) {
     if (isStreaming) {
@@ -1222,7 +1222,7 @@ window.menu = null;
                       return;
                     }, !1);
                     if (n.text) {
-                      return t.className = 'user-request-container', t.innerHTML = '<div class="' + e.CLASS_USER_REQUEST + '">' + n.text + '</div>', this.queryResult.appendChild(t), this;
+                      return t.className = 'user-request-container', t.innerHTML = '<div class="user-icon"><div class="user-icon-img"></div></div><div class="' + e.CLASS_USER_REQUEST + '">' + n.text + '</div>', this.queryResult.appendChild(t), this;
                     } else if (n.input_value && n.id) {
                       var input = ben.domHelper.workplace.getElementById(n.id + '-input');
                       var cnt = ben.domHelper.workplace.getElementById(n.id);
@@ -2050,6 +2050,8 @@ window.menu = null;
                       } else if (n.data.indexOf && n.data.indexOf("show close") === 0) {
                         var w = t.domHelper.getCloseWindow();
                         w.style.display = 'block';
+                      } else if (n.data.indexOf && n.data.indexOf("scroll-to-bottom") === 0) {
+                        t.scrollToBottom()
                       }
                     }
                   } else if (window.shouldOpen) {

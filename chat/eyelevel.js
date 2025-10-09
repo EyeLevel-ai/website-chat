@@ -22,6 +22,46 @@ function trackEvent(name, options) {
   }
 }
 
+function resizeSections() {
+    var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    var sections = document.getElementsByClassName('ey-section-visible');
+    if (!sections.length) return;
+
+    var offset = 0;
+    if (window.visualViewport) {
+      h = window.visualViewport.height || h;
+      offset = window.visualViewport.pageTop || window.visualViewport.offsetTop || window.innerHeight - h;
+      if (offset < 0) {
+        offset = 0;
+      }
+    }
+
+    for (var i = 0; i < sections.length; i++) {
+      if (w < 800) {
+        sections[i].style.height = h + 'px';
+        sections[i].style.top = (offset || 0) + 'px';
+      } else {
+        sections[i].style.height = '';
+        sections[i].style.top = '';
+      }
+    }
+
+    var is = document.getElementById("eyFrame");
+    if (is) {
+      is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
+      setTimeout(function() {
+        is.postMessage("scroll-to-bottom", "*");
+      }, 500);
+    }
+  }
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    resizeSections();
+  });
+}
+
 try {
   var chatV = '3.0';
   var agentV = '3.0';
@@ -1166,6 +1206,7 @@ try {
       if (window.eymenu.position && window.eymenu.position === 'top-right') {
         menuTR = '<div id="eyMenu" class="ey_input-menu ey-menu active ey-menu-right ey-disabled"><span class="ey_input-menu-text ey-disabled" id="ey-menu-tr">' + label + '</span></div>';
         menuClose = ' ey-close-left';
+      } else if (window.eymenu.position && window.eymenu.position === 'none') {
       } else {
         menuBR = '<div id="eyMenu" class="ey_input-menu ey-menu active ey-disabled"><span class="ey_input-menu-text ey-disabled" id="ey-menu-br">' + label + '</span></div></div>';
       }
@@ -1378,6 +1419,14 @@ try {
       cw.classList.remove("ey-section-visible");
       document.body.classList.remove("ey-prevent-scroll");
       cw.classList.add("ey-section-invisible");
+
+      var sections = document.getElementsByClassName('ey-section');
+      if (sections.length) {
+        for (var i = 0; i < sections.length; i++) {
+          sections[i].style.height = '';
+          sections[i].style.top = '';
+        }
+      }
 
       trackEvent('chat_close');
 
