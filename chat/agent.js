@@ -1978,6 +1978,21 @@ window.menu = null;
                   } else {
                     t.handleInput(t.domHelper.getInputValue());
                   }
+                }, this.disableMenu = function() {
+                  var menuTR = t.domHelper.getMenuInputTR();
+                  if (menuTR && !menuTR.classList.contains('ey-disabled')) {
+                    menuTR.classList.add('ey-disabled');
+                    if (menuTR.parentNode && !menuTR.parentNode.classList.contains('ey-disabled')) {
+                      menuTR.parentNode.classList.add('ey-disabled');
+                    }
+                  }
+                  var menuBR = t.domHelper.getMenuInputBR();
+                  if (menuBR && !menuBR.classList.contains('ey-disabled')) {
+                    menuBR.classList.add('ey-disabled');
+                    if (menuBR.parentNode && !menuBR.parentNode.classList.contains('ey-disabled')) {
+                      menuBR.parentNode.classList.add('ey-disabled');
+                    }
+                  }
                 }, this.enableMenu = function() {
                   var menuTR = t.domHelper.getMenuInputTR();
                   if (menuTR && menuTR.classList.contains('ey-disabled')) {
@@ -2000,6 +2015,7 @@ window.menu = null;
                     return;
                   }
                   t.handleEvent('chat', 'chat', null, window.eymenu.pos);
+                  t.disableMenu();
                 }, this.handleSendClick = function(n) {
                   n.preventDefault();
                   n.stopPropagation();
