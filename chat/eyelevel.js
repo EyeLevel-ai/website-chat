@@ -426,6 +426,8 @@ try {
           }
         }
       }
+    } else if (checkExtras(config, isExtra)) {
+      return config.config;
     } else {
       if ((isNot && testPath.indexOf(path.replace('*','')) < 0) || (!isNot && testPath.indexOf(path.replace('*','')) > -1)) {
         if (checkExtras(config, isExtra)) {
