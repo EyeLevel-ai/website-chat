@@ -22,45 +22,122 @@ function trackEvent(name, options) {
   }
 }
 
+var viewportSyncTimer = null;
+var viewportSyncUntil = 0;
+var viewportScrollTimer = null;
+var viewportSyncDuration = 600;
+var viewportSyncInterval = 50;
+
+function getViewportWidth() {
+  return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+}
+
+function isViewportNumber(value) {
+  return typeof value === 'number' && isFinite(value);
+}
+
+function scheduleFrameScroll() {
+  if (viewportScrollTimer !== null) {
+    clearTimeout(viewportScrollTimer);
+  }
+
+  viewportScrollTimer = setTimeout(function() {
+    viewportScrollTimer = null;
+    var frame = document.getElementById("eyFrame");
+    if (!frame) return;
+
+    frame = frame.contentWindow || (frame.contentDocument.document || frame.contentDocument);
+    frame.postMessage("scroll-to-bottom", "*");
+  }, 500);
+}
+
+function resetSections() {
+  var sections = document.getElementsByClassName('ey-section');
+  for (var i = 0; i < sections.length; i++) {
+    sections[i].style.height = '';
+    sections[i].style.top = '';
+  }
+}
+
 function resizeSections() {
-    var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-    var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-    var sections = document.getElementsByClassName('ey-section-visible');
-    if (!sections.length) return;
+  var width = getViewportWidth();
+  var sections = document.getElementsByClassName('ey-section-visible');
+  if (!sections.length) return false;
 
-    var offset = 0;
-    if (window.visualViewport) {
-      h = window.visualViewport.height || h;
-      offset = window.visualViewport.pageTop || window.visualViewport.offsetTop || window.innerHeight - h;
-      if (offset < 0) {
-        offset = 0;
-      }
+  if (width >= 800) {
+    resetSections();
+    return false;
+  }
+
+  var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+  var offset = 0;
+  if (window.visualViewport) {
+    if (isViewportNumber(window.visualViewport.height) && window.visualViewport.height > 0) {
+      height = window.visualViewport.height;
     }
-
-    for (var i = 0; i < sections.length; i++) {
-      if (w < 800) {
-        sections[i].style.height = h + 'px';
-        sections[i].style.top = (offset || 0) + 'px';
-      } else {
-        sections[i].style.height = '';
-        sections[i].style.top = '';
-      }
-    }
-
-    var is = document.getElementById("eyFrame");
-    if (is) {
-      is = is.contentWindow || ( is.contentDocument.document || is.contentDocument);
-      setTimeout(function() {
-        is.postMessage("scroll-to-bottom", "*");
-      }, 500);
+    if (isViewportNumber(window.visualViewport.offsetTop)) {
+      offset = Math.max(0, window.visualViewport.offsetTop);
     }
   }
 
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    resizeSections();
-  });
+  var nextHeight = height + 'px';
+  var nextTop = offset + 'px';
+  var changed = false;
+  for (var i = 0; i < sections.length; i++) {
+    if (sections[i].style.height !== nextHeight || sections[i].style.top !== nextTop) {
+      sections[i].style.height = nextHeight;
+      sections[i].style.top = nextTop;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    scheduleFrameScroll();
+  }
+  return true;
 }
+
+function stopViewportSync() {
+  viewportSyncUntil = 0;
+  if (viewportSyncTimer !== null) {
+    clearTimeout(viewportSyncTimer);
+    viewportSyncTimer = null;
+  }
+  if (viewportScrollTimer !== null) {
+    clearTimeout(viewportScrollTimer);
+    viewportScrollTimer = null;
+  }
+}
+
+function continueViewportSync() {
+  resizeSections();
+  if (Date.now() < viewportSyncUntil) {
+    viewportSyncTimer = setTimeout(continueViewportSync, viewportSyncInterval);
+  } else {
+    viewportSyncTimer = null;
+  }
+}
+
+function scheduleViewportSync() {
+  var shouldContinue = resizeSections();
+  if (!shouldContinue) {
+    stopViewportSync();
+    return;
+  }
+
+  viewportSyncUntil = Date.now() + viewportSyncDuration;
+  if (viewportSyncTimer === null) {
+    viewportSyncTimer = setTimeout(continueViewportSync, viewportSyncInterval);
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', scheduleViewportSync);
+  window.visualViewport.addEventListener('scroll', scheduleViewportSync);
+  window.visualViewport.addEventListener('scrollend', scheduleViewportSync);
+}
+window.addEventListener('resize', scheduleViewportSync);
+window.addEventListener('orientationchange', scheduleViewportSync);
 
 try {
   var chatV = '3.0';
@@ -1197,6 +1274,10 @@ try {
       document.body.appendChild(sn);
     }
 
+    if (shouldOpen) {
+      scheduleViewportSync();
+    }
+
     var menuTR = '';
     var menuBR = '';
     var menuClose = '';
@@ -1422,13 +1503,8 @@ try {
       document.body.classList.remove("ey-prevent-scroll");
       cw.classList.add("ey-section-invisible");
 
-      var sections = document.getElementsByClassName('ey-section');
-      if (sections.length) {
-        for (var i = 0; i < sections.length; i++) {
-          sections[i].style.height = '';
-          sections[i].style.top = '';
-        }
-      }
+      stopViewportSync();
+      resetSections();
 
       trackEvent('chat_close');
 
@@ -1452,6 +1528,7 @@ try {
       cw.classList.remove("ey-section-invisible");
       cw.classList.add("ey-section-visible");
       document.body.classList.add("ey-prevent-scroll");
+      scheduleViewportSync();
       closeAlert();
 
       trackEvent('chat_open');
