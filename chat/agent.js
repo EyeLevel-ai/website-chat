@@ -1598,10 +1598,13 @@ window.menu = null;
                   child.parentNode.removeChild(child);
                   t.scrollToBottom();
                 }, this.heartbeat = function() {
-                  if (!window.eySocket) return;
+                  if (!window.eySocket) {
+                    window.eyHeartbeatTimer = null;
+                    return;
+                  }
                   window.eySocket.heartbeat = true;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
-                  setTimeout(t.heartbeat, 300000);
+                  window.eyHeartbeatTimer = setTimeout(t.heartbeat, 300000);
                 }, this.loadEnv = function() {
                   switch(window.eyEnv) {
                     case 'dev':
@@ -1615,6 +1618,10 @@ window.menu = null;
                 }, this.initializeWS = function(isRestart) {
                   if (window.eyEnv) {
                     t.loadEnv();
+                  }
+                  if (window.eyHeartbeatTimer) {
+                    clearTimeout(window.eyHeartbeatTimer);
+                    window.eyHeartbeatTimer = null;
                   }
                   window.eySocket = new WebSocket(wssURL+'?uid='+window.user.userId+'&username='+window.username+'&origin='+(window.origin || 'web')+(window.eyid ? '&guid='+window.eyid : ''));
                   window.eySocket.connectTime = Date.now();
