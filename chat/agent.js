@@ -375,9 +375,19 @@ try {
   }
 
   function beginTransferRecovery() {
+    if (!window.eyTransferRecoveryPending) {
+      window.eyTransferLiveMessages = [];
+      window.eyAskVetHistoryRender = null;
+    }
     window.eyTransferRecoveryPending = true;
-    window.eyTransferLiveMessages = [];
-    window.eyAskVetHistoryRender = null;
+  }
+
+  function prepareTransferRecoveryRetry() {
+    if (!window.eyTransferRecoveryPending) {
+      return false;
+    }
+    window.eyTransferResumePending = true;
+    return true;
   }
 
   function bufferTransferMessage(rawMessage, parsedMessage) {
@@ -433,6 +443,7 @@ try {
       escapeAndDecorateString,
       finishTransferRecovery,
       mergeAskVetHistory,
+      prepareTransferRecoveryRetry,
       reconnectTransferredUser,
     };
   }
@@ -1760,6 +1771,7 @@ window.menu = null;
                   console.log('ws closed');
                   if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 8000 < now || window.connectAttempts < 4)) {
                     console.log('reconnecting');
+                    prepareTransferRecoveryRetry();
                     setTimeout(function() {
                       t.initializeWS(true);
                     }, 1000);

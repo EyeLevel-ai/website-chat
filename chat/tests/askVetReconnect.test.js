@@ -4,6 +4,7 @@ const {
   bufferTransferMessage,
   finishTransferRecovery,
   mergeAskVetHistory,
+  prepareTransferRecoveryRetry,
   reconnectTransferredUser,
 } = require('../agent');
 
@@ -209,5 +210,24 @@ describe('AskVet reconnect history', () => {
 
     expect(handled).toEqual(['live']);
     expect(window.eyTransferRecoveryPending).toBe(false);
+  });
+
+  test('retries interrupted recovery without dropping buffered messages', () => {
+    const render = Promise.resolve();
+    beginTransferRecovery();
+    window.eyAskVetHistoryRender = render;
+    bufferTransferMessage('live', { action: 'message' });
+
+    expect(prepareTransferRecoveryRetry()).toBe(true);
+    expect(window.eyTransferResumePending).toBe(true);
+
+    beginTransferRecovery();
+    expect(window.eyTransferLiveMessages).toEqual(['live']);
+    expect(window.eyAskVetHistoryRender).toBe(render);
+
+    window.eyTransferRecoveryPending = false;
+    window.eyTransferResumePending = false;
+    expect(prepareTransferRecoveryRetry()).toBe(false);
+    expect(window.eyTransferResumePending).toBe(false);
   });
 });
