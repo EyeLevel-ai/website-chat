@@ -210,8 +210,148 @@ try {
     return reformatMarkdownLists(splitText);
   }
 
+  function collectAskVetHistoryChunk(state, chunk) {
+    if (!chunk || !chunk.sessionId || typeof chunk.index !== 'number' || typeof chunk.total !== 'number'
+      || chunk.index < 0 || chunk.index >= chunk.total || !chunk.message) {
+      return { state: state, history: null };
+    }
+
+    if (!state || state.sessionId !== chunk.sessionId || state.total !== chunk.total) {
+      state = {
+        entries: [],
+        sessionId: chunk.sessionId,
+        total: chunk.total,
+      };
+    }
+
+    state.entries[chunk.index] = {
+      role: chunk.role,
+      text: chunk.message.text,
+      timestamp: chunk.message.timestamp,
+    };
+
+    var complete = true;
+    for (var i = 0; i < state.total; i++) {
+      if (!state.entries[i]) {
+        complete = false;
+        break;
+      }
+    }
+
+    return {
+      state: complete ? null : state,
+      history: complete ? state.entries.slice() : null,
+    };
+  }
+
+  function askVetInteractionSignature(role, text) {
+    return (role === 'user' ? 'user' : 'agent') + '\u0000' + text;
+  }
+
+  function storedInteractionSignature(interaction) {
+    if (!interaction || !interaction.payload) {
+      return null;
+    }
+
+    try {
+      var payload = JSON.parse(interaction.payload);
+      var text = typeof payload.rawText === 'string' ? payload.rawText : payload.text;
+      if (typeof text !== 'string') {
+        return null;
+      }
+      var role = interaction.sender === 'user' || payload.sender === 'user' ? 'user' : 'agent';
+      return askVetInteractionSignature(role, text);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function mergeAskVetHistory(existing, recovered, isOpen) {
+    existing = existing || [];
+    recovered = recovered || [];
+
+    var remaining = {};
+    for (var i = 0; i < existing.length; i++) {
+      var existingSignature = storedInteractionSignature(existing[i]);
+      if (existingSignature) {
+        remaining[existingSignature] = (remaining[existingSignature] || 0) + 1;
+      }
+    }
+
+    var added = [];
+    for (var j = 0; j < recovered.length; j++) {
+      var message = recovered[j];
+      if (!message || typeof message.text !== 'string' || !message.text.length) {
+        continue;
+      }
+
+      var role = message.role === 'user' ? 'user' : 'agent';
+      var signature = askVetInteractionSignature(role, message.text);
+      if (remaining[signature]) {
+        remaining[signature]--;
+        continue;
+      }
+
+      var payload;
+      var sender;
+      if (role === 'user') {
+        sender = 'user';
+        payload = {
+          text: escapeAndDecorateString(message.text),
+          rawText: message.text,
+          type: 'askvet-history',
+        };
+      } else {
+        sender = 'server';
+        payload = { sender: 'server', text: message.text };
+      }
+
+      var timestamp = Number(message.timestamp) || 0;
+      var interaction = {
+        action: 'message',
+        askVetHistory: true,
+        isDone: true,
+        payload: JSON.stringify(payload),
+        sender: sender,
+        time: timestamp > 0 && timestamp < 1000000000000 ? timestamp * 1000 : timestamp,
+        typing: false,
+      };
+      if (sender !== 'user') {
+        interaction.seen = !!isOpen;
+      }
+      added.push(interaction);
+    }
+
+    return { added: added, history: existing.concat(added) };
+  }
+
+  function reconnectTransferredUser(agent, visibilityState) {
+    if (visibilityState !== 'visible' || window.eyTransferResumePending
+      || !window.user || !window.user.isTransfer || !agent) {
+      return false;
+    }
+
+    window.eyTransferResumePending = true;
+    var oldSocket = window.eySocket;
+    if (oldSocket) {
+      oldSocket.onclose = null;
+      if (typeof oldSocket.close === 'function') {
+        oldSocket.close();
+      }
+    }
+    window.eySocket = null;
+    window.isChatting = false;
+    agent.initializeWS(true);
+    return true;
+  }
+
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { escapeAndDecorateString };
+    module.exports = {
+      collectAskVetHistoryChunk,
+      escapeAndDecorateString,
+      mergeAskVetHistory,
+      reconnectTransferredUser,
+    };
   }
 
   function externalLinkIcon() {
@@ -1508,7 +1648,10 @@ window.menu = null;
                   console.error(window.eySocket);
                   throw 'WS error';
                 }, this.handleWSOpen = function(n) {
-                  if (!window.eySocket.isStarted) {
+                  if (window.eyTransferResumePending) {
+                    window.eyTransferResumePending = false;
+                    t.domHelper.reconnect(t);
+                  } else if (!window.eySocket.isStarted) {
                     if (window.eyreset) {
                       clearAll();
                       t.domHelper.setInputValue("");
@@ -1911,6 +2054,21 @@ window.menu = null;
                               delete window.eySocket.typingElement;
                             }
                             setTransfer(true);
+                            if (wsRes.action === 'reconnect-transfer' && wsRes.payload) {
+                              var transferPayload = JSON.parse(wsRes.payload);
+                              if (transferPayload && transferPayload.history) {
+                                var recovered = collectAskVetHistoryChunk(window.eyAskVetHistoryChunks, transferPayload.history);
+                                window.eyAskVetHistoryChunks = recovered.state;
+                                if (recovered.history) {
+                                  var merged = mergeAskVetHistory(retrieveInteractions(false), recovered.history, window.isOpen);
+                                  window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(merged.history));
+                                  if (merged.added.length) {
+                                    window.parent.postMessage("alert-update", "*");
+                                    t.loadRecoveredInteractions(0, merged.added);
+                                  }
+                                }
+                              }
+                            }
                           } else if (wsRes.action === 'transfer' || wsRes.action === 'reconnect-transfer-failed') {
                             if (window.eySocket.typingElement) {
                               t.removeItem(window.eySocket.typingElement);
@@ -2039,6 +2197,17 @@ window.menu = null;
                   if (!window.eySocket && window.user && window.user.isTransfer) {
                     t.initializeWS();
                   }
+                }, this.handleVisibilityChange = function() {
+                  if (document.visibilityState === 'hidden') {
+                    window.eyWasHidden = true;
+                  } else if (document.visibilityState === 'visible' && window.eyWasHidden) {
+                    window.eyWasHidden = false;
+                    reconnectTransferredUser(t, document.visibilityState);
+                  }
+                }, this.handlePageShow = function(n) {
+                  if (n && n.persisted) {
+                    reconnectTransferredUser(t, 'visible');
+                  }
                 }, this.handleChatWindow = function(n) {
                   if (n && n.type === "message") {
                     if (n.data) {
@@ -2127,6 +2296,22 @@ window.menu = null;
                     t.createMessage(int1)
                       .then(function(ra0) {
                         return t.loadInteractions(idx + 1, inter);
+                      });
+                  }
+                }, this.loadRecoveredInteractions = function(idx, inter) {
+                  if (idx === inter.length) {
+                    return;
+                  }
+                  var recovered = inter[idx];
+                  window.eySocket.lastInteraction = recovered;
+                  var payload = JSON.parse(recovered.payload);
+                  if (recovered.sender === 'user') {
+                    t.domHelper.addUserRequestNode(payload, t);
+                    t.loadRecoveredInteractions(idx + 1, inter);
+                  } else {
+                    t.createMessage(recovered)
+                      .then(function() {
+                        t.loadRecoveredInteractions(idx + 1, inter);
                       });
                   }
                 }, this.scrollToBottomOnLoad = function(obj) {
@@ -3189,6 +3374,8 @@ window.menu = null;
             return a()(e, [{
                 key: "bindEventHandlers",
                 value: function() {
+                    document.addEventListener("visibilitychange", this.handleVisibilityChange, !1);
+                    window.addEventListener("pageshow", this.handlePageShow, !1);
                     if (this.domHelper.getMenuInputTR()) {
                       this.domHelper.getMenuInputTR().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
                     }
