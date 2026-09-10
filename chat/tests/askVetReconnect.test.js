@@ -1,15 +1,18 @@
 const {
   collectAskVetHistoryChunk,
+  beginTransferRecovery,
+  bufferTransferMessage,
+  finishTransferRecovery,
   mergeAskVetHistory,
   reconnectTransferredUser,
 } = require('../agent');
 
-function interaction(sender, text, rawText) {
+function interaction(sender, text, rawText, time) {
   return {
     action: 'message',
     payload: JSON.stringify({ sender, text, rawText }),
     sender: sender === 'user' ? 'user' : 'server',
-    time: 1788906254000,
+    time: time || 1788906254000,
     typing: false,
   };
 }
@@ -19,7 +22,9 @@ describe('AskVet reconnect history', () => {
     window.localStorage.clear();
     delete window.eySocket;
     delete window.eyTransferResumePending;
-    window.user = { isTransfer: true };
+    delete window.eyTransferRecoveryPending;
+    delete window.eyTransferLiveMessages;
+    window.user = { isTransfer: true, transferPlatform: 'askvet' };
   });
 
   test('collects chunked history in provider order and ignores retries', () => {
@@ -44,8 +49,8 @@ describe('AskVet reconnect history', () => {
     });
 
     expect(result.history).toEqual([
-      { role: 'user', text: 'First', timestamp: 10 },
-      { role: 'agent', text: 'Second', timestamp: 20 },
+      { index: 0, role: 'user', text: 'First', timestamp: 10 },
+      { index: 1, role: 'agent', text: 'Second', timestamp: 20 },
     ]);
   });
 
@@ -60,7 +65,7 @@ describe('AskVet reconnect history', () => {
       { role: 'agent', text: 'While you were away', timestamp: 1788906256 },
     ];
 
-    const result = mergeAskVetHistory(existing, recovered, false);
+    const result = mergeAskVetHistory(existing, recovered, false, 'session-1');
 
     expect(result.added).toHaveLength(1);
     expect(result.history).toHaveLength(3);
@@ -68,20 +73,47 @@ describe('AskVet reconnect history', () => {
     expect(result.added[0].time).toBe(1788906256000);
     expect(result.added[0].seen).toBe(false);
     expect(JSON.parse(result.added[0].payload).text).toBe('While you were away');
-    expect(mergeAskVetHistory(result.history, recovered).added).toHaveLength(0);
+    expect(mergeAskVetHistory(result.history, recovered, false, 'session-1').added).toHaveLength(0);
   });
 
   test('preserves repeated messages by occurrence count', () => {
-    const existing = [interaction('agent', 'Still there?')];
+    const existing = [interaction('agent', 'Still there?', undefined, 10000)];
     const recovered = [
       { role: 'agent', text: 'Still there?', timestamp: 10 },
       { role: 'agent', text: 'Still there?', timestamp: 20 },
     ];
 
-    const result = mergeAskVetHistory(existing, recovered);
+    const result = mergeAskVetHistory(existing, recovered, false, 'session-1');
 
     expect(result.added).toHaveLength(1);
     expect(result.history).toHaveLength(2);
+  });
+
+  test('does not suppress the same text from an earlier AskVet session', () => {
+    const existing = [interaction('agent', 'Your veterinarian will reply shortly.', undefined, 1000)];
+    const recovered = [
+      { role: 'agent', text: 'Your veterinarian will reply shortly.', timestamp: 2 },
+    ];
+
+    const result = mergeAskVetHistory(existing, recovered, false, 'session-2', 1);
+
+    expect(result.added).toHaveLength(1);
+    expect(result.history).toHaveLength(2);
+  });
+
+  test('places recovered messages before newer live messages', () => {
+    const existing = [
+      interaction('agent', 'A', undefined, 1000),
+      interaction('agent', 'C', undefined, 3000),
+    ];
+    const recovered = [
+      { role: 'agent', text: 'A', timestamp: 1 },
+      { role: 'agent', text: 'B', timestamp: 2 },
+    ];
+
+    const result = mergeAskVetHistory(existing, recovered, false, 'session-1');
+
+    expect(result.history.map((item) => JSON.parse(item.payload).text)).toEqual(['A', 'B', 'C']);
   });
 
   test('keeps recovered user text safe for browser rendering', () => {
@@ -112,5 +144,70 @@ describe('AskVet reconnect history', () => {
     window.user.isTransfer = false;
     window.eyTransferResumePending = false;
     expect(reconnectTransferredUser(agent, 'visible')).toBe(false);
+  });
+
+  test('does not replace a non-AskVet transfer socket', () => {
+    const oldSocket = { close: jest.fn(), onclose: jest.fn() };
+    const agent = { initializeWS: jest.fn() };
+    window.user.transferPlatform = 'slack';
+    window.eySocket = oldSocket;
+
+    expect(reconnectTransferredUser(agent, 'visible')).toBe(false);
+    expect(oldSocket.close).not.toHaveBeenCalled();
+    expect(agent.initializeWS).not.toHaveBeenCalled();
+  });
+
+  test('persists the transfer platform used by foreground reconnect', () => {
+    setTransfer(true, 'askvet');
+
+    expect(window.localStorage.getItem('eyelevel.user.transferPlatform')).toBe('askvet');
+    expect(window.user.transferPlatform).toBe('askvet');
+  });
+
+  test('records the browser history boundary when an AskVet transfer ends', () => {
+    window.localStorage.setItem('eyelevel.user.transfer', 'true');
+    window.localStorage.setItem('eyelevel.user.transferPlatform', 'askvet');
+    window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify([
+      interaction('user', 'First'),
+      interaction('agent', 'Second'),
+    ]));
+
+    setTransfer(false);
+
+    expect(window.localStorage.getItem('eyelevel.conversation.askVetHistoryStart')).toBe('2');
+  });
+
+  test('buffers live messages until transfer recovery finishes', () => {
+    const handled = [];
+    const agent = { handleWSMessage: (event) => handled.push(event.data) };
+    beginTransferRecovery();
+
+    expect(bufferTransferMessage('first', { action: 'message' })).toBe(true);
+    expect(bufferTransferMessage('history', { action: 'reconnect-transfer' })).toBe(false);
+    expect(bufferTransferMessage('second', { action: 'message' })).toBe(true);
+
+    finishTransferRecovery(agent);
+
+    expect(handled).toEqual(['first', 'second']);
+    expect(window.eyTransferRecoveryPending).toBe(false);
+  });
+
+  test('waits for recovered messages to render before flushing live messages', async () => {
+    const handled = [];
+    const agent = { handleWSMessage: (event) => handled.push(event.data) };
+    let finishRender;
+    beginTransferRecovery();
+    window.eyAskVetHistoryRender = new Promise((resolve) => { finishRender = resolve; });
+    bufferTransferMessage('live', { action: 'message' });
+
+    const finished = finishTransferRecovery(agent);
+    expect(handled).toEqual([]);
+    expect(window.eyTransferRecoveryPending).toBe(true);
+
+    finishRender();
+    await finished;
+
+    expect(handled).toEqual(['live']);
+    expect(window.eyTransferRecoveryPending).toBe(false);
   });
 });

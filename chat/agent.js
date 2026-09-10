@@ -225,6 +225,7 @@ try {
     }
 
     state.entries[chunk.index] = {
+      index: chunk.index,
       role: chunk.role,
       text: chunk.message.text,
       timestamp: chunk.message.timestamp,
@@ -266,17 +267,17 @@ try {
     }
   }
 
-  function mergeAskVetHistory(existing, recovered, isOpen) {
+  function askVetTimestamp(timestamp) {
+    timestamp = Number(timestamp) || 0;
+    return timestamp > 0 && timestamp < 1000000000000 ? timestamp * 1000 : timestamp;
+  }
+
+  function mergeAskVetHistory(existing, recovered, isOpen, sessionId, matchStart) {
     existing = existing || [];
     recovered = recovered || [];
-
-    var remaining = {};
-    for (var i = 0; i < existing.length; i++) {
-      var existingSignature = storedInteractionSignature(existing[i]);
-      if (existingSignature) {
-        remaining[existingSignature] = (remaining[existingSignature] || 0) + 1;
-      }
-    }
+    matchStart = Math.max(0, Number(matchStart) || 0);
+    var history = existing.slice();
+    var used = {};
 
     var added = [];
     for (var j = 0; j < recovered.length; j++) {
@@ -287,8 +288,41 @@ try {
 
       var role = message.role === 'user' ? 'user' : 'agent';
       var signature = askVetInteractionSignature(role, message.text);
-      if (remaining[signature]) {
-        remaining[signature]--;
+      var historyIndex = typeof message.index === 'number' ? message.index : j;
+      var timestamp = askVetTimestamp(message.timestamp);
+      var matchIndex = -1;
+      var bestTimeDifference = Infinity;
+
+      for (var i = 0; i < history.length; i++) {
+        if (used[i]) {
+          continue;
+        }
+        if (history[i].askVetSessionId === sessionId && history[i].askVetHistoryIndex === historyIndex) {
+          matchIndex = i;
+          break;
+        }
+        if (i < matchStart) {
+          continue;
+        }
+        if (history[i].askVetSessionId && history[i].askVetSessionId !== sessionId) {
+          continue;
+        }
+        if (storedInteractionSignature(history[i]) !== signature) {
+          continue;
+        }
+
+        var existingTime = Number(history[i].time) || 0;
+        var timeDifference = timestamp && existingTime ? Math.abs(timestamp - existingTime) : Infinity;
+        if (timeDifference <= 60000 && timeDifference < bestTimeDifference) {
+          matchIndex = i;
+          bestTimeDifference = timeDifference;
+        }
+      }
+
+      if (matchIndex >= 0) {
+        used[matchIndex] = true;
+        history[matchIndex].askVetSessionId = sessionId;
+        history[matchIndex].askVetHistoryIndex = historyIndex;
         continue;
       }
 
@@ -306,14 +340,15 @@ try {
         payload = { sender: 'server', text: message.text };
       }
 
-      var timestamp = Number(message.timestamp) || 0;
       var interaction = {
         action: 'message',
+        askVetHistoryIndex: historyIndex,
         askVetHistory: true,
+        askVetSessionId: sessionId,
         isDone: true,
         payload: JSON.stringify(payload),
         sender: sender,
-        time: timestamp > 0 && timestamp < 1000000000000 ? timestamp * 1000 : timestamp,
+        time: timestamp,
         typing: false,
       };
       if (sender !== 'user') {
@@ -322,12 +357,57 @@ try {
       added.push(interaction);
     }
 
-    return { added: added, history: existing.concat(added) };
+    for (var k = 0; k < added.length; k++) {
+      var insertAt = history.length;
+      if (added[k].time) {
+        for (var h = 0; h < history.length; h++) {
+          var currentTime = Number(history[h].time) || 0;
+          if (currentTime && currentTime > added[k].time) {
+            insertAt = h;
+            break;
+          }
+        }
+      }
+      history.splice(insertAt, 0, added[k]);
+    }
+
+    return { added: added, history: history };
+  }
+
+  function beginTransferRecovery() {
+    window.eyTransferRecoveryPending = true;
+    window.eyTransferLiveMessages = [];
+    window.eyAskVetHistoryRender = null;
+  }
+
+  function bufferTransferMessage(rawMessage, parsedMessage) {
+    if (!window.eyTransferRecoveryPending || !parsedMessage || parsedMessage.action !== 'message') {
+      return false;
+    }
+    window.eyTransferLiveMessages = window.eyTransferLiveMessages || [];
+    window.eyTransferLiveMessages.push(rawMessage);
+    return true;
+  }
+
+  function finishTransferRecovery(agent) {
+    var flush = function() {
+      var buffered = window.eyTransferLiveMessages || [];
+      window.eyTransferRecoveryPending = false;
+      window.eyTransferLiveMessages = [];
+      window.eyAskVetHistoryRender = null;
+      for (var i = 0; i < buffered.length; i++) {
+        agent.handleWSMessage({ data: buffered[i] });
+      }
+    };
+    if (window.eyAskVetHistoryRender && typeof window.eyAskVetHistoryRender.then === 'function') {
+      return window.eyAskVetHistoryRender.then(flush, flush);
+    }
+    flush();
   }
 
   function reconnectTransferredUser(agent, visibilityState) {
     if (visibilityState !== 'visible' || window.eyTransferResumePending
-      || !window.user || !window.user.isTransfer || !agent) {
+      || !window.user || !window.user.isTransfer || window.user.transferPlatform !== 'askvet' || !agent) {
       return false;
     }
 
@@ -347,8 +427,11 @@ try {
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+      beginTransferRecovery,
+      bufferTransferMessage,
       collectAskVetHistoryChunk,
       escapeAndDecorateString,
+      finishTransferRecovery,
       mergeAskVetHistory,
       reconnectTransferredUser,
     };
@@ -713,6 +796,7 @@ getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var aid = window.localStorage.getItem('eyelevel.user.aid');
   var isTransfer = window.localStorage.getItem('eyelevel.user.transfer') ? true : false;
+  var transferPlatform = window.localStorage.getItem('eyelevel.user.transferPlatform');
 
   var newUser = false;
   if (!userId) {
@@ -721,7 +805,7 @@ getUser = function() {
     window.localStorage.setItem('eyelevel.user.userId', userId);
   }
 
-  return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
+  return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, transferPlatform: transferPlatform, newUser: newUser };
 }
 
 updateUser = function(req) {
@@ -823,6 +907,10 @@ saveInteraction = function(interaction) {
 }
 
 clearAll = function(isTransfer) {
+  if (isTransfer && window.localStorage.getItem('eyelevel.user.transferPlatform') === 'askvet') {
+    markAskVetHistoryBoundary();
+  }
+  window.localStorage.removeItem('eyelevel.user.transferPlatform');
   if (isTransfer) {
     window.localStorage.removeItem('eyelevel.user.transfer');
   } else {
@@ -832,7 +920,22 @@ clearAll = function(isTransfer) {
     window.localStorage.removeItem('eyelevel.conversation.consent');
     window.localStorage.removeItem('eyelevel.conversation.alerts');
     window.localStorage.removeItem('eyelevel.conversation.open');
+    window.localStorage.removeItem('eyelevel.conversation.askVetHistoryStart');
   }
+}
+
+markAskVetHistoryBoundary = function() {
+  var rawHistory = window.localStorage.getItem('eyelevel.conversation.history');
+  var historyLength = 0;
+  if (rawHistory) {
+    try {
+      var history = JSON.parse(rawHistory);
+      historyLength = history && history.length ? history.length : 0;
+    } catch (err) {
+      historyLength = 0;
+    }
+  }
+  window.localStorage.setItem('eyelevel.conversation.askVetHistoryStart', historyLength);
 }
 
 saveConsent = function(consent) {
@@ -857,9 +960,12 @@ saveSession = function(sess) {
   }
 }
 
-setTransfer = function(val) {
+setTransfer = function(val, platform) {
   if (val) {
     window.localStorage.setItem('eyelevel.user.transfer', 'true');
+    if (platform) {
+      window.localStorage.setItem('eyelevel.user.transferPlatform', platform.toLowerCase());
+    }
     window.user = getUser();
     if (window.eymenu) {
       var mn = document.getElementById('ey-menu-tr');
@@ -874,7 +980,11 @@ setTransfer = function(val) {
       }
     }
   } else {
+    if (window.localStorage.getItem('eyelevel.user.transferPlatform') === 'askvet') {
+      markAskVetHistoryBoundary();
+    }
     window.localStorage.removeItem('eyelevel.user.transfer');
+    window.localStorage.removeItem('eyelevel.user.transferPlatform');
     window.user = getUser();
   }
 }
@@ -1258,6 +1368,9 @@ window.menu = null;
                 key: "reconnect",
                 value: function(ben) {
                   var sess = getSession();
+                  if (window.user && window.user.isTransfer && window.user.transferPlatform === 'askvet') {
+                    beginTransferRecovery();
+                  }
                   setTimeout(function() {
                     ben.handleEvent('reconnect', 'reconnect', null, sess && sess.Pos);
                     return
@@ -2013,6 +2126,9 @@ window.menu = null;
                   if (n && n.data) {
                     try {
                       var wsRes = JSON.parse(n.data);
+                      if (bufferTransferMessage(n.data, wsRes)) {
+                        return;
+                      }
                       saveSession(wsRes.session);
                       if (wsRes) {
                         if (typeof wsRes.isDone === 'undefined') {
@@ -2027,6 +2143,7 @@ window.menu = null;
                           updateUser(wsRes);
                           if (wsRes.action === 'reconnect') {
                             setTransfer(false);
+                            finishTransferRecovery(t);
                             var ints = retrieveInteractions(true);
                             if (!ints || !ints.length) {
                               wsRes.sender = "server";
@@ -2060,20 +2177,27 @@ window.menu = null;
                               t.removeItem(window.eySocket.typingElement);
                               delete window.eySocket.typingElement;
                             }
-                            setTransfer(true);
-                            if (wsRes.action === 'reconnect-transfer' && wsRes.payload) {
-                              var transferPayload = JSON.parse(wsRes.payload);
+                            var transferPayload = wsRes.payload ? JSON.parse(wsRes.payload) : null;
+                            if (wsRes.action === 'reconnect-transfer' && transferPayload
+                              && transferPayload.platform === 'askvet' && !window.eyTransferRecoveryPending) {
+                              beginTransferRecovery();
+                            }
+                            setTransfer(true, transferPayload && transferPayload.platform);
+                            if (wsRes.action === 'reconnect-transfer' && transferPayload) {
                               if (transferPayload && transferPayload.history) {
                                 var recovered = collectAskVetHistoryChunk(window.eyAskVetHistoryChunks, transferPayload.history);
                                 window.eyAskVetHistoryChunks = recovered.state;
                                 if (recovered.history) {
-                                  var merged = mergeAskVetHistory(retrieveInteractions(false), recovered.history, window.isOpen);
+                                  var historyStart = window.localStorage.getItem('eyelevel.conversation.askVetHistoryStart');
+                                  var merged = mergeAskVetHistory(retrieveInteractions(false), recovered.history, window.isOpen, transferPayload.history.sessionId, historyStart);
                                   window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(merged.history));
                                   if (merged.added.length) {
                                     window.parent.postMessage("alert-update", "*");
-                                    t.loadRecoveredInteractions(0, merged.added);
+                                    window.eyAskVetHistoryRender = t.loadRecoveredInteractions(0, merged.added);
                                   }
                                 }
+                              } else {
+                                finishTransferRecovery(t);
                               }
                             }
                           } else if (wsRes.action === 'transfer' || wsRes.action === 'reconnect-transfer-failed') {
@@ -2082,6 +2206,7 @@ window.menu = null;
                               delete window.eySocket.typingElement;
                             }
                             setTransfer(false);
+                            finishTransferRecovery(t);
                           } else if (wsRes.action === 'reconnect-empty') {
                             if (window.eySocket.typingElement) {
                               t.removeItem(window.eySocket.typingElement);
@@ -2093,6 +2218,7 @@ window.menu = null;
                               }
                             }
                             setTransfer(false);
+                            finishTransferRecovery(t);
                           } else if (wsRes.action === 'heartbeat') {
                           } else {
                             if (wsRes.payload) {
@@ -2307,18 +2433,18 @@ window.menu = null;
                   }
                 }, this.loadRecoveredInteractions = function(idx, inter) {
                   if (idx === inter.length) {
-                    return;
+                    return Promise.resolve();
                   }
                   var recovered = inter[idx];
                   window.eySocket.lastInteraction = recovered;
                   var payload = JSON.parse(recovered.payload);
                   if (recovered.sender === 'user') {
                     t.domHelper.addUserRequestNode(payload, t);
-                    t.loadRecoveredInteractions(idx + 1, inter);
+                    return t.loadRecoveredInteractions(idx + 1, inter);
                   } else {
-                    t.createMessage(recovered)
+                    return t.createMessage(recovered)
                       .then(function() {
-                        t.loadRecoveredInteractions(idx + 1, inter);
+                        return t.loadRecoveredInteractions(idx + 1, inter);
                       });
                   }
                 }, this.scrollToBottomOnLoad = function(obj) {
