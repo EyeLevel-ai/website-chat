@@ -210,8 +210,242 @@ try {
     return reformatMarkdownLists(splitText);
   }
 
+  function collectAskVetHistoryChunk(state, chunk) {
+    if (!chunk || !chunk.sessionId || typeof chunk.index !== 'number' || typeof chunk.total !== 'number'
+      || chunk.index < 0 || chunk.index >= chunk.total || !chunk.message) {
+      return { state: state, history: null };
+    }
+
+    if (!state || state.sessionId !== chunk.sessionId || state.total !== chunk.total) {
+      state = {
+        entries: [],
+        sessionId: chunk.sessionId,
+        total: chunk.total,
+      };
+    }
+
+    state.entries[chunk.index] = {
+      index: chunk.index,
+      role: chunk.role,
+      text: chunk.message.text,
+      timestamp: chunk.message.timestamp,
+    };
+
+    var complete = true;
+    for (var i = 0; i < state.total; i++) {
+      if (!state.entries[i]) {
+        complete = false;
+        break;
+      }
+    }
+
+    return {
+      state: complete ? null : state,
+      history: complete ? state.entries.slice() : null,
+    };
+  }
+
+  function askVetInteractionSignature(role, text) {
+    return (role === 'user' ? 'user' : 'agent') + '\u0000' + text;
+  }
+
+  function storedInteractionSignature(interaction) {
+    if (!interaction || !interaction.payload) {
+      return null;
+    }
+
+    try {
+      var payload = JSON.parse(interaction.payload);
+      var text = typeof payload.rawText === 'string' ? payload.rawText : payload.text;
+      if (typeof text !== 'string') {
+        return null;
+      }
+      var role = interaction.sender === 'user' || payload.sender === 'user' ? 'user' : 'agent';
+      return askVetInteractionSignature(role, text);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function askVetTimestamp(timestamp) {
+    timestamp = Number(timestamp) || 0;
+    return timestamp > 0 && timestamp < 1000000000000 ? timestamp * 1000 : timestamp;
+  }
+
+  function mergeAskVetHistory(existing, recovered, isOpen, sessionId, matchStart) {
+    existing = existing || [];
+    recovered = recovered || [];
+    matchStart = Math.max(0, Number(matchStart) || 0);
+    var history = existing.slice();
+    var used = {};
+
+    var added = [];
+    for (var j = 0; j < recovered.length; j++) {
+      var message = recovered[j];
+      if (!message || typeof message.text !== 'string' || !message.text.length) {
+        continue;
+      }
+
+      var role = message.role === 'user' ? 'user' : 'agent';
+      var signature = askVetInteractionSignature(role, message.text);
+      var historyIndex = typeof message.index === 'number' ? message.index : j;
+      var timestamp = askVetTimestamp(message.timestamp);
+      var matchIndex = -1;
+      var bestTimeDifference = Infinity;
+
+      for (var i = 0; i < history.length; i++) {
+        if (used[i]) {
+          continue;
+        }
+        if (history[i].askVetSessionId === sessionId && history[i].askVetHistoryIndex === historyIndex) {
+          matchIndex = i;
+          break;
+        }
+        if (i < matchStart) {
+          continue;
+        }
+        if (history[i].askVetSessionId && history[i].askVetSessionId !== sessionId) {
+          continue;
+        }
+        if (storedInteractionSignature(history[i]) !== signature) {
+          continue;
+        }
+
+        var existingTime = Number(history[i].time) || 0;
+        var timeDifference = timestamp && existingTime ? Math.abs(timestamp - existingTime) : Infinity;
+        if (timeDifference <= 60000 && timeDifference < bestTimeDifference) {
+          matchIndex = i;
+          bestTimeDifference = timeDifference;
+        }
+      }
+
+      if (matchIndex >= 0) {
+        used[matchIndex] = true;
+        history[matchIndex].askVetSessionId = sessionId;
+        history[matchIndex].askVetHistoryIndex = historyIndex;
+        continue;
+      }
+
+      var payload;
+      var sender;
+      if (role === 'user') {
+        sender = 'user';
+        payload = {
+          text: escapeAndDecorateString(message.text),
+          rawText: message.text,
+          type: 'askvet-history',
+        };
+      } else {
+        sender = 'server';
+        payload = { sender: 'server', text: message.text };
+      }
+
+      var interaction = {
+        action: 'message',
+        askVetHistoryIndex: historyIndex,
+        askVetHistory: true,
+        askVetSessionId: sessionId,
+        isDone: true,
+        payload: JSON.stringify(payload),
+        sender: sender,
+        time: timestamp,
+        typing: false,
+      };
+      if (sender !== 'user') {
+        interaction.seen = !!isOpen;
+      }
+      added.push(interaction);
+    }
+
+    for (var k = 0; k < added.length; k++) {
+      var insertAt = history.length;
+      if (added[k].time) {
+        for (var h = 0; h < history.length; h++) {
+          var currentTime = Number(history[h].time) || 0;
+          if (currentTime && currentTime > added[k].time) {
+            insertAt = h;
+            break;
+          }
+        }
+      }
+      history.splice(insertAt, 0, added[k]);
+    }
+
+    return { added: added, history: history };
+  }
+
+  function beginTransferRecovery() {
+    if (!window.eyTransferRecoveryPending) {
+      window.eyTransferLiveMessages = [];
+      window.eyAskVetHistoryRender = null;
+    }
+    window.eyTransferRecoveryPending = true;
+  }
+
+  function prepareTransferRecoveryRetry() {
+    if (!window.eyTransferRecoveryPending) {
+      return false;
+    }
+    window.eyTransferResumePending = true;
+    return true;
+  }
+
+  function bufferTransferMessage(rawMessage, parsedMessage) {
+    if (!window.eyTransferRecoveryPending || !parsedMessage || parsedMessage.action !== 'message') {
+      return false;
+    }
+    window.eyTransferLiveMessages = window.eyTransferLiveMessages || [];
+    window.eyTransferLiveMessages.push(rawMessage);
+    return true;
+  }
+
+  function finishTransferRecovery(agent) {
+    var flush = function() {
+      var buffered = window.eyTransferLiveMessages || [];
+      window.eyTransferRecoveryPending = false;
+      window.eyTransferLiveMessages = [];
+      window.eyAskVetHistoryRender = null;
+      for (var i = 0; i < buffered.length; i++) {
+        agent.handleWSMessage({ data: buffered[i] });
+      }
+    };
+    if (window.eyAskVetHistoryRender && typeof window.eyAskVetHistoryRender.then === 'function') {
+      return window.eyAskVetHistoryRender.then(flush, flush);
+    }
+    flush();
+  }
+
+  function reconnectTransferredUser(agent, visibilityState) {
+    if (visibilityState !== 'visible' || window.eyTransferResumePending
+      || !window.user || !window.user.isTransfer || window.user.transferPlatform !== 'askvet' || !agent) {
+      return false;
+    }
+
+    window.eyTransferResumePending = true;
+    var oldSocket = window.eySocket;
+    if (oldSocket) {
+      oldSocket.onclose = null;
+      if (typeof oldSocket.close === 'function') {
+        oldSocket.close();
+      }
+    }
+    window.eySocket = null;
+    window.isChatting = false;
+    agent.initializeWS(true);
+    return true;
+  }
+
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { escapeAndDecorateString };
+    module.exports = {
+      beginTransferRecovery,
+      bufferTransferMessage,
+      collectAskVetHistoryChunk,
+      escapeAndDecorateString,
+      finishTransferRecovery,
+      mergeAskVetHistory,
+      prepareTransferRecoveryRetry,
+      reconnectTransferredUser,
+    };
   }
 
   function externalLinkIcon() {
@@ -573,6 +807,7 @@ getUser = function() {
   var userId = window.localStorage.getItem('eyelevel.user.userId');
   var aid = window.localStorage.getItem('eyelevel.user.aid');
   var isTransfer = window.localStorage.getItem('eyelevel.user.transfer') ? true : false;
+  var transferPlatform = window.localStorage.getItem('eyelevel.user.transferPlatform');
 
   var newUser = false;
   if (!userId) {
@@ -581,7 +816,7 @@ getUser = function() {
     window.localStorage.setItem('eyelevel.user.userId', userId);
   }
 
-  return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, newUser: newUser };
+  return { userId: userId, aid: aid, GUID: aid + ":" + userId, isTransfer: isTransfer, transferPlatform: transferPlatform, newUser: newUser };
 }
 
 updateUser = function(req) {
@@ -683,6 +918,10 @@ saveInteraction = function(interaction) {
 }
 
 clearAll = function(isTransfer) {
+  if (isTransfer && window.localStorage.getItem('eyelevel.user.transferPlatform') === 'askvet') {
+    markAskVetHistoryBoundary();
+  }
+  window.localStorage.removeItem('eyelevel.user.transferPlatform');
   if (isTransfer) {
     window.localStorage.removeItem('eyelevel.user.transfer');
   } else {
@@ -692,7 +931,22 @@ clearAll = function(isTransfer) {
     window.localStorage.removeItem('eyelevel.conversation.consent');
     window.localStorage.removeItem('eyelevel.conversation.alerts');
     window.localStorage.removeItem('eyelevel.conversation.open');
+    window.localStorage.removeItem('eyelevel.conversation.askVetHistoryStart');
   }
+}
+
+markAskVetHistoryBoundary = function() {
+  var rawHistory = window.localStorage.getItem('eyelevel.conversation.history');
+  var historyLength = 0;
+  if (rawHistory) {
+    try {
+      var history = JSON.parse(rawHistory);
+      historyLength = history && history.length ? history.length : 0;
+    } catch (err) {
+      historyLength = 0;
+    }
+  }
+  window.localStorage.setItem('eyelevel.conversation.askVetHistoryStart', historyLength);
 }
 
 saveConsent = function(consent) {
@@ -717,9 +971,12 @@ saveSession = function(sess) {
   }
 }
 
-setTransfer = function(val) {
+setTransfer = function(val, platform) {
   if (val) {
     window.localStorage.setItem('eyelevel.user.transfer', 'true');
+    if (platform) {
+      window.localStorage.setItem('eyelevel.user.transferPlatform', platform.toLowerCase());
+    }
     window.user = getUser();
     if (window.eymenu) {
       var mn = document.getElementById('ey-menu-tr');
@@ -734,7 +991,11 @@ setTransfer = function(val) {
       }
     }
   } else {
+    if (window.localStorage.getItem('eyelevel.user.transferPlatform') === 'askvet') {
+      markAskVetHistoryBoundary();
+    }
     window.localStorage.removeItem('eyelevel.user.transfer');
+    window.localStorage.removeItem('eyelevel.user.transferPlatform');
     window.user = getUser();
   }
 }
@@ -1118,6 +1379,9 @@ window.menu = null;
                 key: "reconnect",
                 value: function(ben) {
                   var sess = getSession();
+                  if (window.user && window.user.isTransfer && window.user.transferPlatform === 'askvet') {
+                    beginTransferRecovery();
+                  }
                   setTimeout(function() {
                     ben.handleEvent('reconnect', 'reconnect', null, sess && sess.Pos);
                     return
@@ -1458,10 +1722,13 @@ window.menu = null;
                   child.parentNode.removeChild(child);
                   t.scrollToBottom();
                 }, this.heartbeat = function() {
-                  if (!window.eySocket) return;
+                  if (!window.eySocket) {
+                    window.eyHeartbeatTimer = null;
+                    return;
+                  }
                   window.eySocket.heartbeat = true;
                   window.eySocket.send(JSON.stringify(t.buildPayLoad("", "heartbeat")));
-                  setTimeout(t.heartbeat, 300000);
+                  window.eyHeartbeatTimer = setTimeout(t.heartbeat, 300000);
                 }, this.loadEnv = function() {
                   switch(window.eyEnv) {
                     case 'dev':
@@ -1475,6 +1742,10 @@ window.menu = null;
                 }, this.initializeWS = function(isRestart) {
                   if (window.eyEnv) {
                     t.loadEnv();
+                  }
+                  if (window.eyHeartbeatTimer) {
+                    clearTimeout(window.eyHeartbeatTimer);
+                    window.eyHeartbeatTimer = null;
                   }
                   window.eySocket = new WebSocket(wssURL+'?uid='+window.user.userId+'&username='+window.username+'&origin='+(window.origin || 'web')+(window.eyid ? '&guid='+window.eyid : ''));
                   window.eySocket.connectTime = Date.now();
@@ -1500,6 +1771,7 @@ window.menu = null;
                   console.log('ws closed');
                   if (window.eySocket && window.eySocket.connectTime && (window.eySocket.connectTime + 8000 < now || window.connectAttempts < 4)) {
                     console.log('reconnecting');
+                    prepareTransferRecoveryRetry();
                     setTimeout(function() {
                       t.initializeWS(true);
                     }, 1000);
@@ -1508,7 +1780,10 @@ window.menu = null;
                   console.error(window.eySocket);
                   throw 'WS error';
                 }, this.handleWSOpen = function(n) {
-                  if (!window.eySocket.isStarted) {
+                  if (window.eyTransferResumePending) {
+                    window.eyTransferResumePending = false;
+                    t.domHelper.reconnect(t);
+                  } else if (!window.eySocket.isStarted) {
                     if (window.eyreset) {
                       clearAll();
                       t.domHelper.setInputValue("");
@@ -1863,6 +2138,9 @@ window.menu = null;
                   if (n && n.data) {
                     try {
                       var wsRes = JSON.parse(n.data);
+                      if (bufferTransferMessage(n.data, wsRes)) {
+                        return;
+                      }
                       saveSession(wsRes.session);
                       if (wsRes) {
                         if (typeof wsRes.isDone === 'undefined') {
@@ -1877,6 +2155,7 @@ window.menu = null;
                           updateUser(wsRes);
                           if (wsRes.action === 'reconnect') {
                             setTransfer(false);
+                            finishTransferRecovery(t);
                             var ints = retrieveInteractions(true);
                             if (!ints || !ints.length) {
                               wsRes.sender = "server";
@@ -1910,13 +2189,36 @@ window.menu = null;
                               t.removeItem(window.eySocket.typingElement);
                               delete window.eySocket.typingElement;
                             }
-                            setTransfer(true);
+                            var transferPayload = wsRes.payload ? JSON.parse(wsRes.payload) : null;
+                            if (wsRes.action === 'reconnect-transfer' && transferPayload
+                              && transferPayload.platform === 'askvet' && !window.eyTransferRecoveryPending) {
+                              beginTransferRecovery();
+                            }
+                            setTransfer(true, transferPayload && transferPayload.platform);
+                            if (wsRes.action === 'reconnect-transfer' && transferPayload) {
+                              if (transferPayload && transferPayload.history) {
+                                var recovered = collectAskVetHistoryChunk(window.eyAskVetHistoryChunks, transferPayload.history);
+                                window.eyAskVetHistoryChunks = recovered.state;
+                                if (recovered.history) {
+                                  var historyStart = window.localStorage.getItem('eyelevel.conversation.askVetHistoryStart');
+                                  var merged = mergeAskVetHistory(retrieveInteractions(false), recovered.history, window.isOpen, transferPayload.history.sessionId, historyStart);
+                                  window.localStorage.setItem('eyelevel.conversation.history', JSON.stringify(merged.history));
+                                  if (merged.added.length) {
+                                    window.parent.postMessage("alert-update", "*");
+                                    window.eyAskVetHistoryRender = t.loadRecoveredInteractions(0, merged.added);
+                                  }
+                                }
+                              } else {
+                                finishTransferRecovery(t);
+                              }
+                            }
                           } else if (wsRes.action === 'transfer' || wsRes.action === 'reconnect-transfer-failed') {
                             if (window.eySocket.typingElement) {
                               t.removeItem(window.eySocket.typingElement);
                               delete window.eySocket.typingElement;
                             }
                             setTransfer(false);
+                            finishTransferRecovery(t);
                           } else if (wsRes.action === 'reconnect-empty') {
                             if (window.eySocket.typingElement) {
                               t.removeItem(window.eySocket.typingElement);
@@ -1928,6 +2230,7 @@ window.menu = null;
                               }
                             }
                             setTransfer(false);
+                            finishTransferRecovery(t);
                           } else if (wsRes.action === 'heartbeat') {
                           } else {
                             if (wsRes.payload) {
@@ -2039,6 +2342,17 @@ window.menu = null;
                   if (!window.eySocket && window.user && window.user.isTransfer) {
                     t.initializeWS();
                   }
+                }, this.handleVisibilityChange = function() {
+                  if (document.visibilityState === 'hidden') {
+                    window.eyWasHidden = true;
+                  } else if (document.visibilityState === 'visible' && window.eyWasHidden) {
+                    window.eyWasHidden = false;
+                    reconnectTransferredUser(t, document.visibilityState);
+                  }
+                }, this.handlePageShow = function(n) {
+                  if (n && n.persisted) {
+                    reconnectTransferredUser(t, 'visible');
+                  }
                 }, this.handleChatWindow = function(n) {
                   if (n && n.type === "message") {
                     if (n.data) {
@@ -2127,6 +2441,22 @@ window.menu = null;
                     t.createMessage(int1)
                       .then(function(ra0) {
                         return t.loadInteractions(idx + 1, inter);
+                      });
+                  }
+                }, this.loadRecoveredInteractions = function(idx, inter) {
+                  if (idx === inter.length) {
+                    return Promise.resolve();
+                  }
+                  var recovered = inter[idx];
+                  window.eySocket.lastInteraction = recovered;
+                  var payload = JSON.parse(recovered.payload);
+                  if (recovered.sender === 'user') {
+                    t.domHelper.addUserRequestNode(payload, t);
+                    return t.loadRecoveredInteractions(idx + 1, inter);
+                  } else {
+                    return t.createMessage(recovered)
+                      .then(function() {
+                        return t.loadRecoveredInteractions(idx + 1, inter);
                       });
                   }
                 }, this.scrollToBottomOnLoad = function(obj) {
@@ -3189,6 +3519,8 @@ window.menu = null;
             return a()(e, [{
                 key: "bindEventHandlers",
                 value: function() {
+                    document.addEventListener("visibilitychange", this.handleVisibilityChange, !1);
+                    window.addEventListener("pageshow", this.handlePageShow, !1);
                     if (this.domHelper.getMenuInputTR()) {
                       this.domHelper.getMenuInputTR().addEventListener("click", this.handleMenuClick, supportsPassive() ? {passive : false} : false);
                     }
